@@ -45,7 +45,7 @@ export function expressionReport(state) {
   }
   if(state.assets?.length) {
     lines.push('【追加で読み込んだ表情素材】','読込済みです。形・境界・配置・動作品質は未確認です。画像はこの一覧に含みません。');
-    for(const a of state.assets){const layer=state.layers?.[a.role]||defaultExpressionLayer(a.role);lines.push(`- ${EXPRESSION_ROLES.find(([id])=>id===a.role)[1]}：${a.width} × ${a.height} px ／ 左端${+(a.placement.x*100).toFixed(2)}% 上端${+(a.placement.y*100).toFixed(2)}% 幅${+(a.placement.width*100).toFixed(2)}% 高さ${+(a.placement.height*100).toFixed(2)}% ／ 順序${layer.order} ／ ${EXPRESSION_CONDITIONS[layer.condition]} ／ ${layer.enabled?'表示対象':'非表示'}`);}
+    for(const a of state.assets){const layer=state.layers?.[a.role]||defaultExpressionLayer(a.role);lines.push(`- ${EXPRESSION_ROLES.find(([id])=>id===a.role)[1]}：${a.width} × ${a.height} px ／ 左端${+(a.placement.x*100).toFixed(2)}% 上端${+(a.placement.y*100).toFixed(2)}% 幅${+(a.placement.width*100).toFixed(2)}% 高さ${+(a.placement.height*100).toFixed(2)}% ／ 順序${layer.order} ／ ${EXPRESSION_CONDITIONS[layer.condition]} ／ ${layer.enabled?'表示対象':'非表示'} ／ ${state.deforms?.[a.role]?`9点の変形設定あり（${{left:'左目',right:'右目',mouth:'口'}[state.deforms[a.role].driver]}）`:'変形未設定'}`);}
   }
   return '\uFEFF'+lines.join('\r\n');
 }

@@ -1,0 +1,33 @@
+import {test,expect} from '@playwright/test';
+import {encode} from 'fast-png';
+import {unzipSync,zipSync,strToU8,strFromU8} from 'fflate';
+function png(color){const data=new Uint8Array(128*192*4);for(let i=0;i<data.length;i+=4)data.set(color,i);return Buffer.from(encode({width:128,height:192,data,channels:4,depth:8}));}
+async function setup(page){await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png([30,50,80,255])});await expect(page.locator('#source-preview')).toBeVisible();await page.locator('#asset-role').selectOption('mouth_upper');await page.locator('#asset-file').setInputFiles({name:'lip.png',mimeType:'image/png',buffer:png([220,30,60,255])});await expect(page.locator('#deform-apply')).toBeEnabled();await page.locator('#deform-apply').click();}
+async function save(page){const pending=page.waitForEvent('download');await page.locator('#save-project').click();const chunks=[];for await(const c of await(await pending).createReadStream())chunks.push(c);return Buffer.concat(chunks);}
+const rows=page=>page.locator('#scene-canvas').evaluate(c=>{const ctx=c.getContext('2d');let count=0;for(let y=0;y<c.height;y++)if(ctx.getImageData(23,y,1,1).data[3]>200)count++;return count;});
+const at=(page,x,y)=>page.locator('#scene-canvas').evaluate((c,[x,y])=>Array.from(c.getContext('2d').getImageData(x,y,1,1).data),[x,y]);
+test('mesh keys deform real pixels continuously, reject folds and leave raw assets unchanged',async({page})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));await setup(page);await expect(page.locator('#scene-condition')).toHaveValue('always');
+  const closed=await rows(page);expect(closed).toBeGreaterThan(15);expect(closed).toBeLessThan(25);
+  await page.locator('#scene-mouth').fill('0.5');const middle=await rows(page);expect(middle).toBeGreaterThan(95);expect(middle).toBeLessThan(115);
+  await page.locator('#scene-mouth').fill('1');expect(await rows(page)).toBeGreaterThan(180);
+  await page.locator('#deform-point').selectOption('1');await page.locator('#deform-y').fill('20');await page.locator('#deform-apply').click();expect((await at(page,60,55))[3]).toBeGreaterThan(200);
+  await page.locator('#deform-point').selectOption('4');await page.locator('#deform-x').fill('150');await page.locator('#deform-y').fill('150');await page.locator('#deform-apply').click();await expect(page.locator('#deform-status')).toContainText('交差');expect((await at(page,60,55))[3]).toBeGreaterThan(200);
+  await page.locator('#deform-point').selectOption('1');await page.locator('#deform-driver').selectOption('left');await page.locator('#deform-apply').click();await page.locator('#scene-mouth').fill('1');expect(await rows(page)).toBeLessThan(70);await page.locator('#scene-left').fill('1');expect(await rows(page)).toBeGreaterThan(180);
+  const manifestEntries=unzipSync(await save(page));expect(Buffer.from(manifestEntries['expressions/mouth_upper.png'])).toEqual(png([220,30,60,255]));
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.setViewportSize({width:1440,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
+});
+test('version 7 restores mesh keys, rejects invalid and intermediate folds, and reads version 6',async({page})=>{
+  await setup(page);await page.locator('#deform-point').selectOption('1');await page.locator('#deform-y').fill('20');await page.locator('#deform-apply').click();const saved=await save(page),entries=unzipSync(saved),m=JSON.parse(strFromU8(entries['project.json']));expect(m.version).toBe(7);expect(m.expressionDeforms.mouth_upper.closed[1]).toEqual([.5,.2]);
+  await page.reload();await page.locator('#project-file').setInputFiles({name:'saved.zip',mimeType:'application/zip',buffer:saved});await expect(page.locator('#project-status')).toContainText('作業を再開');await expect(page.locator('#deform-apply')).toBeEnabled();await page.locator('#deform-point').selectOption('1');await expect(page.locator('#deform-y')).toHaveValue('20.0');
+  for(const edit of [s=>s.expressionDeforms.mouth_upper.driver='bad',s=>s.expressionDeforms.mouth_upper.open.pop(),s=>s.expressionDeforms.mouth_upper.open[0][0]=2,s=>s.expressionDeforms.mouth_upper.extra=1,s=>s.expressionDeforms.eye_closed_r=s.expressionDeforms.mouth_upper,s=>{const mesh=s.expressionDeforms.mouth_upper;mesh.closed=mesh.open.map(p=>[...p]);mesh.open=mesh.closed.map(([x,y])=>[1-x,1-y]);},s=>s.version=6]){
+    const e=unzipSync(saved),state=JSON.parse(strFromU8(e['project.json']));edit(state);e['project.json']=strToU8(JSON.stringify(state));await page.locator('#project-file').setInputFiles({name:'bad.zip',mimeType:'application/zip',buffer:Buffer.from(zipSync(e,{level:0}))});await expect(page.locator('#project-status')).toContainText('読み込みに失敗');await expect(page.locator('#deform-y')).toHaveValue('20.0');
+  }
+  delete m.expressionDeforms;m.version=6;entries['project.json']=strToU8(JSON.stringify(m));await page.locator('#project-file').setInputFiles({name:'old.zip',mimeType:'application/zip',buffer:Buffer.from(zipSync(entries,{level:0}))});await expect(page.locator('#project-status')).toContainText('作業を再開');await expect(page.locator('#deform-status')).toContainText('未設定');await expect(page.locator('#deform-remove')).toBeDisabled();await expect(page.locator('#scene-play')).toBeEnabled();expect(await rows(page)).toBeGreaterThan(180);
+});
+test('playback interpolates, saving stops it and removal/reset clears deformation settings',async({page})=>{
+  await setup(page);await page.locator('#scene-play').click();await expect(page.locator('#deform-apply')).toBeDisabled();await expect.poll(()=>rows(page)).toBeGreaterThan(60);await expect.poll(()=>rows(page)).toBeLessThan(140);const saved=await save(page);await expect(page.locator('#scene-play')).toHaveText('瞬き・口の切替を再生');await expect(page.locator('#deform-apply')).toBeEnabled();
+  await page.locator('#deform-remove').click();await expect(page.locator('#deform-status')).toContainText('未設定');expect(JSON.parse(strFromU8(unzipSync(await save(page))['project.json'])).version).toBe(6);
+  await page.locator('#project-file').setInputFiles({name:'saved.zip',mimeType:'application/zip',buffer:saved});await expect(page.locator('#project-status')).toContainText('作業を再開');await expect(page.locator('#deform-remove')).toBeEnabled();await page.locator('#asset-remove').click();const clean=JSON.parse(strFromU8(unzipSync(await save(page))['project.json']));expect(clean.expressionDeforms).toBeUndefined();expect(clean.expressionLayers).toBeUndefined();
+  await page.locator('#reset').click();await expect(page.locator('.expression-scene')).toBeHidden();
+});
