@@ -3,7 +3,7 @@
 最終更新: 2026-10-09（日本時間）
 
 ## 承認とブランチ
-- 最新ブランチ: feature/prompted-segmentation。過去の基本画面・ZIP 改善・計画を継承。
+- 最新ブランチ: docs/character-evaluation（feature/prompted-segmentation から作成）。過去の基本画面・ZIP 改善・計画を継承。
 - 初版目標、段階 1、段階 2 の資料調査に続き、オーナーの「進めて」で点・枠の試作、モデル導入、無課金の自前評価が承認された。
 - 今回は自作のテスト画像だけを使用。ユーザー画像の外部送信・外部 API・有料機器・公開・main マージは行っていない。
 
@@ -32,3 +32,10 @@
 ## 再開
 Codex で feature/prompted-segmentation を選び、AGENTS.md、ROADMAP.md、PROGRESS.md、README.md を読む。
 README の AI 試作手順で準備し、サーバーと画面を別々に起動する。プロセスは新タスクに引き継がれない。
+
+## ユーザー提供画像の評価
+- 提供された一枚を第三者に送信せずローカル SAM で処理。点・枠各 4 パーツの PNG を生成し目視確認。
+- 点指定では顔・両目・トップスの抽出を確認。髪の長い部分は不足。大きな髪の枠には衣装が混在した。
+- 結果は docs/CHARACTER_EVALUATION.md に記録。画像は GitHub に保存しない。
+- 次の提案はパーツごとの追加点・除外点。候補選択とブラシ補正はその後。今回アプリコードは変更していない。
+- 次回は docs/character-evaluation から再開できる。
