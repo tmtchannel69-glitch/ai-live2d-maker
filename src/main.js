@@ -1,3 +1,4 @@
+import {createExpressionPanel} from './expression-panel.js';
 import {createMotionPanel} from './motion-panel.js';
 import {createPsdExport} from './psd-export.js';
 import {createMaterialArchive} from './material-archive.js';
@@ -37,7 +38,7 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor,reviewPanel,motionPanel;
+let brushEditor,reviewPanel,motionPanel,expressionPanel;
 let motion={};
 let reviews={},materialBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
@@ -55,7 +56,7 @@ brushEditor = createBrushEditor({ labels, getSource: () => file, getCurrent: id 
     $('#status').textContent = `${labels[part.id]}のブラシ補正を反映しました。PNG・ZIP に補正後の結果を保存できます。`;
   },
 });
-reviewPanel=createReviewPanel({labels,getState:()=>({file,sourceUrl,ids:activeIds(),selected:selected(),results,reviews,locked:busy||projectBusy||archiveBusy||materialBusy}),isDirty:dirty,onChange:(id,record)=>{reviews={...reviews,[id]:record};}});
+reviewPanel=createReviewPanel({labels,getState:()=>({file,sourceUrl,ids:activeIds(),selected:selected(),results,reviews,locked:busy||projectBusy||archiveBusy||materialBusy}),isDirty:dirty,onChange:(id,record)=>{reviews={...reviews,[id]:record};expressionPanel?.update();}});
 function updateEditorNote() {
   if (!editor) return;
   const result = results.find(part => part.id === editor.selectedPart);
@@ -66,6 +67,12 @@ function updateEditorNote() {
 }
 $('#edit-prompts').addEventListener('click', () => { editor.open(); updateEditorNote(); });
 motionPanel=createMotionPanel({labels,getState:()=>({file,results:visibleResults(),selected:selected(),settings:motion,locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:(id,setting)=>{motion={...motion,[id]:setting};},isDirty:dirty});
+expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:editor.prompts,reviews,locked:busy || projectBusy || archiveBusy || materialBusy}),onPrepare:ids=>{
+  if(!file || busy || projectBusy || archiveBusy || materialBusy)return;
+  rememberTemplate();reviewPanel.close();brushEditor.close();editor.clearView();closePreview();
+  template='production';templates.production.selected=TEMPLATES.production.map(p=>p.id).filter(id=>templates.production.selected.includes(id) || ids.includes(id));
+  renderPartChoices();renderResults();updateEditorNote();updateButton();updateSelectionStatus();
+}});
 function rememberTemplate() {templates[template]={mode:$('#processing-mode').value,selected:selected()};}
 function renderPartChoices() {
   const parts=TEMPLATES[template],groups=template==='basic'?['']: [...new Set(parts.map(part=>part.group))];
@@ -111,6 +118,7 @@ function clearResults(ids=null) {
 }
 function renderResults() {
   motionPanel?.update();
+  expressionPanel?.update();
   reviewPanel?.update();
   const shown=visibleResults();
   $('#count').textContent = `${shown.length} PARTS`;
@@ -149,6 +157,7 @@ function renderResults() {
 }
 function updateButton() {
   motionPanel?.update();
+  expressionPanel?.update();
   reviewPanel?.update();
   const locked=busy || projectBusy || materialBusy;
   $('#download-materials').disabled=!file || !selected().length || locked || archiveBusy;
