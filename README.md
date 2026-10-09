@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/expression-deformation` です。
+最新の開発ブランチは `feature/mobile-expression-editor` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/expression-deformation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/mobile-expression-editor https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/expression-deformation` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/mobile-expression-editor` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -248,3 +248,9 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 追加素材ごとに9点で「閉じた形」「開いた形」を編集し、左右の目・口のスライダーで途中の形も確認できます。点は数値入力で編集し、反映時に表示条件を「常に表示」に変えます。仮の閉じた形は縦に縮めるだけなので、自然な表情には素材と点の調整が必要です。作業ファイル版7で保存・再開でき、旧版1〜6も読めます。
 
 変形の解除、選択中の形を元の矩形に戻す操作、点と線の表示、自動再生に対応します。元PNG・PSDは変わりません。目の内側に描く処理・親子の動き・moc3出力は未対応です。[操作と制限](docs/EXPRESSION_DEFORMATION.md)。
+
+## スマホでの形の編集
+
+「指で形を編集」から、画像を見ながら点をドラッグできます。拡大を1〜3倍で切り替え、「拡大画面を移動」で見たい位置に移動します。近い点は「調整する点」で選び、矢印で0.5%ずつ微調整できます。取り消し・やり直しは最大30操作。「形を反映」で確定し、閉じる・「変更せず戻る」では元の設定を保ちます。保存は従来の作業ファイル版7です。
+
+今後の開発はスマホでの作業を基準にします。現在はWebアプリで、iPhone/Androidへのアプリ配布・実機確認はまだ行っていません。[スマホ優先の方針](docs/MOBILE_UX.md)。
