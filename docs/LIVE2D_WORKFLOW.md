@@ -5,7 +5,7 @@
 ## 調査範囲
 取得できた資料: Live2D 公式 Web SDK の README・モデル定義・パラメータ一覧・ライセンス、VTube Studio 開発元の公開マニュアル。
 これらから、Cubism Editor でモデルを作り、モデル・テクスチャ・物理設定などを書き出して表示・追跡アプリへ読み込む流れを確認した。
-パーツ分けや描き足しの制作マニュアル（docs.live2d.com）はプロキシの 403 で未取得。以下の作画・モデリング前半のコツは一般的な制作知識として整理しており、今回その公式ページ本文を確認した事実とは区別する。
+初回は制作マニュアルがプロキシの 403 で未取得だった。追加の設計作業で公式の制作フロー、PSD 準備・注意点・取り込み、アートメッシュのページを取得できた。制作フローの「動かすと見える部分の描き足し」と PSD の「一部品一レイヤー」等を追加確認した。各パーツの具体的な分け方の提案は一般的な制作知識と当該画像の評価に基づき、公式の必須構成としない。
 取得可能な資料だけでは、現行 Editor の PSD 読み込み条件や最新の編集操作をすべて確定できない。実装前に対応版で確認する。
 
 ## 通常の制作フロー
@@ -68,8 +68,10 @@
 - [VTube Studio 開発元：アニメーション](https://github.com/DenchiSoft/VTubeStudio/wiki/Animations): Animator からの motion3.json 出力。
 - [Live2D Web Samples ライセンス](https://github.com/Live2D/CubismWebSamples/blob/develop/LICENSE.md): SDK 使用条件。Editor・Core・モデル素材の条件も個別に確認し、GitHub にあることを無条件利用の根拠にしない。
 
-追加確認対象（本文未取得）:
-- [Cubism Editor 公式マニュアル](https://docs.live2d.com/cubism-editor-manual/top/)
-- [Live2D 学習ページ](https://www.live2d.com/learn/)
+追加確認した公式資料:
+- [制作フロー](https://docs.live2d.com/cubism-editor-manual/workflow/)
+- [インポート PSD の作り方](https://docs.live2d.com/cubism-editor-manual/reimport-psd/)
+- [PSD 作成上の注意](https://docs.live2d.com/cubism-editor-manual/precautions-for-psd-data/)
+「素材分けについて」の詳細ページは追加取得時 503。Live2D 学習ページ本文は未確認。
 
-通信設定のドラフトへ docs.live2d.com と www.live2d.com を追加し、既存のモデル配布先は保持した。保存だけでは現在の通信許可が適用された証拠にならず、今回の再取得も 403 だった。設定の適用後に制作・PSD・メッシュ・描画順等の現行資料を追加確認する。
+通信設定のドラフトへ docs.live2d.com と www.live2d.com を追加し、既存のモデル配布先は保持した。初回再取得は 403 だったが、次の設計作業で公式資料の応答と本文を確認した。接続成功は設定公開やすべての関連ページの取得を証明しない。詳細は [設計案](PARTS_AND_EDITOR_DESIGN.md) に記録。
