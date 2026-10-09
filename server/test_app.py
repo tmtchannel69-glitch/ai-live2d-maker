@@ -65,3 +65,53 @@ def test_transparent_only_region_is_not_reported_as_success(monkeypatch):
     response=request([{'id':'hair','point':[.5,.5]}],stream.getvalue())
     assert response.status_code == 422
     assert '透明' in response.json()['detail']
+
+def test_multiple_points_and_box_reach_engine_unchanged(monkeypatch):
+    def inspect(image, prompts):
+        prompt = prompts[0]
+        assert [(p.x,p.y,p.label) for p in prompt.all_points] == [(0.25,0.3,1),(0.8,0.7,0)]
+        assert prompt.box == (0,0,1,1)
+        return [np.ones((60,40),dtype=bool)]
+    monkeypatch.setattr(module.engine,'segment',inspect)
+    result=request([{'id':'hair','points':[{'x':.25,'y':.3,'label':1},{'x':.8,'y':.7,'label':0}],'box':[0,0,1,1]}])
+    assert result.status_code == 200
+
+def test_multiple_point_limits_and_negative_only_validation():
+    positive={'x':.5,'y':.5,'label':1}
+    invalid=[
+        {'id':'hair','points':[]},
+        {'id':'hair','points':[positive]*33},
+        {'id':'hair','points':[{'x':.5,'y':.5,'label':0}]},
+        {'id':'hair','points':[{'x':1.01,'y':.5,'label':1}]},
+        {'id':'hair','points':[{'x':float('nan'),'y':.5,'label':1}]},
+        {'id':'hair','points':[{'x':.5,'y':.5,'label':2}]},
+        {'id':'hair','points':[{'x':.5,'y':.5,'label':True}]},
+        {'id':'hair','points':[positive],'point':[.5,.5]},
+    ]
+    for prompt in invalid: assert request([prompt]).status_code==422
+
+def test_maximum_points_and_box_with_exclusions_are_valid(monkeypatch):
+    monkeypatch.setattr(module.engine,'segment',lambda image,prompts:[np.ones((60,40),dtype=bool)])
+    assert request([{'id':'hair','points':[{'x':.5,'y':.5,'label':1}]*32}]).status_code==200
+    assert request([{'id':'hair','points':[{'x':.5,'y':.5,'label':0}],'box':[0,0,1,1]}]).status_code==200
+
+def test_engine_passes_scaled_coordinates_and_labels_to_predictor(monkeypatch,tmp_path):
+    import server.engine as engine_module
+    checkpoint=tmp_path/'checkpoint';checkpoint.write_text('fake fixture')
+    monkeypatch.setattr(engine_module,'CHECKPOINT',checkpoint)
+    captured=[]
+    class Predictor:
+        def set_image(self,image): assert image.shape==(60,40,3)
+        def predict(self,**kwargs):
+            captured.append(kwargs)
+            return np.ones((1,60,40),dtype=bool),np.array([1.0]),None
+    engine=engine_module.SamEngine();engine.predictor=Predictor()
+    prompts=[module.Prompt(id='hair',points=[{'x':.25,'y':.3,'label':1},{'x':1,'y':1,'label':0}],box=[0,0,1,1]),
+             module.Prompt(id='face',point=[.5,.5])]
+    image=Image.new('RGBA',(40,60))
+    engine.segment(image,prompts)
+    np.testing.assert_array_equal(captured[0]['point_coords'],[[10,18],[39,59]])
+    np.testing.assert_array_equal(captured[0]['point_labels'],[1,0])
+    np.testing.assert_array_equal(captured[0]['box'],[0,0,40,60])
+    np.testing.assert_array_equal(captured[1]['point_coords'],[[20,30]])
+    np.testing.assert_array_equal(captured[1]['point_labels'],[1])

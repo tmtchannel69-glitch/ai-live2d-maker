@@ -31,11 +31,11 @@ class SamEngine:
             self.predictor.set_image(np.array(image.convert('RGB'), copy=True))
             outputs = []
             for prompt in prompts:
-                point = prompt.point
+                points = prompt.all_points
                 box = prompt.box
                 masks, scores, _ = self.predictor.predict(
-                    point_coords=np.array([[point[0] * width, point[1] * height]]) if point else None,
-                    point_labels=np.array([1]) if point else None,
+                    point_coords=np.array([[min(width - 1, p.x * width), min(height - 1, p.y * height)] for p in points]) if points else None,
+                    point_labels=np.array([p.label for p in points]) if points else None,
                     box=np.array([box[0] * width, box[1] * height, box[2] * width, box[3] * height]) if box else None,
                     multimask_output=True,
                 )

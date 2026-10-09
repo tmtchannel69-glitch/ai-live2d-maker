@@ -16,7 +16,14 @@ test('actual local SAM returns a full-size transparent PNG through the browser',
   await page.locator('#prompt-kind').selectOption('box');
   await page.getByText('数値で指定（キーボード操作）').click();
   for (const [name,value] of Object.entries({x:'20',y:'13',right:'80',bottom:'87'})) await page.locator(`input[name="${name}"]`).fill(value);
-  await page.getByRole('button',{name:'数値を反映'}).click(); await page.locator('#close-prompts').click();
+  await page.getByRole('button',{name:'数値を反映'}).click();
+  for (const [kind,x,y] of [['point','50','50'],['exclude','0','0']]) {
+    await page.locator('#prompt-kind').selectOption(kind);
+    await page.locator('input[name="x"]').fill(x); await page.locator('input[name="y"]').fill(y);
+    await page.getByRole('button',{name:'数値を反映'}).click();
+  }
+  await expect(page.locator('svg circle')).toHaveCount(2);
+  await page.locator('#close-prompts').click();
   await page.getByRole('button',{name:/AI でパーツを分離/}).click();
   await expect(page.locator('#status')).toContainText('1 個のAI 試作',{timeout:90000});
   await expect(page.locator('.result-card')).toHaveCount(1);

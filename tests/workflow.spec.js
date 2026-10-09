@@ -162,7 +162,7 @@ test('AI prompt editor supports taps, boxes and numeric entry; missing model is 
   await page.locator('#close-prompts').click();
   await expect(page.getByRole('button', { name: /AI でパーツを分離/ })).toBeEnabled();
   await page.route('**/api/separate', async route => {
-    const body = route.request().postData(); expect(body).toContain('"point":[0.25,0.3]');
+    const body = route.request().postData(); expect(body).toContain('"points":[{"x":0.25,"y":0.3,"label":1}]');
     await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'SAM のモデルが未配置です。' }) });
   });
   await page.getByRole('button', { name: /AI でパーツを分離/ }).click();
@@ -171,4 +171,80 @@ test('AI prompt editor supports taps, boxes and numeric entry; missing model is 
   await page.locator('#processing-mode').selectOption('demo');
   await page.getByRole('button', { name: /パーツを分離/ }).click();
   await expect(page.locator('.result-card')).toHaveCount(1);
+});
+
+async function numericPoint(page, kind = 'point', x = '25', y = '30') {
+  await page.locator('#prompt-kind').selectOption(kind);
+  await page.locator('input[name="x"]').fill(x); await page.locator('input[name="y"]').fill(y);
+  await page.getByRole('button', { name: '数値を反映' }).click();
+}
+test('multipoint history is per part, negative-only is gated and point count is bounded', async ({ page }) => {
+  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  await page.locator('#edit-prompts').click(); await page.getByText('数値で指定（キーボード操作）').click();
+  await numericPoint(page, 'exclude'); await expect(page.locator('#separate-one')).toBeDisabled();
+  await numericPoint(page); await expect(page.locator('#separate-one')).toBeEnabled();
+  await page.locator('#undo-prompt').click(); await expect(page.locator('#separate-one')).toBeDisabled();
+  await page.locator('#redo-prompt').click(); await expect(page.locator('svg circle')).toHaveCount(2);
+  await page.locator('#prompt-part').selectOption('face'); await numericPoint(page);
+  await page.locator('#undo-prompt').click(); await expect(page.locator('svg circle')).toHaveCount(0);
+  await page.locator('#prompt-part').selectOption('hair'); await expect(page.locator('svg circle')).toHaveCount(2);
+  for (let i=0;i<31;i++) await page.getByRole('button', { name: '数値を反映' }).click();
+  await expect(page.locator('svg circle')).toHaveCount(32); await expect(page.locator('#prompt-summary')).toContainText('32 個まで');
+  await page.locator('#undo-prompt').click(); await expect(page.locator('svg circle')).toHaveCount(31);
+  await numericPoint(page,'exclude'); await expect(page.locator('#redo-prompt')).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('single-part correction preserves other parts and failed runs retain download results', async ({ page }) => {
+  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  for (const id of ['body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
+  await page.locator('#edit-prompts').click(); await page.getByText('数値で指定（キーボード操作）').click();
+  await numericPoint(page); await page.locator('#prompt-part').selectOption('face'); await numericPoint(page);
+  await page.locator('#close-prompts').click();
+  const png = await page.locator('#source-preview').evaluate(async img => {
+    const c=document.createElement('canvas');c.width=300;c.height=500;c.getContext('2d').drawImage(img,0,0);return c.toDataURL().split(',')[1];
+  });
+  let calls=0;
+  await page.route('**/api/separate', async route => {
+    calls++; const body=route.request().postData();
+    if(calls===1) expect(body).toContain('"id":"face"');
+    else { expect(body).toContain('"id":"hair"'); expect(body).not.toContain('"id":"face"'); expect(body).toContain('"label":0'); }
+    if(calls===3) await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({detail:'simulated failure'})});
+    else await route.fulfill({contentType:'application/json',body:JSON.stringify({parts:(calls===1?['hair','face']:['hair']).map(id=>({id,png}))})});
+  });
+  await page.locator('#separate').click(); await expect(page.locator('.result-card')).toHaveCount(2);
+  const faceBefore=await page.locator('[data-part="face"] img').getAttribute('src');
+  const hairBefore=await page.locator('[data-part="hair"] img').getAttribute('src');
+  await page.getByRole('button',{name:'髪を修正'}).click(); await numericPoint(page,'exclude','80','80');
+  await expect(page.locator('[data-part="hair"] .result-state')).toContainText('以前の結果');
+  await page.locator('#separate-one').click(); await expect(page.locator('#prompt-run-status')).toContainText('髪だけを更新');
+  expect(await page.locator('[data-part="face"] img').getAttribute('src')).toBe(faceBefore);
+  const hairAfter=await page.locator('[data-part="hair"] img').getAttribute('src'); expect(hairAfter).not.toBe(hairBefore);
+  await numericPoint(page,'point','50','50'); await page.locator('#separate-one').click();
+  await expect(page.locator('#prompt-run-status')).toContainText('以前の結果は保持');
+  expect(await page.locator('[data-part="hair"] img').getAttribute('src')).toBe(hairAfter);
+  await page.locator('#close-prompts').click();
+  const downloadPromise=page.waitForEvent('download'); await page.locator('#download-all').click();
+  const download=await downloadPromise; const stream=await download.createReadStream(); const chunks=[];
+  for await(const chunk of stream) chunks.push(chunk);
+  const {unzipSync}=await import('fflate'); expect(Object.keys(unzipSync(Buffer.concat(chunks))).sort()).toEqual(['face.png','hair.png']);
+  await page.locator('#reset').click(); await upload(page); await page.locator('#edit-prompts').click();
+  await expect(page.locator('svg circle')).toHaveCount(0); await expect(page.locator('#undo-prompt')).toBeDisabled();
+});
+
+test('reset during an AI request discards its late response and clears prompt history', async ({ page }) => {
+  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  for(const id of ['face','body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
+  await page.locator('#edit-prompts').click(); await page.locator('svg').click({position:{x:50,y:50}}); await page.locator('#close-prompts').click();
+  let release; const gate=new Promise(resolve=>{release=resolve;}); let completed;
+  const done=new Promise(resolve=>{completed=resolve;});
+  await page.route('**/api/separate',async route=>{
+    await gate;
+    try { await route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({detail:'late response'})}); } finally {completed();}
+  });
+  const request=page.waitForRequest('**/api/separate'); await page.locator('#separate').click(); await request;
+  await page.locator('#reset').click(); release(); await done;
+  await expect(page.locator('#status')).toContainText('まずは'); await expect(page.locator('.result-card')).toHaveCount(0);
+  await upload(page); await page.locator('#edit-prompts').click(); await expect(page.locator('svg circle')).toHaveCount(0);
+  await expect(page.locator('#undo-prompt')).toBeDisabled(); await expect(page.locator('#separate-one')).toBeDisabled();
 });

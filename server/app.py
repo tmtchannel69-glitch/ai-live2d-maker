@@ -1,4 +1,4 @@
-"""Local prototype, not a public deployment. Images processed only in memory."""
+"""Local prototype, not a public deployment. Images are not retained; multipart parsing may use temporary files."""
 import base64
 import io
 import json
@@ -6,7 +6,8 @@ import threading
 import warnings
 from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from typing import Literal
 from server.engine import SamEngine, CHECKPOINT, ModelUnavailable
 
 app = FastAPI(title='AI Live2D Maker local prototype')
@@ -14,31 +15,61 @@ engine = SamEngine()
 lock = threading.Lock()
 PARTS = {'hair', 'face', 'body', 'eyes'}
 
+class MaskPoint(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    label: Literal[0, 1]
+
+    @field_validator('label', mode='before')
+    @classmethod
+    def strict_label(cls, value):
+        if type(value) is not int:
+            raise ValueError('点の種類は整数の 0 または 1 にしてください。')
+        return value
+
+
 class Prompt(BaseModel):
     model_config = ConfigDict(extra='forbid')
     id: str
+    # Preserve legacy one-point/one-box clients.
     point: tuple[float, float] | None = None
+    points: list[MaskPoint] | None = Field(default=None, min_length=1, max_length=32)
     box: tuple[float, float, float, float] | None = None
 
     @model_validator(mode='after')
     def validate_prompt(self):
-        if self.id not in PARTS or (self.point is None) == (self.box is None):
-            raise ValueError('各パーツに点または枠を一つ指定してください。')
-        values = self.point if self.point is not None else self.box
-        if not all(0 <= value <= 1 for value in values):
-            raise ValueError('座標は 0 から 1 の範囲で指定してください。')
-        if self.box and (self.box[0] >= self.box[2] or self.box[1] >= self.box[3]):
-            raise ValueError('枠には幅と高さが必要です。')
+        if self.id not in PARTS:
+            raise ValueError('不明なパーツです。')
+        if self.point is not None:
+            if self.points is not None or self.box is not None:
+                raise ValueError('旧式の点指定を他の指定と混ぜないでください。')
+            if not all(0 <= value <= 1 for value in self.point):
+                raise ValueError('座標は 0 から 1 の範囲で指定してください。')
+        if self.box is not None:
+            if not all(0 <= value <= 1 for value in self.box):
+                raise ValueError('座標は 0 から 1 の範囲で指定してください。')
+            if self.box[0] >= self.box[2] or self.box[1] >= self.box[3]:
+                raise ValueError('枠には幅と高さが必要です。')
+        if self.point is None and self.box is None and not any(p.label == 1 for p in self.points or []):
+            raise ValueError('残す点または枠を指定してください。')
         return self
+
+    @property
+    def all_points(self):
+        if self.point is not None:
+            return [MaskPoint(x=self.point[0], y=self.point[1], label=1)]
+        return self.points or []
 
 @app.get('/api/health')
 def health():
     return {'mode': 'sam2.1-cpu', 'checkpoint_present': CHECKPOINT.is_file(),
-            'model_loaded': engine.predictor is not None, 'public_deployment': False}
+            'model_loaded': engine.predictor is not None, 'public_deployment': False,
+            'multiple_points': True, 'max_points_per_part': 32}
 
 @app.post('/api/separate')
 def separate(image: UploadFile = File(...), prompts: str = Form(...)):
-    if len(prompts) > 4096:
+    if len(prompts) > 32768:
         raise HTTPException(422, '指定データが大きすぎます。')
     try:
         raw = json.loads(prompts)
@@ -48,7 +79,7 @@ def separate(image: UploadFile = File(...), prompts: str = Form(...)):
         if len({prompt.id for prompt in parsed}) != len(parsed):
             raise ValueError()
     except (ValueError, TypeError, ValidationError):
-        raise HTTPException(422, '各パーツに正しい点または枠を指定してください。')
+        raise HTTPException(422, '各パーツに正しい残す点または枠を指定してください（点は最大 32 個）。')
     data = image.file.read(10 * 1024 * 1024 + 1)
     if len(data) > 10 * 1024 * 1024:
         raise HTTPException(413, '画像は 10 MB 以下にしてください。')
