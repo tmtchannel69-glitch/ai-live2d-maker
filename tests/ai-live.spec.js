@@ -36,5 +36,12 @@ test('actual local SAM returns a full-size transparent PNG through the browser',
     return [ctx.getImageData(0,0,1,1).data[3],ctx.getImageData(128,190,1,1).data[3]];
   });
   expect(alpha[0]).toBe(0); expect(alpha[1]).toBeGreaterThan(0);
+  const pending=page.waitForEvent('download');await page.locator('#save-project').click();const download=await pending;
+  const chunks=[];for await(const chunk of await download.createReadStream())chunks.push(chunk);
+  await page.reload();await page.locator('#project-file').setInputFiles({name:'ai-live2d-work.zip',mimeType:'application/zip',buffer:Buffer.concat(chunks)});
+  await expect(page.locator('#project-status')).toContainText('作業を再開');
+  const restored=page.locator('.result-card img');await expect.poll(()=>restored.evaluate(img=>img.complete&&img.naturalWidth===256&&img.naturalHeight===384)).toBe(true);
+  const restoredAlpha=await restored.evaluate(img=>{const c=document.createElement('canvas');c.width=256;c.height=384;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);return[ctx.getImageData(0,0,1,1).data[3],ctx.getImageData(128,190,1,1).data[3]];});
+  expect(restoredAlpha).toEqual(alpha);
   await page.screenshot({path:'/tmp/live2d-real-ai-mobile.png',fullPage:true});
 });

@@ -38,6 +38,7 @@ export function createPromptState(onChange) {
     },
     canUndo(id) { return Boolean(undo[id]?.length); },
     canRedo(id) { return Boolean(redo[id]?.length); },
+    replace(value) { prompts=copy(value);undo={};redo={};onChange(); },
     reset() { prompts = {}; undo = {}; redo = {}; onChange(); },
   };
 }

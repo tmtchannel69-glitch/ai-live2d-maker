@@ -94,6 +94,7 @@ export function createPromptEditor({ labels, getSource, onChange, onSeparate }) 
   return {
     open(id) { if (id) $('#prompt-part').value=id; $('.prompt-image img').src=getSource(); render(); dialog.showModal(); },
     clear() { dialog.close(); $('.prompt-image img').removeAttribute('src'); resultNote=''; $('#prompt-run-status').textContent=''; start=null; state.reset(); },
+    restore(value) { dialog.close();resultNote='';$('#prompt-run-status').textContent='';start=null;state.replace(value); },
     setRunEnabled(value) { runEnabled=value; render(); },
     setBusy(value) { busy=value; render(); },
     setStatus(message) { $('#prompt-run-status').textContent=message; },
