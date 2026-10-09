@@ -1,3 +1,4 @@
+import {createPsdExport} from './psd-export.js';
 import {createMaterialArchive} from './material-archive.js';
 import {createReviewPanel} from './review-panel.js';
 import {invalidateReview} from './review-state.js';
@@ -28,7 +29,7 @@ app.innerHTML = `
 <input id="file" type="file" accept="image/png,image/jpeg,image/webp" class="visually-hidden"><p id="file-info" class="muted">背景がシンプルな正面画像がおすすめです</p></section>
 <section class="panel settings"><div class="panel-title"><h2><span>02</span> パーツ分離</h2><span class="pill">デモモード</span></div><div class="mode-controls"><label>パーツ構成 <select id="parts-template"><option value="basic">基本の四分類</option><option value="production">制作向け・上半身15項目</option></select></label><label>処理方式 <select id="processing-mode"><option value="demo">デモ（固定領域）</option><option value="ai">AI 試作（点・枠を指定）</option></select></label><button id="edit-prompts" class="secondary" disabled hidden>切り抜く場所を指定</button></div><p id="ai-help" class="muted" hidden>試作サーバーへ画像を送って処理します。第三者の AI サービスへは送りません。外部公開には対応していません。</p><p id="template-help" class="muted" hidden>構成を切り替えても指定と結果は保持します。左右はキャラクター本人の左右（正面では左＝画面右）。使う項目だけ選び、見える領域を指定してください。目の細分化や隠れ部分の描き足しは別工程です。</p><h3>分離するパーツ</h3><p class="muted">書き出したいパーツを選んでください。</p><div class="part-options">${BASIC_IDS.map(id => [id,labels[id]]).map(([id,label]) => `<label class="part-option"><input type="checkbox" value="${id}" checked><span>${label}</span><small>PNG</small></label>`).join('')}</div><div class="notice"><span>✧</span><p>現在は画像を領域ごとに切り出すデモです。<br>AI 試作では残す点・除く点を指定できます。</p></div><button id="separate" class="primary" disabled>✦ パーツを分離する <span>→</span></button><p id="status" role="status" aria-live="polite">まずはキャラクター画像を選択してください</p></section>
 </div>
-<section class="panel results-panel"><div class="panel-title"><div><h2><span>03</span> 分離結果</h2><p class="muted">表示中の構成のパーツを確認して、PNG 形式でダウンロード。</p></div><div class="result-actions"><span id="count" class="pill">0 PARTS</span><button id="download-all" class="secondary" disabled>まとめて ZIP 保存</button></div></div><div class="material-export"><button id="download-materials" class="secondary" disabled>確認記録付き 制作素材ZIP</button><p class="muted">選択中の項目のPNG・確認記録・不足一覧を保存します。結果なしの項目も一覧に残します。元画像は含みません。作業の再開には「作業ファイルを保存」を使ってください。</p><p id="material-status" role="status" aria-live="polite"></p></div><div id="results"><div class="empty"><span>▧</span><h3>ここにパーツが表示されます</h3><p>画像を選択して、パーツ分離を実行してください。</p></div></div></section>
+<section class="panel results-panel"><div class="panel-title"><div><h2><span>03</span> 分離結果</h2><p class="muted">表示中の構成のパーツを確認して、PNG 形式でダウンロード。</p></div><div class="result-actions"><span id="count" class="pill">0 PARTS</span><button id="download-all" class="secondary" disabled>まとめて ZIP 保存</button></div></div><div class="material-export"><button id="download-materials" class="secondary" disabled>確認記録付き 制作素材ZIP</button><p class="muted">選択中の項目のPNG・確認記録・不足一覧を保存します。結果なしの項目も一覧に残します。元画像は含みません。作業の再開には「作業ファイルを保存」を使ってください。</p><button id="download-psd" class="secondary" disabled>レイヤー付きPSDを保存（試作）</button><p class="muted">選択中のAI結果を名前付きレイヤーに保存します。結果がない項目は含みません。重なり順は仮の順序です。出力後に画像編集ソフトで確認・調整してください。Cubismでの実読み込みは未検証です。</p><p id="psd-status" role="status" aria-live="polite"></p><p id="material-status" role="status" aria-live="polite"></p></div><div id="results"><div class="empty"><span>▧</span><h3>ここにパーツが表示されます</h3><p>画像を選択して、パーツ分離を実行してください。</p></div></div></section>
 <dialog id="part-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><h2 id="dialog-title"></h2><button id="close-dialog" class="secondary">閉じる</button></div><div class="dialog-preview"><img id="dialog-image" alt=""></div><p class="muted">デモの切り出し結果です。AI 分離は未接続です。</p></dialog><footer><span>✦ AI Live2D Maker</span><span>あなたのキャラクターを、次のステージへ。</span></footer>
 </main>`;
 const $ = selector => document.querySelector(selector);
@@ -36,7 +37,7 @@ let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
 let brushEditor,reviewPanel;
-let reviews={},materialBusy=false;
+let reviews={},materialBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
 editor = createPromptEditor({ labels, getSource: () => sourceUrl,
@@ -146,6 +147,7 @@ function updateButton() {
   reviewPanel?.update();
   const locked=busy || projectBusy || materialBusy;
   $('#download-materials').disabled=!file || !selected().length || locked || archiveBusy;
+  $('#download-psd').disabled=!file || !isAi() || !visibleResults().some(part=>part.ai && selected().includes(part.id)) || locked || archiveBusy;
   $('#save-project').disabled=!file || locked || archiveBusy;
   $('#open-project').disabled=locked || archiveBusy;
   $('#parts-template').disabled=locked || archiveBusy;
@@ -163,7 +165,7 @@ function updateButton() {
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
-function cancelProjectOperation() {$('#material-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
+function cancelProjectOperation() {psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
 async function loadFile(next) {
   cancelProjectOperation();
   const version = ++uploadVersion;
@@ -251,6 +253,22 @@ $('#download-materials').addEventListener('click',async()=>{
     $('#material-status').textContent=`選択中${snapshot.selected.length}項目の確認記録とPNG ${exported}個の保存を開始しました。PNGなし${snapshot.selected.length-exported}項目も一覧に含みます。`;
   } catch(error) {if(isCurrent())$('#material-status').textContent=`制作素材ZIPの作成に失敗しました。現在の作業は保持しています。${error.message}`;}
   finally {materialBusy=false;archiveBusy=false;updateButton();}
+});
+$('#download-psd').addEventListener('click',async()=>{
+  if($('#download-psd').disabled)return;
+  brushEditor.close();editor.clearView();reviewPanel.close();
+  const snapshot={file,template,selected:selected(),results:visibleResults().map(({id,ai,blob})=>({id,ai,blob}))},version=uploadVersion;
+  const current=new AbortController();psdController=current;
+  const isCurrent=()=>!current.signal.aborted && file===snapshot.file && version===uploadVersion;
+  materialBusy=true;archiveBusy=true;updateButton();$('#psd-status').textContent='PSDを準備しています…';
+  try {
+    const blob=await createPsdExport(snapshot,{signal:current.signal,onProgress:message=>{if(isCurrent())$('#psd-status').textContent=message;}});
+    if(!isCurrent())return;
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='ai-live2d-parts.psd';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);
+    const chosen=visibleResults().filter(part=>snapshot.selected.includes(part.id));
+    $('#psd-status').textContent=`${chosen.length}レイヤーのPSDの保存を開始しました。結果なし${snapshot.selected.length-chosen.length}項目は含みません。${chosen.some(dirty)?'指定変更前の結果を含みます。再分離・再確認が必要です。':''}重なり順と色を画像編集ソフトで確認してください。`;
+  } catch(error) {if(isCurrent())$('#psd-status').textContent=`PSDの作成に失敗しました。現在の作業は保持しています。${error.message}`;}
+  finally {if(psdController===current){psdController=null;materialBusy=false;archiveBusy=false;updateButton();}}
 });
 $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#save-project').addEventListener('click',async()=>{

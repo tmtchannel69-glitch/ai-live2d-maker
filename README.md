@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/production-export` です。
+最新の開発ブランチは `feature/psd-export` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/production-export https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/psd-export https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/production-export` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/psd-export` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -184,3 +184,13 @@ AI 試作の結果カードにある「髪をブラシで補正」などを押�
 選択中の項目だけが対象です。結果がある項目はPNGを含め、結果がない項目も不足一覧に残します。未選択や別構成の素材は含めません。AI結果は元画像のサイズ・位置とブラシ補正を保ったまま保存します。指定変更前のPNGには再分離・再確認の案内を付け、確認済みの集計に入れません。デモ素材には固定領域の切り出しと明記します。
 
 元画像は含みませんが、選択したPNGと作業メモを含みます。作業再開には別途「作業ファイルを保存」を使ってください。完成したLive2Dモデル・PSDではありません。詳しくは [制作素材ZIPの仕様](docs/MATERIAL_ARCHIVE.md)。
+
+## レイヤー付きPSD（試作）
+
+AI結果を準備し、出力する項目を選んで「レイヤー付きPSDを保存（試作）」を押します。`ai-live2d-parts.psd`を端末に保存します。選択中の結果がある項目だけを一項目一レイヤーにし、元画像のキャンバスサイズ・位置・透明度・反映済みブラシ補正を保ちます。未選択と別構成の結果、元画像、結果なしの項目は含みません。
+
+レイヤー名は日本語名とIDです。重なり順は仮の初期順序なので、画像編集ソフトで調整してください。指定変更前の結果もそのまま保存し、画面に再確認を案内します。確認記録と不足一覧は「確認記録付き 制作素材ZIP」、作業再開は「作業ファイルを保存」を併用してください。
+
+デモは元画像上の位置を復元できないためPSDの対象外です。出力はRGB・8ビット、色プロファイルの埋め込み・変換は未対応です。画像編集ソフトでsRGBとして色を確認・保存してください。Cubism・Photoshop等での実読み込み、実機スマートフォンは未検証です。PSDの読み戻し検証を、これらのソフトの対応保証とは扱いません。
+
+試作の上限は、レイヤーと合成画像の展開後の画素量128 MiB、各入力PNG32 MiB、出力100 MiBです。上限を超えると選択項目を減らすか素材ZIPを使う案内を表示します。PSD作成は画面とは別の処理で行い、リセット・画像再選択で中止できます。[設計と検証](docs/PSD_EXPORT.md)。
