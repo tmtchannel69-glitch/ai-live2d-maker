@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `docs/cubism-import-check` です。
+最新の開発ブランチは `feature/motion-preview` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch docs/cubism-import-check https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/motion-preview https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/psd-export` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/motion-preview` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -206,3 +206,12 @@ node scripts/create-cubism-check.mjs --out test-results/cubism-check-02
 ```
 
 標準の出力先はtest-results/cubism-checkです。PSD・参照PNG・確認票と移動用ZIPを作成します。既存フォルダーには上書きしません。Cubismで開いてRESULT.mdへ記録した後、アプリから保存したPSDも別に確認してください。Cubismが起動・読み込みできたとはまだ確認していません。
+
+
+## アプリ内の動きの試作
+
+AIパーツを準備すると「04 動きの試作」で、選択した結果を元の位置に合成します。頭の傾きのスライダーと「揺れ・呼吸を再生」で動きを確認できます。調整するパーツを選び、支点X/Y・重なり順・揺れ幅・頭への追従を設定して「設定を反映」を押します。数値は仮の初期値なので、パーツの配置に合わせて調整してください。
+
+支点などの設定は「作業ファイルを保存」に含まれます（設定がある場合は版4、旧版1〜3も読込可能）。以前のアプリでは版4を開けません。再開後の再生は手動で開始してください。プレビュー用の変形と順序はPNG・PSDには反映しません。
+
+これはアプリ独自の平面変形の試作です。瞬き・口・立体的な顔の向き、Live2Dモデルの出力は未対応です。最終目標はVTube Studio等で使えるモデルですが、現在のプレビューやPSDをそのままVTube Studioへ読み込むことはできません。[対応形式の調査と開発方針](docs/MODEL_AUTHORING.md)を参照してください。
