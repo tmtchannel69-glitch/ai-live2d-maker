@@ -17,3 +17,4 @@ select,input[type=number]{background:#151621;color:#eee;border:1px solid #66517c
 .review-fields select,.review-fields textarea { width:100%; box-sizing:border-box; font:inherit; padding:10px; border:1px solid #dcdce8; border-radius:8px; }
 #review-summary { overflow-wrap:anywhere; }
 @media(max-width:600px) { .review-row { align-items:stretch; flex-direction:column; } }
+.material-export{margin:0 0 20px;padding:14px;border:1px solid #3c3150;border-radius:10px;background:#1e1d2d}.material-export button{max-width:100%;white-space:normal}.material-export p{overflow-wrap:anywhere}#material-status{font-size:12px;line-height:1.8;color:#c7b3ee;margin:8px 0 0}

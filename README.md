@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/part-review` です。
+最新の開発ブランチは `feature/production-export` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/part-review https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/production-export https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/part-review` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/production-export` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -174,3 +174,13 @@ AI 試作の結果カードにある「髪をブラシで補正」などを押�
 画像を選ぶと「パーツの確認記録」が表示されます。各項目の「確認を記録」で元画像と結果を切り替え、境界の確認状態、隠れ部分の描き足しの必要性、500文字までのメモを記録します。集計は選択中の項目だけです。デモ・結果なし・指定変更前の結果を新しく確認済みにはできません。
 
 「作業ファイルを保存」で記録も保存できます。ページを閉じる前に保存してください。再分離・ブラシ補正の成功時は対象の境界を未確認へ戻します。描き足し「必要」とメモは保持し、「この用途では不要」は未確認へ戻します。詳細は [確認記録](docs/REVIEW_STATUS.md)。
+
+## 確認記録付きの制作素材ZIP
+
+1. 保存したい構成を選び、必要な項目にチェックを入れます。
+2. 「確認記録付き 制作素材ZIP」を押し、`ai-live2d-materials.zip` を保存します。
+3. ZIPを展開して `CHECKLIST.txt` の確認・不足一覧を読み、`parts/` のPNGを画像編集などに使います。
+
+選択中の項目だけが対象です。結果がある項目はPNGを含め、結果がない項目も不足一覧に残します。未選択や別構成の素材は含めません。AI結果は元画像のサイズ・位置とブラシ補正を保ったまま保存します。指定変更前のPNGには再分離・再確認の案内を付け、確認済みの集計に入れません。デモ素材には固定領域の切り出しと明記します。
+
+元画像は含みませんが、選択したPNGと作業メモを含みます。作業再開には別途「作業ファイルを保存」を使ってください。完成したLive2Dモデル・PSDではありません。詳しくは [制作素材ZIPの仕様](docs/MATERIAL_ARCHIVE.md)。
