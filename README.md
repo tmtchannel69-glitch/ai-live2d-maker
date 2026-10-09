@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/prompted-segmentation` です。
+最新の開発ブランチは `feature/brush-correction` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/prompted-segmentation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/brush-correction https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/prompted-segmentation` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/brush-correction` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -121,3 +121,17 @@ npm.cmd run dev -- --port 5173 --strictPort
 [評価結果と限界](docs/AI_PROTOTYPE_RESULTS.md)、[候補比較](docs/AI_EVALUATION.md)も参照してください。
 
 [複数点の実画像評価](docs/MULTIPOINT_EVALUATION.md)も参照してください。
+
+## ブラシで輪郭を補正
+
+AI 試作の結果カードにある「髪をブラシで補正」などを押します。デモは固定領域の切り出しで元画像とサイズが異なるため、ブラシ補正の対象は AI 結果です。
+
+1. 「消す」で不要部分をなぞると透明になります。「元画像から戻す」で欠けた領域をなぞると、元画像の色と透明度を戻します。元画像にない部分や完全に透明な領域は描き足せません。
+2. 太さは元画像の px 単位で 1〜200。拡大は 100 / 200 / 400%。「画面を移動」に切り替えると、拡大した画像をスクロールできます。補正するときはブラシに戻します。数値で点を置く操作もあります。
+3. 「補正前」でこの画面を開いた時点の結果と比較できます。「元画像を薄く重ねる」は確認用で、PNG に含みません。
+4. 一操作ごとの取り消し・やり直しができます。最大 100 操作、変更前の透明度データは 32 MiB まで。超えると古い履歴を整理し、表示します。補正そのものは保持します。長い操作は 4096 点で区切ります。
+5. 「補正を反映」を押すとこのパーツだけ保存対象を更新します。個別 PNG / ZIP は補正後の結果になります。閉じる・Escape は未反映の変更を破棄し、以前の保存対象を保持します。
+
+取り消し履歴は補正画面を閉じると消えます。再度開くと、直前に反映した結果から新しい補正を始めます。AI の再分離に成功したパーツはブラシ補正を新しい AI 結果で置き換えます。画像の再選択・リセット・ページ更新で作業は消えるため、PNG / ZIP を保存してください。作業全体の保存・再開はまだ未実装です。
+
+[ブラシの検証と制限](docs/BRUSH_CORRECTION.md)を参照してください。

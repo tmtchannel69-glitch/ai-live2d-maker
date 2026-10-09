@@ -1,4 +1,5 @@
 import './style.css';
+import { createBrushEditor } from './brush-editor.js';
 import { hasUsablePrompt, promptSignature } from './prompt-state.js';
 import { createPromptEditor } from './prompt-editor.js';
 import { createPartsArchive } from './archive.js';
@@ -25,17 +26,27 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
+let brushEditor;
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
 editor = createPromptEditor({ labels, getSource: () => sourceUrl,
   onChange: () => { updateButton(); renderResults(); updateEditorNote(); },
   onSeparate: id => runSeparation([id], true),
 });
+brushEditor = createBrushEditor({ labels, getSource: () => file, getCurrent: id => results.find(part => part.id === id),
+  onApply: (part, blob) => {
+    if (busy || !results.includes(part)) return;
+    const updated = { ...part, blob, url: URL.createObjectURL(blob), manual: true };
+    closePreview(); results = results.map(result => result === part ? updated : result);
+    URL.revokeObjectURL(part.url); renderResults(); updateButton(); updateEditorNote();
+    $('#status').textContent = `${labels[part.id]}のブラシ補正を反映しました。PNG・ZIP に補正後の結果を保存できます。`;
+  },
+});
 function updateEditorNote() {
   if (!editor) return;
   const result = results.find(part => part.id === editor.selectedPart);
   editor.setResultNote(result ? dirty(result)
-    ? '指定を変更しています。表示中の結果は以前の指定で生成したものです。再分離するまで保持します。'
-    : '現在の指定で生成した結果があります。'
+    ? `指定を変更しています。表示中の結果は以前の指定で生成したものです。再分離するまで保持します。${result.manual ? '再分離すると、このパーツのブラシ補正を新しい AI 結果で置き換えます。' : ''}`
+    : result.manual ? 'ブラシ補正済みの結果があります。再分離すると、このパーツのブラシ補正を新しい AI 結果で置き換えます。' : '現在の指定で生成した結果があります。'
     : 'このパーツの結果はまだありません。');
 }
 $('#edit-prompts').addEventListener('click', () => { editor.open(); updateEditorNote(); });
@@ -65,7 +76,7 @@ $('#part-dialog').addEventListener('click', event => {
   }
 });
 function clearResults() {
-  closePreview(); results.forEach(part => URL.revokeObjectURL(part.url)); results = []; renderResults();
+  brushEditor?.close(); closePreview(); results.forEach(part => URL.revokeObjectURL(part.url)); results = []; renderResults();
 }
 function renderResults() {
   $('#count').textContent = `${results.length} PARTS`;
@@ -91,10 +102,12 @@ function renderResults() {
     row.append(title,link); card.append(preview,row);
     if (part.ai) {
       const state = document.createElement('p'); state.className = `result-state${dirty(part) ? ' stale' : ''}`;
-      state.textContent = dirty(part) ? '指定変更あり・以前の結果' : '現在の指定の結果';
+      state.textContent = `${dirty(part) ? '指定変更あり・以前の結果' : '現在の指定の結果'}${part.manual ? '・ブラシ補正済み' : ''}`;
       const edit = document.createElement('button'); edit.className = 'secondary correct-part'; edit.textContent = `${labels[part.id]}を修正`; edit.disabled = busy;
       edit.addEventListener('click', () => { editor.open(part.id); updateEditorNote(); });
-      card.append(state,edit);
+      const brush = document.createElement('button'); brush.className = 'secondary brush-part'; brush.textContent = `${labels[part.id]}をブラシで補正`; brush.disabled = busy;
+      brush.addEventListener('click', () => brushEditor.open(part));
+      card.append(state,edit,brush);
     }
     grid.append(card);
   }
@@ -108,7 +121,7 @@ function updateButton() {
     if (index === stage) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current');
   });
   document.querySelectorAll('.part-options input').forEach(input => { input.disabled = busy; });
-  document.querySelectorAll('.correct-part').forEach(button => { button.disabled = busy; });
+  document.querySelectorAll('.correct-part,.brush-part').forEach(button => { button.disabled = busy; });
   $('#edit-prompts').disabled = !file || busy; $('#processing-mode').disabled = busy;
   $('#separate').disabled = busy || !file || !selected().length || (isAi() && selected().some(id => !hasUsablePrompt(editor?.prompts[id])));
   $('#separate').textContent = busy ? '処理中…' : isAi() ? '✦ AI でパーツを分離する →' : '✦ パーツを分離する →';
@@ -150,6 +163,7 @@ $('#reset').addEventListener('click', () => {
 async function runSeparation(ids, partial = false) {
   const aiRun = isAi();
   if (busy || !file || !ids.length || (aiRun && ids.some(id => !hasUsablePrompt(editor.prompts[id])))) return;
+  brushEditor.close();
   const snapshot = editor.prompts, requestFile = file;
   const current=new AbortController(); controller=current; busy=true; updateButton();
   const message=aiRun ? `${partial ? labels[ids[0]]+'だけを再分離しています。' : ''}CPU で AI 処理中です。初回は時間がかかります…` : 'デモの切り出し処理を実行しています…';
