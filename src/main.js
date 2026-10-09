@@ -1,3 +1,5 @@
+import {createReviewPanel} from './review-panel.js';
+import {invalidateReview} from './review-state.js';
 import './style.css';
 import { TEMPLATES, PART_LABELS, BASIC_IDS, defaultTemplates } from './parts.js';
 import { createProjectFile, readProjectFile } from './project-file.js';
@@ -18,7 +20,7 @@ app.innerHTML = `
 <main>
 <section class="intro"><span class="eyebrow">FROM IMAGE TO CHARACTER</span><h1>キャラクターに、<span>動きの第一歩を。</span></h1><p>画像をアップロードして、Live2D 制作のためのパーツを準備しましょう。</p></section>
 <div class="steps"><span class="active">01 <b>画像を選択</b></span><i></i><span>02 <b>パーツを分離</b></span><i></i><span>03 <b>ダウンロード</b></span></div>
-<section class="project-panel"><div class="project-actions"><button id="save-project" class="secondary" disabled>作業ファイルを保存</button><button id="open-project" class="secondary">作業ファイルを開く</button></div><input id="project-file" type="file" accept=".zip,application/zip" hidden><p class="muted">元画像・すべての指定・反映済みパーツを端末に保存します。開くと現在の作業を置き換えます。</p><p id="project-status" role="status" aria-live="polite"></p></section>
+<section class="project-panel"><div class="project-actions"><button id="save-project" class="secondary" disabled>作業ファイルを保存</button><button id="open-project" class="secondary">作業ファイルを開く</button></div><input id="project-file" type="file" accept=".zip,application/zip" hidden><p class="muted">元画像・すべての指定・反映済みパーツ・確認記録を端末に保存します。開くと現在の作業を置き換えます。</p><p id="project-status" role="status" aria-live="polite"></p></section>
 <div class="workspace">
 <section class="panel upload-panel"><div class="panel-title"><h2><span>01</span> キャラクター画像</h2><button id="reset" class="text-button" disabled>リセット</button></div>
 <label class="dropzone" id="dropzone" for="file"><div id="upload-hint"><div class="upload-icon">↑</div><h3>画像をここにドロップ</h3><p>またはタップして画像を選択</p><span class="file-note">PNG・JPG・WebP / 最大 10 MB</span><span class="choose-button">画像を選択</span></div><img id="source-preview" hidden alt="アップロードしたキャラクター画像"></label>
@@ -32,7 +34,9 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor;
+let brushEditor,reviewPanel;
+let reviews={};
+function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
 editor = createPromptEditor({ labels, getSource: () => sourceUrl,
   onChange: () => { updateButton(); renderResults(); updateEditorNote(); },
@@ -42,11 +46,12 @@ brushEditor = createBrushEditor({ labels, getSource: () => file, getCurrent: id 
   onApply: (part, blob) => {
     if (busy || projectBusy || !results.includes(part)) return;
     const updated = { ...part, blob, url: URL.createObjectURL(blob), manual: true };
-    closePreview(); results = results.map(result => result === part ? updated : result);
+    reviewPanel.close();invalidateReviews([part.id]);closePreview(); results = results.map(result => result === part ? updated : result);
     URL.revokeObjectURL(part.url); renderResults(); updateButton(); updateEditorNote();
     $('#status').textContent = `${labels[part.id]}のブラシ補正を反映しました。PNG・ZIP に補正後の結果を保存できます。`;
   },
 });
+reviewPanel=createReviewPanel({labels,getState:()=>({file,sourceUrl,ids:activeIds(),selected:selected(),results,reviews,locked:busy||projectBusy||archiveBusy}),isDirty:dirty,onChange:(id,record)=>{reviews={...reviews,[id]:record};}});
 function updateEditorNote() {
   if (!editor) return;
   const result = results.find(part => part.id === editor.selectedPart);
@@ -70,10 +75,10 @@ function renderMode() {
   $('.notice p').textContent = isAi() ? '残す点・除く点を複数指定できます。枠との組み合わせも可能です。見えている部分を切り抜きます。' : '現在は画像を領域ごとに切り出すデモです。AI 試作も選択できます。';
 }
 $('#processing-mode').addEventListener('change', () => {
-  controller?.abort();busy=false;clearResults(activeIds());rememberTemplate();renderMode();updateButton();updateSelectionStatus();
+  controller?.abort();busy=false;invalidateReviews(activeIds());clearResults(activeIds());rememberTemplate();renderMode();updateButton();updateSelectionStatus();
 });
 $('#parts-template').addEventListener('change',()=>{
-  rememberTemplate();brushEditor.close();editor.clearView?.();closePreview();
+  rememberTemplate();reviewPanel.close();brushEditor.close();editor.clearView?.();closePreview();
   template=$('#parts-template').value;renderPartChoices();renderResults();updateEditorNote();updateButton();updateSelectionStatus();
 });
 function updateSelectionStatus() {
@@ -95,11 +100,12 @@ $('#part-dialog').addEventListener('click', event => {
   }
 });
 function clearResults(ids=null) {
-  brushEditor?.close();closePreview();
+  reviewPanel?.close();brushEditor?.close();closePreview();
   results.filter(part=>!ids || ids.includes(part.id)).forEach(part=>URL.revokeObjectURL(part.url));
   results=ids?results.filter(part=>!ids.includes(part.id)):[];renderResults();
 }
 function renderResults() {
+  reviewPanel?.update();
   const shown=visibleResults();
   $('#count').textContent = `${shown.length} PARTS`;
   $('#download-all').disabled = !visibleResults().length || busy || projectBusy || archiveBusy;
@@ -136,6 +142,7 @@ function renderResults() {
   $('#results').replaceChildren(grid);
 }
 function updateButton() {
+  reviewPanel?.update();
   const locked=busy || projectBusy;
   $('#save-project').disabled=!file || locked || archiveBusy;
   $('#open-project').disabled=locked || archiveBusy;
@@ -170,7 +177,7 @@ async function loadFile(next) {
     if (tooLarge) { $('#status').textContent = '画像が大きすぎます。各辺 4096 px 以下・1600 万画素以下に縮小してから選択してください。現在の画像と結果は保持しています。'; return; }
     controller?.abort(); busy=false;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-    clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
+    reviews={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
     $('#source-preview').src=sourceUrl; $('#source-preview').hidden=false; $('#upload-hint').hidden=true;
     $('#file-info').textContent=`${next.name} · ${dimensions}`; $('#reset').disabled=false;
     updateSelectionStatus(); updateButton();
@@ -182,7 +189,7 @@ $('#dropzone').addEventListener('dragleave', () => $('#dropzone').classList.remo
 $('#dropzone').addEventListener('drop', event => { event.preventDefault(); $('#dropzone').classList.remove('dragging'); loadFile(event.dataTransfer.files[0]); });
 $('.part-options').addEventListener('change', () => {rememberTemplate();updateButton();updateSelectionStatus();});
 $('#reset').addEventListener('click', () => {
-  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null; editor.clear();
+  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={}; editor.clear();
   if (sourceUrl) URL.revokeObjectURL(sourceUrl); sourceUrl=null;
   $('#source-preview').hidden=true; $('#source-preview').removeAttribute('src'); $('#upload-hint').hidden=false;
   $('#file-info').textContent='背景がシンプルな正面画像がおすすめです';
@@ -202,6 +209,7 @@ async function runSeparation(ids, partial = false) {
     const replacements=parts.map(part => ({...part,ai:aiRun,signature:promptSignature(snapshot[part.id]),url:URL.createObjectURL(part.blob)}));
     closePreview();
     const replaced=new Set(partial?ids:activeIds());
+    reviewPanel.close();invalidateReviews([...replaced]);
     const retained=results.filter(part=>!replaced.has(part.id));
     results.filter(part=>replaced.has(part.id)).forEach(part=>URL.revokeObjectURL(part.url));
     results=[...retained,...replacements].sort((a,b)=>Object.keys(labels).indexOf(a.id)-Object.keys(labels).indexOf(b.id));
@@ -231,7 +239,7 @@ $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#save-project').addEventListener('click',async()=>{
   if(!file || busy || projectBusy || archiveBusy)return;
   rememberTemplate();
-  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates)};
+  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews)};
   projectBusy=true;updateButton();$('#project-status').textContent='作業ファイルを準備しています…';
   try {
     const blob=await createProjectFile(snapshot);if(ticket!==projectVersion)return;
@@ -252,7 +260,7 @@ $('#project-file').addEventListener('change',async event=>{
       const nextResults=restored.results.map(part=>{const url=URL.createObjectURL(part.blob);nextUrls.push(url);return{...part,url};});
       controller?.abort();busy=false;clearResults();editor.clear();
       if(sourceUrl)URL.revokeObjectURL(sourceUrl);
-      file=restored.file;sourceUrl=nextSource;results=nextResults;
+      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;
       template=restored.template;templates=restored.templates;renderPartChoices();
       $('#source-preview').src=sourceUrl;$('#source-preview').hidden=false;$('#upload-hint').hidden=true;
       $('#file-info').textContent=`${file.name} · ${restored.dimensions.width} × ${restored.dimensions.height}`;$('#reset').disabled=false;

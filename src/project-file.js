@@ -1,4 +1,5 @@
 import { zip, unzipSync, strToU8, strFromU8 } from 'fflate';
+import { validateReviews } from './review-state.js';
 import { promptSignature } from './prompt-state.js';
 
 import { ALL_IDS, BASIC_IDS, defaultTemplates, partTemplate } from './parts.js';
@@ -46,9 +47,10 @@ async function imageSize(blob) {
   finally {bitmap?.close();}
 }
 function validateMetadata(data) {
-  object(data,['format','version','source','mode','selected','prompts','parts','template','templates']);
+  object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews']);
   if (data.format!=='ai-live2d-maker') invalid('AI Live2D Maker の作業ファイルではありません。');
-  if (![1,2].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if (![1,2,3].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if(data.version===2)object(data,['format','version','source','mode','selected','prompts','parts','template','templates']);
   let template,templates,ids;
   if(data.version===1) {
     object(data,['format','version','source','mode','selected','prompts','parts']);
@@ -77,10 +79,11 @@ function validateMetadata(data) {
     if(!ids.includes(part.id) || part.path!==`parts/${part.id}.png` || typeof part.ai!=='boolean' || typeof part.manual!=='boolean' || part.ai!==(templates[partTemplate(part.id)].mode==='ai') || (part.manual && !part.ai)) invalid();
     validatePrompt(part.generatedPrompt);
   }
-  return {...data,template,templates};
+  const reviews=data.version===3?validateReviews(data.reviews,data.parts):{};
+  return {...data,template,templates,reviews};
 }
 
-export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates}) {
+export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates,reviews={}}) {
   const sizes = await imageSize(file);
   const metadata = {
     format:'ai-live2d-maker',version:1,
@@ -89,6 +92,9 @@ export async function createProjectFile({file,mode,selected,prompts,results,temp
   };
   if(template!=='basic' || Object.keys(prompts).some(id=>!BASIC_IDS.includes(id)) || results.some(part=>!BASIC_IDS.includes(part.id)) || templates?.production.selected.length) {
     metadata.version=2;metadata.template=template;metadata.templates=structuredClone(templates);
+  }
+  if(Object.keys(reviews).length) {
+    metadata.version=3;metadata.template=template;metadata.templates=structuredClone(templates||defaultTemplates());metadata.templates[template]={mode,selected};metadata.reviews=reviews;
   }
   validateMetadata(metadata);
   const manifest=strToU8(JSON.stringify(metadata));
@@ -132,5 +138,5 @@ export async function readProjectFile(file) {
     const blob=new Blob([entries[part.path]],{type:'image/png'});await imageSize(blob);
     results.push({id:part.id,name:`${part.id}.png`,blob,ai:part.ai,manual:part.manual,signature:promptSignature(part.generatedPrompt)});
   }
-  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates};
+  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates,reviews:metadata.reviews};
 }
