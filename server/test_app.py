@@ -115,3 +115,23 @@ def test_engine_passes_scaled_coordinates_and_labels_to_predictor(monkeypatch,tm
     np.testing.assert_array_equal(captured[0]['box'],[0,0,40,60])
     np.testing.assert_array_equal(captured[1]['point_coords'],[[20,30]])
     np.testing.assert_array_equal(captured[1]['point_labels'],[1])
+
+def test_all_production_ids_preserve_id_and_coordinates(monkeypatch):
+    ids=[part['id'] for part in module.CATALOG['production']]
+    assert len(ids)==15
+    seen=[]
+    def segment(image,prompts):
+        seen.extend(prompt.id for prompt in prompts)
+        return [np.ones((60,40),dtype=bool) for prompt in prompts]
+    monkeypatch.setattr(module.engine,'segment',segment)
+    for offset in range(0,len(ids),4):
+        batch=ids[offset:offset+4]
+        result=request([{'id':id,'points':[{'x':.25,'y':.3,'label':1}]} for id in batch])
+        assert result.status_code==200
+        assert [part['id'] for part in result.json()['parts']]==batch
+        assert all(part['name']==part['id']+'.png' for part in result.json()['parts'])
+    assert seen==ids
+    assert request([{'id':id,'point':[.5,.5]} for id in ids[:5]]).status_code==422
+    health=client.get('/api/health').json()
+    assert len(health['supported_parts'])==19
+    assert health['max_parts_per_request']==4

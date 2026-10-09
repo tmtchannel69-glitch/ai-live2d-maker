@@ -1,11 +1,12 @@
 import { zip, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { promptSignature } from './prompt-state.js';
 
-const IDS = ['hair','face','body','eyes'];
+import { ALL_IDS, BASIC_IDS, defaultTemplates, partTemplate } from './parts.js';
+const IDS = ALL_IDS;
 const MIB = 1024 * 1024;
 export const MAX_PROJECT_BYTES = 100 * MIB;
 const MAX_PART_BYTES = 32 * MIB;
-const MAX_METADATA_BYTES = 64 * 1024;
+const MAX_METADATA_BYTES = 256 * 1024;
 const invalid = message => { throw new Error(message || '作業ファイルの内容が正しくありません。'); };
 function object(value, keys) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !keys.includes(key))) invalid();
@@ -45,34 +46,53 @@ async function imageSize(blob) {
   finally {bitmap?.close();}
 }
 function validateMetadata(data) {
-  object(data,['format','version','source','mode','selected','prompts','parts']);
+  object(data,['format','version','source','mode','selected','prompts','parts','template','templates']);
   if (data.format!=='ai-live2d-maker') invalid('AI Live2D Maker の作業ファイルではありません。');
-  if (data.version!==1) invalid('この版の作業ファイルには対応していません。');
+  if (![1,2].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  let template,templates,ids;
+  if(data.version===1) {
+    object(data,['format','version','source','mode','selected','prompts','parts']);
+    template='basic';templates=defaultTemplates();templates.basic={mode:data.mode,selected:data.selected};ids=BASIC_IDS;
+  } else {
+    if(!['basic','production'].includes(data.template))invalid();
+    template=data.template;templates=data.templates;ids=ALL_IDS;
+    object(templates,['basic','production']);
+    for(const name of ['basic','production']) {
+      const config=templates[name];object(config,['mode','selected']);
+      const allowed=ALL_IDS.filter(id=>partTemplate(id)===name);
+      if(!['ai','demo'].includes(config.mode) || (name==='production' && config.mode!=='ai') || !Array.isArray(config.selected) || config.selected.length>allowed.length || config.selected.some(id=>!allowed.includes(id)) || new Set(config.selected).size!==config.selected.length)invalid();
+    }
+    if(data.mode!==templates[template].mode || JSON.stringify(data.selected)!==JSON.stringify(templates[template].selected))invalid();
+  }
   object(data.source,['name','type','path','width','height']);
   const source=data.source;
   if (typeof source.name!=='string' || !source.name.length || source.name.length>120 || /[\\/\x00-\x1f]/.test(source.name) || !['image/png','image/jpeg','image/webp'].includes(source.type) || source.path!=='source/image') invalid();
   dimensions(source.width,source.height);
-  if (!['ai','demo'].includes(data.mode) || !Array.isArray(data.selected) || data.selected.length>4 || data.selected.some(id=>!IDS.includes(id)) || new Set(data.selected).size!==data.selected.length) invalid();
-  object(data.prompts,IDS);for(const value of Object.values(data.prompts)) validatePrompt(value);
-  if (!Array.isArray(data.parts) || data.parts.length>4 || new Set(data.parts.map(p=>p?.id)).size!==data.parts.length) invalid();
+  const activeIds=ids.filter(id=>partTemplate(id)===template);
+  if (!['ai','demo'].includes(data.mode) || !Array.isArray(data.selected) || data.selected.length>activeIds.length || data.selected.some(id=>!activeIds.includes(id)) || new Set(data.selected).size!==data.selected.length) invalid();
+  object(data.prompts,ids);for(const value of Object.values(data.prompts)) validatePrompt(value);
+  if (!Array.isArray(data.parts) || data.parts.length>ids.length || new Set(data.parts.map(p=>p?.id)).size!==data.parts.length) invalid();
   for(const part of data.parts) {
     object(part,['id','path','ai','manual','generatedPrompt']);
-    if(!IDS.includes(part.id) || part.path!==`parts/${part.id}.png` || typeof part.ai!=='boolean' || typeof part.manual!=='boolean' || part.ai!==(data.mode==='ai') || (part.manual && !part.ai)) invalid();
+    if(!ids.includes(part.id) || part.path!==`parts/${part.id}.png` || typeof part.ai!=='boolean' || typeof part.manual!=='boolean' || part.ai!==(templates[partTemplate(part.id)].mode==='ai') || (part.manual && !part.ai)) invalid();
     validatePrompt(part.generatedPrompt);
   }
-  return data;
+  return {...data,template,templates};
 }
 
-export async function createProjectFile({file,mode,selected,prompts,results}) {
+export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates}) {
   const sizes = await imageSize(file);
   const metadata = {
     format:'ai-live2d-maker',version:1,
     source:{name:file.name.replace(/[\\/\x00-\x1f]/g,'_').slice(0,120)||'character.png',type:file.type,path:'source/image',...sizes},
     mode,selected,prompts,parts:results.map(part=>({id:part.id,path:`parts/${part.id}.png`,ai:part.ai,manual:Boolean(part.manual),generatedPrompt:JSON.parse(part.signature||'{}')})),
   };
+  if(template!=='basic' || Object.keys(prompts).some(id=>!BASIC_IDS.includes(id)) || results.some(part=>!BASIC_IDS.includes(part.id)) || templates?.production.selected.length) {
+    metadata.version=2;metadata.template=template;metadata.templates=structuredClone(templates);
+  }
   validateMetadata(metadata);
   const manifest=strToU8(JSON.stringify(metadata));
-  if(file.size>10*MIB || results.some(part=>part.blob.size>MAX_PART_BYTES) || manifest.length>MAX_METADATA_BYTES || file.size+manifest.length+results.reduce((sum,p)=>sum+p.blob.size,0)>MAX_PROJECT_BYTES-2048) invalid('作業ファイルが大きすぎます。上限は 100 MiB、各パーツ 32 MiB です。');
+  if(file.size>10*MIB || results.some(part=>part.blob.size>MAX_PART_BYTES) || manifest.length>MAX_METADATA_BYTES || file.size+manifest.length+results.reduce((sum,p)=>sum+p.blob.size,0)>MAX_PROJECT_BYTES-4096) invalid('作業ファイルが大きすぎます。上限は 100 MiB、各パーツ 32 MiB です。');
   const sourceBytes=new Uint8Array(await file.arrayBuffer());
   if(!sourceMagic(sourceBytes,file.type))invalid('元画像の形式が正しくありません。');
   const entries={'project.json':manifest,'source/image':sourceBytes};
@@ -112,5 +132,5 @@ export async function readProjectFile(file) {
     const blob=new Blob([entries[part.path]],{type:'image/png'});await imageSize(blob);
     results.push({id:part.id,name:`${part.id}.png`,blob,ai:part.ai,manual:part.manual,signature:promptSignature(part.generatedPrompt)});
   }
-  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results};
+  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates};
 }

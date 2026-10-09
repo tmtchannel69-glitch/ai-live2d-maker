@@ -5,7 +5,7 @@ export function createPromptEditor({ labels, getSource, onChange, onSeparate }) 
   const dialog = document.createElement('dialog'); dialog.id = 'prompt-dialog';
   dialog.setAttribute('aria-labelledby', 'prompt-title');
   dialog.innerHTML = `<div class="dialog-header"><h2 id="prompt-title">切り抜く場所を指定</h2><button type="button" class="secondary" id="close-prompts">閉じる</button></div>
-    <p class="muted">残す部分には ＋、混ざった部分には − の点を置きます。枠と点を組み合わせられます。隠れた部分は描き足しません。</p>
+    <p class="muted">左右はキャラクター本人の左右です（正面では左が画面右）。残す部分には ＋、混ざった部分には − の点を置きます。枠と点を組み合わせられます。隠れた部分は描き足しません。</p>
     <div class="prompt-controls"><label>対象 <select id="prompt-part">${Object.entries(labels).map(([id, label]) => `<option value="${id}">${label}</option>`).join('')}</select></label>
     <label>指定方法 <select id="prompt-kind"><option value="point">＋ 残す点（タップ）</option><option value="exclude">− 除く点（タップ）</option><option value="box">枠（ドラッグ）</option></select></label></div>
     <div class="prompt-image"><img alt="切り抜く場所を指定する元画像" draggable="false"><svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-label="画像上で切り抜く場所を指定"></svg></div>
@@ -34,7 +34,7 @@ export function createPromptEditor({ labels, getSource, onChange, onSeparate }) 
     $('svg').innerHTML = shapes.join('');
     const positives = (prompt.points || []).filter(p => p.label === 1).length;
     const negatives = (prompt.points || []).length - positives;
-    const named = Object.entries(state.prompts).filter(([,p]) => hasUsablePrompt(p)).map(([id]) => labels[id]);
+    const named = Object.entries(state.prompts).filter(([id,p]) => [...$('#prompt-part').options].some(option=>option.value===id) && hasUsablePrompt(p)).map(([id]) => labels[id]);
     $('#prompt-summary').textContent = `指定済み：${named.join('、') || 'なし'}。${labels[part()]}：残す ${positives} 点・除く ${negatives} 点${prompt.box ? '・枠あり' : ''}。${hasUsablePrompt(prompt) ? '' : '残す点または枠を指定してください。'}`;
     $('#undo-prompt').disabled = busy || !state.canUndo(part());
     $('#redo-prompt').disabled = busy || !state.canRedo(part());
@@ -95,6 +95,11 @@ export function createPromptEditor({ labels, getSource, onChange, onSeparate }) 
     open(id) { if (id) $('#prompt-part').value=id; $('.prompt-image img').src=getSource(); render(); dialog.showModal(); },
     clear() { dialog.close(); $('.prompt-image img').removeAttribute('src'); resultNote=''; $('#prompt-run-status').textContent=''; start=null; state.reset(); },
     restore(value) { dialog.close();resultNote='';$('#prompt-run-status').textContent='';start=null;state.replace(value); },
+    clearView() {dialog.close();start=null;$('#prompt-run-status').textContent='';},
+    setParts(ids) {
+      const previous=part();$('#prompt-part').replaceChildren(...ids.map(id=>{const option=document.createElement('option');option.value=id;option.textContent=labels[id];return option;}));
+      if(ids.includes(previous))$('#prompt-part').value=previous;render();
+    },
     setRunEnabled(value) { runEnabled=value; render(); },
     setBusy(value) { busy=value; render(); },
     setStatus(message) { $('#prompt-run-status').textContent=message; },

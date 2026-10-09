@@ -1,0 +1,25 @@
+{
+  "basic": [
+    {"id":"hair","name":"髪"},
+    {"id":"face","name":"顔"},
+    {"id":"body","name":"体・衣装"},
+    {"id":"eyes","name":"目"}
+  ],
+  "production": [
+    {"id":"hair_front","name":"前髪","group":"髪"},
+    {"id":"hair_side_l","name":"横髪・左（画面右）","group":"髪"},
+    {"id":"hair_side_r","name":"横髪・右（画面左）","group":"髪"},
+    {"id":"hair_back","name":"後ろ髪","group":"髪"},
+    {"id":"face_skin","name":"顔の肌","group":"顔・首"},
+    {"id":"neck","name":"首","group":"顔・首"},
+    {"id":"eye_l","name":"目・左（画面右）","group":"目・眉・口"},
+    {"id":"eye_r","name":"目・右（画面左）","group":"目・眉・口"},
+    {"id":"brow_l","name":"眉・左（画面右）","group":"目・眉・口"},
+    {"id":"brow_r","name":"眉・右（画面左）","group":"目・眉・口"},
+    {"id":"mouth_visible","name":"口の見える部分","group":"目・眉・口"},
+    {"id":"top","name":"トップス","group":"衣装"},
+    {"id":"jacket","name":"ジャケット本体","group":"衣装"},
+    {"id":"sleeve_l","name":"袖・左（画面右）","group":"衣装"},
+    {"id":"sleeve_r","name":"袖・右（画面左）","group":"衣装"}
+  ]
+}

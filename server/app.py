@@ -4,6 +4,7 @@ import io
 import json
 import threading
 import warnings
+from pathlib import Path
 from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -13,7 +14,8 @@ from server.engine import SamEngine, CHECKPOINT, ModelUnavailable
 app = FastAPI(title='AI Live2D Maker local prototype')
 engine = SamEngine()
 lock = threading.Lock()
-PARTS = {'hair', 'face', 'body', 'eyes'}
+CATALOG = json.loads((Path(__file__).resolve().parents[1] / 'shared' / 'parts.json').read_text(encoding='utf-8'))
+PARTS = {part['id'] for parts in CATALOG.values() for part in parts}
 
 class MaskPoint(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -65,7 +67,8 @@ class Prompt(BaseModel):
 def health():
     return {'mode': 'sam2.1-cpu', 'checkpoint_present': CHECKPOINT.is_file(),
             'model_loaded': engine.predictor is not None, 'public_deployment': False,
-            'multiple_points': True, 'max_points_per_part': 32}
+            'multiple_points': True, 'max_points_per_part': 32,
+            'supported_parts': sorted(PARTS), 'max_parts_per_request': 4}
 
 @app.post('/api/separate')
 def separate(image: UploadFile = File(...), prompts: str = Form(...)):
