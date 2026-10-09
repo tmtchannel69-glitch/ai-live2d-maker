@@ -22,7 +22,7 @@ npm run dev
 5. 各パーツの「PNG」で個別保存、「まとめて ZIP 保存」で表示中の全パーツを保存できます。
 6. リセット、または画像の再選択で結果を消去します。
 
-現在の分離は、元画像の決められた矩形領域を切り出すデモです。意味に基づく AI 分離、背景の除去、Live2D モデル生成はまだ実装していません。画像はブラウザ内で処理され、サーバーへ送信しません。
+現在の分離は、元画像の決められた矩形領域を切り出すデモです。デモモードでは画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、隠れた部分の補完、Live2D モデル生成は未実装です。
 
 ## AI 分離処理の接続
 
@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-基本画面の開発ブランチは `feature/parts-workflow` です。
+最新の開発ブランチは `feature/prompted-segmentation` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/parts-workflow https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/prompted-segmentation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -81,3 +81,39 @@ npm.cmd run dev -- --port 5173 --strictPort
 ターミナルを開いたまま、同じ Windows PC のブラウザで `http://localhost:5173` を開いてください。
 
 画像が制限を超える場合は元画像を縮小して再選択してください。拒否された場合も前の画像と結果は保持します。対象の選択変更は次の分離に反映され、既存の結果は再実行するまで変わりません。
+
+## AI 試作（点・枠で指定する切り抜き）
+
+最新の試作ブランチは `feature/prompted-segmentation` です。デモモードの処理は引き続きブラウザ内です。
+AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
+認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
+
+Python 3.12 と Git を用意します。モデルと依存関係のダウンロードが必要です。GPU は不要です。
+
+```sh
+python3 scripts/setup_ai.py
+# ターミナル 1: サーバーを起動（プロジェクトルートで実行）
+.venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
+# ターミナル 2: 画面を起動
+npm ci --cache /tmp/ai-live2d-npm-cache
+npm run dev -- --port 5173 --strictPort
+```
+
+Windows PowerShell の場合（Windows での AI 導入はまだ未検証）:
+
+```powershell
+py -3.12 scripts/setup_ai.py
+# ターミナル 1
+.\.venv\Scripts\python.exe -m uvicorn server.app:app --host 127.0.0.1 --port 8000
+# 別のターミナル 2
+npm.cmd ci
+npm.cmd run dev -- --port 5173 --strictPort
+```
+
+画像を選び、「処理方式」を「AI 試作」に変更します。選択パーツごとに「切り抜く場所を指定」で点を置くか枠を描き、閉じて AI 分離を実行します。数値による座標指定も可能です。指定を消す・画像を再選択すると対応する指定も消えます。
+出力は元画像と同じサイズの透明 PNG。隠れた部分は描き足しません。処理中のリセットは画面反映を止めますが、サーバーの計算自体は完了まで続きます。
+
+モデル未配置の場合は `python3 scripts/download_sam.py` を実行してください。公式配布先 `dl.fbaipublicfiles.com` への通信許可が必要です。
+`/api` は開発サーバーの転送機能を使います。`npm run preview` や単なる dist 配信では AI API 接続を提供しません。
+
+[評価結果と限界](docs/AI_PROTOTYPE_RESULTS.md)、[候補比較](docs/AI_EVALUATION.md)も参照してください。

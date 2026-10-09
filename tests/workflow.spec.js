@@ -137,3 +137,38 @@ test('reset cancels in-flight separation without stale results', async ({ page }
   await expect(page.locator('#status')).toContainText('まずは');
   await expect(page.getByRole('button', { name: 'まとめて ZIP 保存' })).toBeDisabled();
 });
+
+test('AI prompt editor supports taps, boxes and numeric entry; missing model is explained', async ({ page }) => {
+  await page.goto('/'); await upload(page);
+  await page.locator('#processing-mode').selectOption('ai');
+  for (const id of ['face','body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
+  await expect(page.getByRole('button', { name: /AI でパーツを分離/ })).toBeDisabled();
+  await page.getByRole('button', { name: '切り抜く場所を指定' }).click();
+  const svg = page.locator('#prompt-dialog svg');
+  await svg.click({ position: { x: 50, y: 50 } });
+  await expect(page.locator('#prompt-summary')).toContainText('髪');
+  await expect(svg.locator('circle')).toHaveCount(1);
+  await page.locator('#prompt-kind').selectOption('box');
+  const bounds = await svg.boundingBox();
+  await page.mouse.move(bounds.x+20,bounds.y+20); await page.mouse.down();
+  await page.mouse.move(bounds.x+100,bounds.y+100); await page.mouse.up();
+  await expect(svg.locator('rect')).toHaveCount(1);
+  await page.getByRole('button', { name: 'この指定を消す' }).click();
+  await expect(page.locator('#prompt-summary')).toContainText('なし');
+  await page.getByText('数値で指定（キーボード操作）').click();
+  await page.locator('#prompt-kind').selectOption('point');
+  await page.locator('input[name="x"]').fill('25'); await page.locator('input[name="y"]').fill('30');
+  await page.getByRole('button', { name: '数値を反映' }).click();
+  await page.locator('#close-prompts').click();
+  await expect(page.getByRole('button', { name: /AI でパーツを分離/ })).toBeEnabled();
+  await page.route('**/api/separate', async route => {
+    const body = route.request().postData(); expect(body).toContain('"point":[0.25,0.3]');
+    await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'SAM のモデルが未配置です。' }) });
+  });
+  await page.getByRole('button', { name: /AI でパーツを分離/ }).click();
+  await expect(page.locator('#status')).toContainText('モデルが未配置');
+  await expect(page.locator('.result-card')).toHaveCount(0);
+  await page.locator('#processing-mode').selectOption('demo');
+  await page.getByRole('button', { name: /パーツを分離/ }).click();
+  await expect(page.locator('.result-card')).toHaveCount(1);
+});

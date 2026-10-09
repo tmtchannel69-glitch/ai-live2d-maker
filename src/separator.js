@@ -1,8 +1,10 @@
+import { separateWithApi } from './api-separator.js';
 /** Replace this adapter with an API implementation returning { id, name, blob }[].
  * Input: { file: File, parts: string[], signal: AbortSignal }.
  * Production adapters should return transparent PNGs and respect cancellation.
  */
-export async function separateParts({ file, parts, signal }) {
+export async function separateParts({ file, parts, signal, mode = 'demo', prompts = {} }) {
+  if (mode === 'ai') return separateWithApi({ file, parts, signal, prompts });
   const bitmap = await createImageBitmap(file);
   try {
     // Deliberately a demo: rectangular crops, not AI segmentation.

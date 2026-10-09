@@ -2,3 +2,8 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+
+.venv/
+.models/
+__pycache__/
+.pytest_cache/
