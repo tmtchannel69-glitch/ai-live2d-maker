@@ -4,6 +4,7 @@ export function createExpressionPanel({getState,onPrepare}) {
   const section=document.createElement('section');section.className='panel expression-panel';section.hidden=true;
   section.innerHTML='<div class="panel-title"><h2>瞬き・口の動きの素材準備</h2><button id="expression-report" class="secondary">準備一覧を保存</button></div><p class="muted">制作向けの目・口・顔の肌を準備します。未選択の既存結果も一覧に含みます。「見える境界は確認済み」でも、動く表情の完成ではありません。閉じた目・口の内部・下地の肌は別途準備が必要です。</p><p class="muted">保存する準備一覧は画像を含まず、確認記録のメモを含みます。作業の再開には別途、作業ファイルを保存してください。</p><div id="expression-groups"></div><p id="expression-status" role="status" aria-live="polite"></p>';
   document.querySelector('.motion-panel').after(section);
+  const assetSummary=document.createElement('p');assetSummary.className='muted';assetSummary.id='expression-assets-summary';section.querySelector('#expression-groups').before(assetSummary);
   const rows=new Map();let source=null;
   for(const group of EXPRESSION_GROUPS) {
     const card=document.createElement('article');card.className='expression-card';card.dataset.expression=group.id;
@@ -18,6 +19,7 @@ export function createExpressionPanel({getState,onPrepare}) {
   }
   function update() {
     const state=getState();section.hidden=!state.file;
+    assetSummary.textContent=`追加の表情素材：${state.assets?.length||0}役割を読み込み済み。読み込み・位置合わせは下の画面で行います。読込済みでも形や動作品質は未確認です。`;
     if(state.file!==source){source=state.file;section.querySelector('#expression-status').textContent='';}
     for(const button of section.querySelectorAll('button'))button.disabled=state.locked || !state.file;
     if(!state.file)section.querySelector('#expression-status').textContent='';

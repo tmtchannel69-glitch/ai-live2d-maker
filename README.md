@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/expression-preparation` です。
+最新の開発ブランチは `feature/expression-assets` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/expression-preparation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-assets https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/expression-preparation` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-assets` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -224,3 +224,12 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 準備一覧は未選択の制作向けの結果も含み、未分離・指定変更あり・境界修正待ち等を反映します。「準備一覧を保存」で状態・メモ・次の確認項目をテキストに保存できます。画像は含まず、作業ファイルの代わりにはなりません。確認記録は既存の作業ファイルに保存され、再開時に一覧へ反映されます。
 
 閉じた目・口内部・下地の肌・細分化した素材や変形設定は未確認です。見える境界の確認済みだけで表情の完成とは扱いません。[操作と素材・変形の設計](docs/EXPRESSION_PREPARATION.md)。瞬きや口の動作・moc3出力はまだ実装していません。
+
+
+## 追加の表情素材を読み込む
+
+「表情素材の読み込み・位置合わせ」で、閉じた目・白目・瞳・まつげ・下地の肌・上唇・下唇・口内部などの役割を選び、用意したPNGを読み込めます。各PNGは10 MiB以下、各辺4096 px以下・1600万画素以下です。透明PNGを推奨し、一つの役割に一枚まで。画像はブラウザ内で扱います。
+
+元画像または透明背景に選択した一枚を表示します。左端・上端・幅・高さを元画像に対する%で指定し、「配置を反映」で位置合わせします。初期配置は比率を保って中央に置きます。元画像と同じサイズの素材なら元のキャンバス位置を維持します。元画像に既に描かれた目・口は背景に残ります。
+
+「作業ファイルを保存」で追加画像・役割・配置も保存します（素材ありは版5、旧版1〜4は読込可能）。以前のアプリでは版5を開けません。「この素材の元PNGを保存」で元の画像も保存できます。「この役割の素材を外す」は現在の作業の一役割だけ外します。追加素材は既存のPNG/ZIP/PSD出力や動作プレビューにはまだ含みません。瞬き・口の変形・画像生成・VTube Studio用モデル出力は未対応です。[操作と保存仕様](docs/EXPRESSION_ASSETS.md)。

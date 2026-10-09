@@ -1,3 +1,4 @@
+import {createExpressionAssetPanel} from './expression-asset-panel.js';
 import {createExpressionPanel} from './expression-panel.js';
 import {createMotionPanel} from './motion-panel.js';
 import {createPsdExport} from './psd-export.js';
@@ -24,7 +25,7 @@ app.innerHTML = `
 <main>
 <section class="intro"><span class="eyebrow">FROM IMAGE TO CHARACTER</span><h1>キャラクターに、<span>動きの第一歩を。</span></h1><p>画像をアップロードして、Live2D 制作のためのパーツを準備しましょう。</p></section>
 <div class="steps"><span class="active">01 <b>画像を選択</b></span><i></i><span>02 <b>パーツを分離</b></span><i></i><span>03 <b>ダウンロード</b></span></div>
-<section class="project-panel"><div class="project-actions"><button id="save-project" class="secondary" disabled>作業ファイルを保存</button><button id="open-project" class="secondary">作業ファイルを開く</button></div><input id="project-file" type="file" accept=".zip,application/zip" hidden><p class="muted">元画像・すべての指定・反映済みパーツ・確認記録・動きの試作設定を端末に保存します。開くと現在の作業を置き換えます。</p><p id="project-status" role="status" aria-live="polite"></p></section>
+<section class="project-panel"><div class="project-actions"><button id="save-project" class="secondary" disabled>作業ファイルを保存</button><button id="open-project" class="secondary">作業ファイルを開く</button></div><input id="project-file" type="file" accept=".zip,application/zip" hidden><p class="muted">元画像・すべての指定・反映済みパーツ・確認記録・動きの試作設定・追加した表情素材を端末に保存します。開くと現在の作業を置き換えます。</p><p id="project-status" role="status" aria-live="polite"></p></section>
 <div class="workspace">
 <section class="panel upload-panel"><div class="panel-title"><h2><span>01</span> キャラクター画像</h2><button id="reset" class="text-button" disabled>リセット</button></div>
 <label class="dropzone" id="dropzone" for="file"><div id="upload-hint"><div class="upload-icon">↑</div><h3>画像をここにドロップ</h3><p>またはタップして画像を選択</p><span class="file-note">PNG・JPG・WebP / 最大 10 MB</span><span class="choose-button">画像を選択</span></div><img id="source-preview" hidden alt="アップロードしたキャラクター画像"></label>
@@ -38,9 +39,9 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor,reviewPanel,motionPanel,expressionPanel;
-let motion={};
-let reviews={},materialBusy=false,psdController=null;
+let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel;
+let motion={},expressionAssets=[];
+let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
 editor = createPromptEditor({ labels, getSource: () => sourceUrl,
@@ -49,14 +50,14 @@ editor = createPromptEditor({ labels, getSource: () => sourceUrl,
 });
 brushEditor = createBrushEditor({ labels, getSource: () => file, getCurrent: id => results.find(part => part.id === id),
   onApply: (part, blob) => {
-    if (busy || projectBusy || materialBusy || !results.includes(part)) return;
+    if (busy || projectBusy || materialBusy || assetBusy || !results.includes(part)) return;
     const updated = { ...part, blob, url: URL.createObjectURL(blob), manual: true };
     reviewPanel.close();invalidateReviews([part.id]);closePreview(); results = results.map(result => result === part ? updated : result);
     URL.revokeObjectURL(part.url); renderResults(); updateButton(); updateEditorNote();
     $('#status').textContent = `${labels[part.id]}のブラシ補正を反映しました。PNG・ZIP に補正後の結果を保存できます。`;
   },
 });
-reviewPanel=createReviewPanel({labels,getState:()=>({file,sourceUrl,ids:activeIds(),selected:selected(),results,reviews,locked:busy||projectBusy||archiveBusy||materialBusy}),isDirty:dirty,onChange:(id,record)=>{reviews={...reviews,[id]:record};expressionPanel?.update();}});
+reviewPanel=createReviewPanel({labels,getState:()=>({file,sourceUrl,ids:activeIds(),selected:selected(),results,reviews,locked:busy||projectBusy||archiveBusy||materialBusy||assetBusy}),isDirty:dirty,onChange:(id,record)=>{reviews={...reviews,[id]:record};expressionPanel?.update();}});
 function updateEditorNote() {
   if (!editor) return;
   const result = results.find(part => part.id === editor.selectedPart);
@@ -66,12 +67,16 @@ function updateEditorNote() {
     : 'このパーツの結果はまだありません。');
 }
 $('#edit-prompts').addEventListener('click', () => { editor.open(); updateEditorNote(); });
-motionPanel=createMotionPanel({labels,getState:()=>({file,results:visibleResults(),selected:selected(),settings:motion,locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:(id,setting)=>{motion={...motion,[id]:setting};},isDirty:dirty});
-expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:editor.prompts,reviews,locked:busy || projectBusy || archiveBusy || materialBusy}),onPrepare:ids=>{
-  if(!file || busy || projectBusy || archiveBusy || materialBusy)return;
+motionPanel=createMotionPanel({labels,getState:()=>({file,results:visibleResults(),selected:selected(),settings:motion,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(id,setting)=>{motion={...motion,[id]:setting};},isDirty:dirty});
+expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:editor.prompts,reviews,assets:expressionAssets,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onPrepare:ids=>{
+  if(!file || busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   rememberTemplate();reviewPanel.close();brushEditor.close();editor.clearView();closePreview();
   template='production';templates.production.selected=TEMPLATES.production.map(p=>p.id).filter(id=>templates.production.selected.includes(id) || ids.includes(id));
   renderPartChoices();renderResults();updateEditorNote();updateButton();updateSelectionStatus();
+}});
+assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
+  if(busy || projectBusy || archiveBusy || materialBusy)return;
+  expressionAssets=assets;assetPanel.update();expressionPanel.update();
 }});
 function rememberTemplate() {templates[template]={mode:$('#processing-mode').value,selected:selected()};}
 function renderPartChoices() {
@@ -117,12 +122,13 @@ function clearResults(ids=null) {
   results=ids?results.filter(part=>!ids.includes(part.id)):[];renderResults();
 }
 function renderResults() {
+  assetPanel?.update();
   motionPanel?.update();
   expressionPanel?.update();
   reviewPanel?.update();
   const shown=visibleResults();
   $('#count').textContent = `${shown.length} PARTS`;
-  $('#download-all').disabled = !visibleResults().length || busy || projectBusy || archiveBusy;
+  $('#download-all').disabled = !visibleResults().length || busy || projectBusy || archiveBusy || assetBusy;
   if (!shown.length) {
     $('#results').innerHTML = '<div class="empty"><span>▧</span><h3>ここにパーツが表示されます</h3><p>画像を選択して、パーツ分離を実行してください。</p></div>'; return;
   }
@@ -156,16 +162,17 @@ function renderResults() {
   $('#results').replaceChildren(grid);
 }
 function updateButton() {
+  assetPanel?.update();
   motionPanel?.update();
   expressionPanel?.update();
   reviewPanel?.update();
-  const locked=busy || projectBusy || materialBusy;
+  const locked=busy || projectBusy || materialBusy || assetBusy;
   $('#download-materials').disabled=!file || !selected().length || locked || archiveBusy;
   $('#download-psd').disabled=!file || !isAi() || !visibleResults().some(part=>part.ai && selected().includes(part.id)) || locked || archiveBusy;
   $('#save-project').disabled=!file || locked || archiveBusy;
   $('#open-project').disabled=locked || archiveBusy;
   $('#parts-template').disabled=locked || archiveBusy;
-  $('#download-all').disabled = !visibleResults().length || busy || projectBusy || archiveBusy;
+  $('#download-all').disabled = !visibleResults().length || busy || projectBusy || archiveBusy || assetBusy;
   const stage = visibleResults().length && !busy ? 2 : file ? 1 : 0;
   document.querySelectorAll('.steps > span').forEach((step, index) => {
     step.classList.toggle('active', index === stage);
@@ -179,7 +186,7 @@ function updateButton() {
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
-function cancelProjectOperation() {psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
+function cancelProjectOperation() {assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
 async function loadFile(next) {
   cancelProjectOperation();
   const version = ++uploadVersion;
@@ -195,7 +202,7 @@ async function loadFile(next) {
     if (tooLarge) { $('#status').textContent = '画像が大きすぎます。各辺 4096 px 以下・1600 万画素以下に縮小してから選択してください。現在の画像と結果は保持しています。'; return; }
     controller?.abort(); busy=false;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-    reviews={};motion={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
+    reviews={};motion={};expressionAssets=[];clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
     $('#source-preview').src=sourceUrl; $('#source-preview').hidden=false; $('#upload-hint').hidden=true;
     $('#file-info').textContent=`${next.name} · ${dimensions}`; $('#reset').disabled=false;
     updateSelectionStatus(); updateButton();
@@ -207,7 +214,7 @@ $('#dropzone').addEventListener('dragleave', () => $('#dropzone').classList.remo
 $('#dropzone').addEventListener('drop', event => { event.preventDefault(); $('#dropzone').classList.remove('dragging'); loadFile(event.dataTransfer.files[0]); });
 $('.part-options').addEventListener('change', () => {rememberTemplate();updateButton();updateSelectionStatus();});
 $('#reset').addEventListener('click', () => {
-  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={}; editor.clear();
+  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={};expressionAssets=[]; editor.clear();
   if (sourceUrl) URL.revokeObjectURL(sourceUrl); sourceUrl=null;
   $('#source-preview').hidden=true; $('#source-preview').removeAttribute('src'); $('#upload-hint').hidden=false;
   $('#file-info').textContent='背景がシンプルな正面画像がおすすめです';
@@ -215,7 +222,7 @@ $('#reset').addEventListener('click', () => {
 });
 async function runSeparation(ids, partial = false) {
   const aiRun = isAi();
-  if (busy || projectBusy || materialBusy || !file || !ids.length || (aiRun && ids.some(id => !hasUsablePrompt(editor.prompts[id])))) return;
+  if (busy || projectBusy || materialBusy || assetBusy || !file || !ids.length || (aiRun && ids.some(id => !hasUsablePrompt(editor.prompts[id])))) return;
   brushEditor.close();
   const snapshot = editor.prompts, requestFile = file;
   const current=new AbortController(); controller=current; busy=true; updateButton();
@@ -243,7 +250,7 @@ async function runSeparation(ids, partial = false) {
 }
 $('#separate').addEventListener('click', () => { if (!$('#separate').disabled) runSeparation(selected()); });
 $('#download-all').addEventListener('click', async () => {
-  if (archiveBusy || busy || projectBusy || !visibleResults().length) return;
+  if (archiveBusy || busy || projectBusy || assetBusy || !visibleResults().length) return;
   const snapshotAll=results,snapshot=visibleResults();archiveBusy=true; updateButton(); $('#download-all').textContent='ZIP を準備中…';
   try {
     const blob=await createPartsArchive(snapshot); if(snapshotAll!==results)return;
@@ -254,7 +261,7 @@ $('#download-all').addEventListener('click', async () => {
   finally { archiveBusy=false; $('#download-all').textContent='まとめて ZIP 保存'; updateButton(); }
 });
 $('#download-materials').addEventListener('click',async()=>{
-  if(!file || !selected().length || busy || projectBusy || archiveBusy || materialBusy)return;
+  if(!file || !selected().length || busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   brushEditor.close();editor.clearView();reviewPanel.close();
   const version=uploadVersion,snapshotResults=results,snapshot={file,template,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results:[...results],reviews:structuredClone(reviews)};
   const isCurrent=()=>version===uploadVersion && file===snapshot.file && results===snapshotResults;
@@ -286,9 +293,9 @@ $('#download-psd').addEventListener('click',async()=>{
 });
 $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#save-project').addEventListener('click',async()=>{
-  if(!file || busy || projectBusy || archiveBusy)return;
+  if(!file || busy || projectBusy || archiveBusy || assetBusy)return;
   rememberTemplate();
-  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion)};
+  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion),expressions:expressionAssets.map(a=>({...a,placement:{...a.placement}}))};
   projectBusy=true;updateButton();$('#project-status').textContent='作業ファイルを準備しています…';
   try {
     const blob=await createProjectFile(snapshot);if(ticket!==projectVersion)return;
@@ -299,7 +306,7 @@ $('#save-project').addEventListener('click',async()=>{
   finally {if(ticket===projectVersion){projectBusy=false;updateButton();}}
 });
 $('#project-file').addEventListener('change',async event=>{
-  const next=event.target.files[0];event.target.value='';if(!next || busy || projectBusy || archiveBusy)return;
+  const next=event.target.files[0];event.target.value='';if(!next || busy || projectBusy || archiveBusy || assetBusy)return;
   const ticket=++projectVersion;uploadVersion++;projectBusy=true;updateButton();$('#project-status').textContent='作業ファイルを確認しています…';
   try {
     const restored=await readProjectFile(next);if(ticket!==projectVersion)return;
@@ -309,7 +316,7 @@ $('#project-file').addEventListener('change',async event=>{
       const nextResults=restored.results.map(part=>{const url=URL.createObjectURL(part.blob);nextUrls.push(url);return{...part,url};});
       controller?.abort();busy=false;clearResults();editor.clear();
       if(sourceUrl)URL.revokeObjectURL(sourceUrl);
-      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;
+      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;expressionAssets=restored.expressions;
       template=restored.template;templates=restored.templates;renderPartChoices();
       $('#source-preview').src=sourceUrl;$('#source-preview').hidden=false;$('#upload-hint').hidden=true;
       $('#file-info').textContent=`${file.name} · ${restored.dimensions.width} × ${restored.dimensions.height}`;$('#reset').disabled=false;

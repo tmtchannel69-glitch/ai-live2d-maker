@@ -1,6 +1,7 @@
 import {PART_LABELS} from './parts.js';
 import {emptyReview} from './review-state.js';
 import {promptSignature} from './prompt-state.js';
+import {EXPRESSION_ROLES} from './expression-assets.js';
 
 export const EXPRESSION_GROUPS=[
   {id:'blink',label:'瞬き・目の表情',parts:['face_skin','eye_l','eye_r','brow_l','brow_r'],parameters:'ParamEyeLOpen / ParamEyeROpen（開閉 0〜1）',tasks:[
@@ -40,6 +41,10 @@ export function expressionReport(state) {
       if(part.note)lines.push('  作業メモ：',...part.note.replace(/\r\n?/g,'\n').split('\n').map(line=>`    ${line}`));
     }
     lines.push('次に確認する素材と設定（この画面では未確認）：',...group.tasks.map(task=>`- ${task}`),'');
+  }
+  if(state.assets?.length) {
+    lines.push('【追加で読み込んだ表情素材】','読込済みです。形・境界・配置・動作品質は未確認です。画像はこの一覧に含みません。');
+    for(const a of state.assets)lines.push(`- ${EXPRESSION_ROLES.find(([id])=>id===a.role)[1]}：${a.width} × ${a.height} px ／ 左端${+(a.placement.x*100).toFixed(2)}% 上端${+(a.placement.y*100).toFixed(2)}% 幅${+(a.placement.width*100).toFixed(2)}% 高さ${+(a.placement.height*100).toFixed(2)}%`);
   }
   return '\uFEFF'+lines.join('\r\n');
 }

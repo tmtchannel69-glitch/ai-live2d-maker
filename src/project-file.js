@@ -1,3 +1,4 @@
+import {EXPRESSION_ROLE_IDS,MAX_EXPRESSION_BYTES,validateExpressionAssets,expressionPngSize} from './expression-assets.js';
 import {validateMotion} from './motion-state.js';
 import { zip, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { validateReviews } from './review-state.js';
@@ -48,9 +49,10 @@ async function imageSize(blob) {
   finally {bitmap?.close();}
 }
 function validateMetadata(data) {
-  object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion']);
+  object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions']);
   if (data.format!=='ai-live2d-maker') invalid('AI Live2D Maker の作業ファイルではありません。');
-  if (![1,2,3,4].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if (![1,2,3,4,5].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if(data.version===4)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion']);
   if(data.version===3)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews']);
   if(data.version===2)object(data,['format','version','source','mode','selected','prompts','parts','template','templates']);
   let template,templates,ids;
@@ -82,11 +84,12 @@ function validateMetadata(data) {
     validatePrompt(part.generatedPrompt);
   }
   const reviews=data.version>=3?validateReviews(data.reviews,data.parts):{};
-  const motion=data.version===4?validateMotion(data.motion):{};
-  return {...data,template,templates,reviews,motion};
+  const motion=data.version>=4?validateMotion(data.motion):{};
+  const expressions=data.version===5?validateExpressionAssets(data.expressions):[];
+  return {...data,template,templates,reviews,motion,expressions};
 }
 
-export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates,reviews={},motion={}}) {
+export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates,reviews={},motion={},expressions=[]}) {
   const sizes = await imageSize(file);
   const metadata = {
     format:'ai-live2d-maker',version:1,
@@ -102,13 +105,22 @@ export async function createProjectFile({file,mode,selected,prompts,results,temp
   if(Object.keys(motion).length) {
     metadata.version=4;metadata.template=template;metadata.templates=structuredClone(templates||defaultTemplates());metadata.templates[template]={mode,selected};metadata.reviews=reviews;metadata.motion=motion;
   }
+  if(expressions.length) {
+    metadata.version=5;metadata.template=template;metadata.templates=structuredClone(templates||defaultTemplates());metadata.templates[template]={mode,selected};metadata.reviews=reviews;metadata.motion=motion;
+    metadata.expressions=expressions.map(({role,name,width,height,placement})=>({role,name,width,height,placement,path:`expressions/${role}.png`}));
+  }
   validateMetadata(metadata);
   const manifest=strToU8(JSON.stringify(metadata));
-  if(file.size>10*MIB || results.some(part=>part.blob.size>MAX_PART_BYTES) || manifest.length>MAX_METADATA_BYTES || file.size+manifest.length+results.reduce((sum,p)=>sum+p.blob.size,0)>MAX_PROJECT_BYTES-4096) invalid('作業ファイルが大きすぎます。上限は 100 MiB、各パーツ 32 MiB です。');
+  if(file.size>10*MIB || results.some(part=>part.blob.size>MAX_PART_BYTES) || expressions.some(a=>a.blob.size>MAX_EXPRESSION_BYTES) || manifest.length>MAX_METADATA_BYTES || file.size+manifest.length+results.reduce((sum,p)=>sum+p.blob.size,0)+expressions.reduce((sum,a)=>sum+a.blob.size,0)>MAX_PROJECT_BYTES-4096) invalid('作業ファイルが大きすぎます。上限は 100 MiB、各パーツ 32 MiB、各表情素材 10 MiB です。');
   const sourceBytes=new Uint8Array(await file.arrayBuffer());
   if(!sourceMagic(sourceBytes,file.type))invalid('元画像の形式が正しくありません。');
   const entries={'project.json':manifest,'source/image':sourceBytes};
   for(const part of results) entries[`parts/${part.id}.png`]=new Uint8Array(await part.blob.arrayBuffer());
+  for(const asset of expressions) {
+    const bytes=new Uint8Array(await asset.blob.arrayBuffer()),size=expressionPngSize(bytes);
+    if(size.width!==asset.width || size.height!==asset.height)invalid('表情素材のサイズが作業情報と一致しません。');
+    await imageSize(asset.blob);entries[`expressions/${asset.role}.png`]=bytes;
+  }
   return new Promise((resolve,reject)=>zip(entries,{level:0},(error,data)=>error?reject(error):resolve(new Blob([data],{type:'application/zip'}))));
 }
 
@@ -118,9 +130,9 @@ export async function readProjectFile(file) {
   const seen=new Set();let total=0,entries;
   try {
     entries=unzipSync(bytes,{filter:entry=>{
-      if (seen.has(entry.name) || !['project.json','source/image',...IDS.map(id=>`parts/${id}.png`)].includes(entry.name)) invalid();
+      if (seen.has(entry.name) || !['project.json','source/image',...IDS.map(id=>`parts/${id}.png`),...EXPRESSION_ROLE_IDS.map(id=>`expressions/${id}.png`)].includes(entry.name)) invalid();
       seen.add(entry.name);total+=entry.originalSize;
-      const limit=entry.name==='project.json'?MAX_METADATA_BYTES:entry.name==='source/image'?10*MIB:MAX_PART_BYTES;
+      const limit=entry.name==='project.json'?MAX_METADATA_BYTES:entry.name==='source/image'?10*MIB:entry.name.startsWith('expressions/')?MAX_EXPRESSION_BYTES:MAX_PART_BYTES;
       if(entry.compression!==0 || entry.size!==entry.originalSize || entry.originalSize>limit || total>MAX_PROJECT_BYTES) invalid('作業ファイルのサイズや保存形式が正しくありません。');
       return true;
     }});
@@ -129,7 +141,7 @@ export async function readProjectFile(file) {
   let metadata;
   try {metadata=validateMetadata(JSON.parse(strFromU8(entries['project.json'])));}
   catch(error) {throw new Error(`作業情報を読み込めませんでした。${error.message}`);}
-  const expected=['project.json','source/image',...metadata.parts.map(p=>p.path)];
+  const expected=['project.json','source/image',...metadata.parts.map(p=>p.path),...metadata.expressions.map(a=>a.path)];
   if(Object.keys(entries).length!==expected.length || expected.some(name=>!entries[name])) invalid('パーツ画像が不足しているか、余分なデータがあります。');
   if(!sourceMagic(entries['source/image'],metadata.source.type)) invalid('元画像の形式が正しくありません。');
   if(metadata.source.type==='image/png')pngSize(entries['source/image']);
@@ -144,5 +156,12 @@ export async function readProjectFile(file) {
     const blob=new Blob([entries[part.path]],{type:'image/png'});await imageSize(blob);
     results.push({id:part.id,name:`${part.id}.png`,blob,ai:part.ai,manual:part.manual,signature:promptSignature(part.generatedPrompt)});
   }
-  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates,reviews:metadata.reviews,motion:metadata.motion};
+  const expressions=[];
+  for(const asset of metadata.expressions) {
+    const size=expressionPngSize(entries[asset.path]);
+    if(size.width!==asset.width || size.height!==asset.height)invalid('表情素材のサイズが作業情報と一致しません。');
+    const blob=new Blob([entries[asset.path]],{type:'image/png'});await imageSize(blob);
+    expressions.push({role:asset.role,name:asset.name,width:asset.width,height:asset.height,placement:asset.placement,blob});
+  }
+  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates,reviews:metadata.reviews,motion:metadata.motion,expressions};
 }
