@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/psd-export` です。
+最新の開発ブランチは `docs/cubism-import-check` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/psd-export https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch docs/cubism-import-check https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -194,3 +194,15 @@ AI結果を準備し、出力する項目を選んで「レイヤー付きPSDを
 デモは元画像上の位置を復元できないためPSDの対象外です。出力はRGB・8ビット、色プロファイルの埋め込み・変換は未対応です。画像編集ソフトでsRGBとして色を確認・保存してください。Cubism・Photoshop等での実読み込み、実機スマートフォンは未検証です。PSDの読み戻し検証を、これらのソフトの対応保証とは扱いません。
 
 試作の上限は、レイヤーと合成画像の展開後の画素量128 MiB、各入力PNG32 MiB、出力100 MiBです。上限を超えると選択項目を減らすか素材ZIPを使う案内を表示します。PSD作成は画面とは別の処理で行い、リセット・画像再選択で中止できます。[設計と検証](docs/PSD_EXPORT.md)。
+
+## WindowsでCubismへ取り込む確認
+
+Cubism未導入の場合は、[Windows導入・PSD取り込みの手順](docs/CUBISM_IMPORT_GUIDE.md)を参照してください。無料の機能で確認するための小さな自作図形キットを生成できます。AIサーバーとユーザー画像は不要です。
+
+```sh
+node scripts/create-cubism-check.mjs
+# 既存の記録を残して再実行する場合
+node scripts/create-cubism-check.mjs --out test-results/cubism-check-02
+```
+
+標準の出力先はtest-results/cubism-checkです。PSD・参照PNG・確認票と移動用ZIPを作成します。既存フォルダーには上書きしません。Cubismで開いてRESULT.mdへ記録した後、アプリから保存したPSDも別に確認してください。Cubismが起動・読み込みできたとはまだ確認していません。
