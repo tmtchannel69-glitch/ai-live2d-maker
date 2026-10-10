@@ -43,7 +43,7 @@ let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
 let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow;
-let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={};
+let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={},expressionClips={};
 let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
@@ -71,7 +71,7 @@ function updateEditorNote() {
 }
 $('#edit-prompts').addEventListener('click', () => { editor.open(); updateEditorNote(); });
 motionPanel=createMotionPanel({labels,getState:()=>({file,results:visibleResults(),selected:selected(),settings:motion,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(id,setting)=>{motion={...motion,[id]:setting};},isDirty:dirty});
-expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:editor.prompts,reviews,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onPrepare:ids=>{
+expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:editor.prompts,reviews,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onPrepare:ids=>{
   if(!file || busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   rememberTemplate();reviewPanel.close();brushEditor.close();editor.clearView();closePreview();
   template='production';templates.production.selected=TEMPLATES.production.map(p=>p.id).filter(id=>templates.production.selected.includes(id) || ids.includes(id));
@@ -79,11 +79,15 @@ expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:edito
 }});
 assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
   if(busy || projectBusy || archiveBusy || materialBusy)return;
-  expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));assetPanel.update();expressionPanel.update();expressionScene?.update();
+  expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));assetPanel.update();expressionPanel.update();expressionScene?.update();
 }});
-expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(role,setting)=>{
+expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   expressionLayers={...expressionLayers,[role]:setting};expressionScene.update();expressionPanel.update();
+},onClip:(role,setting)=>{
+  if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionClips={...expressionClips};if(setting)expressionClips[role]=setting;else delete expressionClips[role];
+  expressionScene.update();
 },onDeform:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   if(setting){expressionDeforms={...expressionDeforms,[role]:setting};expressionLayers={...expressionLayers,[role]:{...(expressionLayers[role]||defaultExpressionLayer(role)),condition:'always'}};}
@@ -218,7 +222,7 @@ async function loadFile(next) {
     if (tooLarge) { $('#status').textContent = '画像が大きすぎます。各辺 4096 px 以下・1600 万画素以下に縮小してから選択してください。現在の画像と結果は保持しています。'; return; }
     controller?.abort(); busy=false;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-    reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
+    reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
     $('#source-preview').src=sourceUrl; $('#source-preview').hidden=false; $('#upload-hint').hidden=true;
     $('#file-info').textContent=`${next.name} · ${dimensions}`; $('#reset').disabled=false;
     updateSelectionStatus(); updateButton();
@@ -230,7 +234,7 @@ $('#dropzone').addEventListener('dragleave', () => $('#dropzone').classList.remo
 $('#dropzone').addEventListener('drop', event => { event.preventDefault(); $('#dropzone').classList.remove('dragging'); loadFile(event.dataTransfer.files[0]); });
 $('.part-options').addEventListener('change', () => {rememberTemplate();updateButton();updateSelectionStatus();});
 $('#reset').addEventListener('click', () => {
-  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={}; editor.clear();
+  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={}; editor.clear();
   if (sourceUrl) URL.revokeObjectURL(sourceUrl); sourceUrl=null;
   $('#source-preview').hidden=true; $('#source-preview').removeAttribute('src'); $('#upload-hint').hidden=false;
   $('#file-info').textContent='背景がシンプルな正面画像がおすすめです';
@@ -311,7 +315,7 @@ $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#save-project').addEventListener('click',async()=>{
   if(!file || busy || projectBusy || archiveBusy || assetBusy)return;
   rememberTemplate();
-  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion),expressions:expressionAssets.map(a=>({...a,placement:{...a.placement}})),expressionLayers:structuredClone(expressionLayers),expressionDeforms:structuredClone(expressionDeforms)};
+  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion),expressions:expressionAssets.map(a=>({...a,placement:{...a.placement}})),expressionLayers:structuredClone(expressionLayers),expressionDeforms:structuredClone(expressionDeforms),expressionClips:structuredClone(expressionClips)};
   projectBusy=true;updateButton();$('#project-status').textContent='作業ファイルを準備しています…';
   try {
     const blob=await createProjectFile(snapshot);if(ticket!==projectVersion)return;
@@ -332,7 +336,7 @@ $('#project-file').addEventListener('change',async event=>{
       const nextResults=restored.results.map(part=>{const url=URL.createObjectURL(part.blob);nextUrls.push(url);return{...part,url};});
       controller?.abort();busy=false;clearResults();editor.clear();
       if(sourceUrl)URL.revokeObjectURL(sourceUrl);
-      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;expressionAssets=restored.expressions;expressionLayers=restored.expressionLayers;expressionDeforms=restored.expressionDeforms;
+      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;expressionAssets=restored.expressions;expressionLayers=restored.expressionLayers;expressionDeforms=restored.expressionDeforms;expressionClips=restored.expressionClips;
       template=restored.template;templates=restored.templates;renderPartChoices();
       $('#source-preview').src=sourceUrl;$('#source-preview').hidden=false;$('#upload-hint').hidden=true;
       $('#file-info').textContent=`${file.name} · ${restored.dimensions.width} × ${restored.dimensions.height}`;$('#reset').disabled=false;
