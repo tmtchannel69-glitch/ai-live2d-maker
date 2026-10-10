@@ -1,19 +1,21 @@
+import {createAssetPlacementEditor} from './asset-placement-editor.js';
 import {EXPRESSION_ROLES,readExpressionImage,defaultExpressionPlacement} from './expression-assets.js';
 
 export function createExpressionAssetPanel({getState,onChange,onBusy}) {
   const section=document.createElement('section');section.className='panel asset-panel';section.hidden=true;
-  section.innerHTML=`<h2>表情素材の読み込み・位置合わせ</h2><p class="muted">用意したPNGを役割ごとに読み込みます。画像はブラウザ内で扱い、作業ファイルに保存できます。一つの役割に一枚まで。元画像にない形の生成や瞬き・口の変形はまだ行いません。</p>
+  section.innerHTML=`<h2>表情素材の読み込み・位置合わせ</h2><p class="muted">用意したPNGを役割ごとに読み込みます。画像はブラウザ内で扱い、作業ファイルに保存できます。一つの役割に一枚まで。元画像にない形の生成は行いません。開閉の形は下の合成画面で編集できます。</p>
   <div class="asset-controls"><label>素材の役割<select id="asset-role"></select></label><button id="asset-open" class="secondary">PNGを読み込む・置き換える</button><input id="asset-file" type="file" accept="image/png" hidden><label>位置合わせの背景<select id="asset-view"><option value="source">元画像</option><option value="transparent">透明背景</option></select></label></div>
   <p id="asset-inventory" class="muted"></p><p id="asset-info" class="muted"></p><p id="asset-status" role="status" aria-live="polite"></p>
   <div class="motion-workspace"><div class="motion-stage"><canvas id="asset-canvas" width="1" height="1" aria-label="選択した表情素材の配置プレビュー"></canvas></div><div class="motion-controls">
-  <form id="asset-placement"><div class="coordinate-grid"><label>左端 X（%）<input id="asset-x" type="number" min="0" max="100" step="0.01" required></label><label>上端 Y（%）<input id="asset-y" type="number" min="0" max="100" step="0.01" required></label><label>幅（元画像に対する%）<input id="asset-width" type="number" min="0.01" max="100" step="0.01" required></label><label>高さ（元画像に対する%）<input id="asset-height" type="number" min="0.01" max="100" step="0.01" required></label></div><button id="asset-apply" class="secondary">配置を反映</button></form>
-  <button id="asset-download" class="secondary">この素材の元PNGを保存</button><button id="asset-remove" class="secondary">この役割の素材を外す</button><p class="muted">表示は選択した一枚だけです。座標は元画像の左上が0%、右下が100%。はみ出した部分はプレビューの外側に隠れます。初期配置は比率を保って中央に置きます。</p><p class="muted">元画像に描かれた目や口は背景に残っています。この画面は位置合わせ用です。読み込んだ素材・配置は既存の動作プレビューやPNG・PSD出力にはまだ反映しません。</p></div></div>`;
+  <button id="asset-touch" class="secondary">指で位置を合わせる</button><form id="asset-placement"><div class="coordinate-grid"><label>左端 X（%）<input id="asset-x" type="number" min="0" max="100" step="0.01" required></label><label>上端 Y（%）<input id="asset-y" type="number" min="0" max="100" step="0.01" required></label><label>幅（元画像に対する%）<input id="asset-width" type="number" min="0.01" max="100" step="0.01" required></label><label>高さ（元画像に対する%）<input id="asset-height" type="number" min="0.01" max="100" step="0.01" required></label></div><button id="asset-apply" class="secondary">配置を反映</button></form>
+  <button id="asset-download" class="secondary">この素材の元PNGを保存</button><button id="asset-remove" class="secondary">この役割の素材を外す</button><p class="muted">表示は選択した一枚だけです。座標は元画像の左上が0%、右下が100%。はみ出した部分はプレビューの外側に隠れます。初期配置は比率を保って中央に置きます。</p><p class="muted">元画像に描かれた目や口は背景に残っています。この画面は位置合わせ用です。配置は下の合成・開閉プレビューに反映します。元PNG・制作素材ZIP・PSDは変更しません。</p></div></div>`;
   document.querySelector('.expression-panel').after(section);
   const $=s=>section.querySelector(s),canvas=$('#asset-canvas'),ctx=canvas.getContext('2d');
   for(const [id,label] of EXPRESSION_ROLES){const o=document.createElement('option');o.value=id;o.textContent=label;$('#asset-role').append(o);}
   let source=null,asset=null,lastRole='',sourceBitmap=null,assetBitmap=null,renderTicket=0,importTicket=0,importBusy=false,loading=false;
   const current=()=>getState().assets.find(a=>a.role===$('#asset-role').value);
-  function release(){sourceBitmap?.close();assetBitmap?.close();sourceBitmap=null;assetBitmap=null;ctx.clearRect(0,0,canvas.width,canvas.height);}
+  const placementEditor=createAssetPlacementEditor({isLocked:()=>getState().locked || importBusy || loading,onApply:placement=>{const state=getState(),a=current();if(state.locked || importBusy || loading || !a)return false;onChange(state.assets.map(v=>v===a?{...v,placement}:v));$('#asset-status').textContent='配置を反映しました。作業ファイルを保存すると配置も保持できます。';return true;}});
+  function release(){placementEditor.close();sourceBitmap?.close();assetBitmap?.close();sourceBitmap=null;assetBitmap=null;ctx.clearRect(0,0,canvas.width,canvas.height);}
   function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(sourceBitmap && $('#asset-view').value==='source')ctx.drawImage(sourceBitmap,0,0,canvas.width,canvas.height);
@@ -25,6 +27,8 @@ export function createExpressionAssetPanel({getState,onChange,onBusy}) {
     section.hidden=!state.file;
     for(const input of section.querySelectorAll('input,select,button'))input.disabled=!state.file || locked;
     for(const input of $('#asset-placement').querySelectorAll('input,button'))input.disabled=locked || loading || !current();
+    $('#asset-touch').disabled=locked || loading || !current() || !sourceBitmap || !assetBitmap;
+    if(locked)placementEditor.close();
     $('#asset-download').disabled=locked || !current();$('#asset-remove').disabled=locked || !current();
     $('#asset-inventory').textContent=`読み込み済み ${state.assets.length} / ${EXPRESSION_ROLES.length} 役割：${state.assets.map(a=>EXPRESSION_ROLES.find(([id])=>id===a.role)[1]).join('、')||'なし'}。読込済みでも素材の品質や動作は未確認です。`;
     const a=current();$('#asset-info').textContent=a?`${a.name} · ${a.width} × ${a.height} px`:'この役割の素材はまだありません。';
@@ -53,11 +57,12 @@ export function createExpressionAssetPanel({getState,onChange,onBusy}) {
     if(changed) {
       renderTicket++;release();source=state.file;asset=next;lastRole=role;loading=Boolean(source);fields();
       if(source)void preview(renderTicket,source,next);
-    } else if(asset!==next){asset=next;fields();draw();}
+    } else if(asset!==next){placementEditor.close();asset=next;fields();draw();}
     controls();
   }
   $('#asset-role').addEventListener('change',()=>{update();fields();draw();});
-  $('#asset-view').addEventListener('change',draw);
+  $('#asset-view').addEventListener('change',()=>{placementEditor.close();draw();});
+  $('#asset-touch').addEventListener('click',()=>{const a=current();if(getState().locked || importBusy || loading || !a || !sourceBitmap || !assetBitmap)return;placementEditor.open({asset:a,sourceBitmap,assetBitmap,sourceVisible:$('#asset-view').value==='source'});});
   $('#asset-open').addEventListener('click',()=>$('#asset-file').click());
   $('#asset-file').addEventListener('change',async event=>{
     const image=event.target.files[0];event.target.value='';const state=getState();if(!image || !state.file || state.locked || importBusy)return;

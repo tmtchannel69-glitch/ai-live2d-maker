@@ -1,3 +1,4 @@
+import {activateTouchButtons} from './touch-controls.js';
 import {TRIANGLES,defaultDeform,validateDeforms,drawDeformed} from './expression-deform.js';
 
 export function createExpressionTouchEditor({getState,onApply}) {
@@ -11,19 +12,7 @@ export function createExpressionTouchEditor({getState,onApply}) {
   <p id="touch-deform-status" role="status" aria-live="polite"></p><div class="touch-deform-history"><button id="touch-deform-undo" class="secondary">取り消し</button><button id="touch-deform-redo" class="secondary">やり直し</button></div>
   <div class="touch-deform-actions"><button id="touch-deform-cancel" class="secondary">変更せず戻る</button><button id="touch-deform-apply" class="primary">形を反映</button></div>`;
   document.body.append(dialog);
-  // Activate touch controls on release as well as through keyboard/mouse clicks.
-  // Some browsers suppress the compatibility click after a captured canvas drag.
-  // A moved/cancelled touch never activates a button, and the following native
-  // click is consumed so a single tap cannot apply an action twice.
-  for(const button of dialog.querySelectorAll('button')) {
-    let contact=null,suppressClick=false;
-    button.addEventListener('pointerdown',event=>{suppressClick=false;if(event.pointerType==='touch' && event.isPrimary && !button.disabled)contact={id:event.pointerId,x:event.clientX,y:event.clientY};});
-    button.addEventListener('pointermove',event=>{if(contact && Math.hypot(event.clientX-contact.x,event.clientY-contact.y)>8)contact=null;});
-    button.addEventListener('pointercancel',()=>{contact=null;});
-    button.addEventListener('pointerup',event=>{if(!contact || contact.id!==event.pointerId)return;contact=null;if(button.disabled)return;button.click();suppressClick=true;});
-    button.addEventListener('touchend',event=>{if(suppressClick)event.preventDefault();},{passive:false});
-    button.addEventListener('click',event=>{if(suppressClick && event.isTrusted && event.detail>0){event.preventDefault();event.stopImmediatePropagation();suppressClick=false;}},true);
-  }
+  activateTouchButtons(dialog);
   const $=s=>dialog.querySelector(s),canvas=$('#touch-deform-canvas'),ctx=canvas.getContext('2d');
   const names=['左上','上中央','右上','左中央','中央','右中央','左下','下中央','右下'];
   names.forEach((name,i)=>{const option=document.createElement('option');option.value=i;option.textContent=`${i+1}：${name}`;$('#touch-deform-point').append(option);});

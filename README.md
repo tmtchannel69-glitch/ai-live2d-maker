@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/mobile-workflow` です。
+最新の開発ブランチは `feature/mobile-asset-placement` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/mobile-workflow https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/mobile-asset-placement https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/mobile-workflow` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/mobile-asset-placement` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -260,3 +260,9 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 画面上の「画像・分離・確認・動き・保存」から各工程へ移動できます。各工程の「次」も使えます。移動しても画像・結果・設定は保持されます。「動き」には素材読込・表情編集・頭と髪の動きへの入口があります。長い画面を繰り返しスクロールする負担を減らします。
 
 最後の「作業の保存・再開」から端末に作業ZIPを保存し、後日読み込んで再開できます。PNG・制作素材ZIP・PSDの出力は「結果と素材の出力へ」から行います。これらの素材出力と、再開用の作業ファイルを区別してください。VTube Studio用モデルの書き出しはまだ未対応です。
+
+## 指で表情素材を配置する
+
+素材を読み込んだら「指で位置を合わせる」を開きます。素材の枠をドラッグして移動し、「大きさを変える」で右下の点を動かすと、現在の縦横比を保って拡大・縮小できます。1〜4倍に画面を拡大でき、「拡大画面を移動」で見たい位置へ移動します。矢印は元画像に対して0.5%ずつ移動し、大小ボタンは現在のサイズに対して5%ずつ調整します。
+
+最大30操作の取り消し・やり直しに対応し、「配置を確定」で合成プレビューにも反映します。閉じる・変更せず戻るでは元の配置を保持します。素材の見え方を薄くする操作は、この編集画面だけの表示です。元PNGや出力の透明度は変えません。配置は従来の作業ZIPへ保存できます。
