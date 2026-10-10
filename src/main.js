@@ -1,3 +1,4 @@
+import {createWorkflowNavigation} from './workflow-navigation.js';
 import {defaultExpressionLayer} from './expression-layer-state.js';
 import {createExpressionScene} from './expression-scene.js';
 import {createExpressionAssetPanel} from './expression-asset-panel.js';
@@ -30,7 +31,7 @@ app.innerHTML = `
 <section class="project-panel"><div class="project-actions"><button id="save-project" class="secondary" disabled>作業ファイルを保存</button><button id="open-project" class="secondary">作業ファイルを開く</button></div><input id="project-file" type="file" accept=".zip,application/zip" hidden><p class="muted">元画像・すべての指定・反映済みパーツ・確認記録・動きの試作設定・追加した表情素材を端末に保存します。開くと現在の作業を置き換えます。</p><p id="project-status" role="status" aria-live="polite"></p></section>
 <div class="workspace">
 <section class="panel upload-panel"><div class="panel-title"><h2><span>01</span> キャラクター画像</h2><button id="reset" class="text-button" disabled>リセット</button></div>
-<label class="dropzone" id="dropzone" for="file"><div id="upload-hint"><div class="upload-icon">↑</div><h3>画像をここにドロップ</h3><p>またはタップして画像を選択</p><span class="file-note">PNG・JPG・WebP / 最大 10 MB</span><span class="choose-button">画像を選択</span></div><img id="source-preview" hidden alt="アップロードしたキャラクター画像"></label>
+<label class="dropzone" id="dropzone" for="file"><div id="upload-hint"><div class="upload-icon">↑</div><h3>キャラクター画像を選択</h3><p>タップして端末の画像を選びます</p><span class="file-note">PNG・JPG・WebP / 最大 10 MB</span><span class="choose-button">画像を選択</span></div><img id="source-preview" hidden alt="アップロードしたキャラクター画像"></label>
 <input id="file" type="file" accept="image/png,image/jpeg,image/webp" class="visually-hidden"><p id="file-info" class="muted">背景がシンプルな正面画像がおすすめです</p></section>
 <section class="panel settings"><div class="panel-title"><h2><span>02</span> パーツ分離</h2><span class="pill">デモモード</span></div><div class="mode-controls"><label>パーツ構成 <select id="parts-template"><option value="basic">基本の四分類</option><option value="production">制作向け・上半身15項目</option></select></label><label>処理方式 <select id="processing-mode"><option value="demo">デモ（固定領域）</option><option value="ai">AI 試作（点・枠を指定）</option></select></label><button id="edit-prompts" class="secondary" disabled hidden>切り抜く場所を指定</button></div><p id="ai-help" class="muted" hidden>試作サーバーへ画像を送って処理します。第三者の AI サービスへは送りません。外部公開には対応していません。</p><p id="template-help" class="muted" hidden>構成を切り替えても指定と結果は保持します。左右はキャラクター本人の左右（正面では左＝画面右）。使う項目だけ選び、見える領域を指定してください。目の細分化や隠れ部分の描き足しは別工程です。</p><h3>分離するパーツ</h3><p class="muted">書き出したいパーツを選んでください。</p><div class="part-options">${BASIC_IDS.map(id => [id,labels[id]]).map(([id,label]) => `<label class="part-option"><input type="checkbox" value="${id}" checked><span>${label}</span><small>PNG</small></label>`).join('')}</div><div class="notice"><span>✧</span><p>現在は画像を領域ごとに切り出すデモです。<br>AI 試作では残す点・除く点を指定できます。</p></div><button id="separate" class="primary" disabled>✦ パーツを分離する <span>→</span></button><p id="status" role="status" aria-live="polite">まずはキャラクター画像を選択してください</p></section>
 </div>
@@ -41,7 +42,7 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene;
+let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow;
 let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={};
 let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
@@ -89,6 +90,7 @@ expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAsse
   else {expressionDeforms={...expressionDeforms};delete expressionDeforms[role];}
   expressionScene.update();expressionPanel.update();
 }});
+workflow=createWorkflowNavigation({getState:()=>({file,resultCount:results.length,assetCount:expressionAssets.length})});
 function rememberTemplate() {templates[template]={mode:$('#processing-mode').value,selected:selected()};}
 function renderPartChoices() {
   const parts=TEMPLATES[template],groups=template==='basic'?['']: [...new Set(parts.map(part=>part.group))];
@@ -196,6 +198,7 @@ function updateButton() {
   $('#edit-prompts').disabled = !file || locked; $('#processing-mode').disabled = locked;
   $('#separate').disabled = locked || !file || !selected().length || (isAi() && selected().some(id => !hasUsablePrompt(editor?.prompts[id])));
   $('#separate').textContent = busy ? '処理中…' : isAi() ? '✦ AI でパーツを分離する →' : '✦ パーツを分離する →';
+  workflow?.update();
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
