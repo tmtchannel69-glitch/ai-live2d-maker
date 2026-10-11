@@ -1,3 +1,4 @@
+import {defaultGroupKeys} from './group-motion-keys.js';
 import {createProjectFile} from './project-file.js';
 import {BASIC_IDS,defaultTemplates} from './parts.js';
 import {defaultExpressionLayer} from './expression-layer-state.js';
@@ -30,10 +31,11 @@ export async function createSampleProject() {
   expressionClips.mouth_inside={shape:'ellipse',...expressions.find(a=>a.role==='mouth_inside').placement};
   const expressionGroups=emptyGroups();expressionGroups.assignments=suggestedAssignments(expressions);expressionGroups.clipFollow=Object.fromEntries(Object.keys(expressionClips).map(role=>[role,true]));
   expressionGroups.transforms.face={dx:0,dy:0,pivotX:.5,pivotY:.4,angle:0,scale:1};
+  const groupMotionKeys={face:defaultGroupKeys(expressionGroups,'face')};groupMotionKeys.face.negative={...groupMotionKeys.face.center,dx:-.025,angle:-8};groupMotionKeys.face.positive={...groupMotionKeys.face.center,dx:.025,angle:8};
   const source=canvas(width,height),ctx=source.getContext('2d');ctx.fillStyle='#786bbb';ctx.beginPath();ctx.roundRect(68,220,104,100,24);ctx.fill();
   ctx.drawImage(face,.15*width,.08*height,.7*width,.65*height);
   for(const a of expressions.filter(a=>a.role!=='face_base' && !a.role.startsWith('eye_closed'))){const bitmap=await createImageBitmap(a.blob);try{const p=a.placement;ctx.drawImage(bitmap,p.x*width,p.y*height,p.width*width,p.height*height);}finally{bitmap.close();}}
   const file=new File([await blob(source)],'sample-character.png',{type:'image/png'});
-  const result=await createProjectFile({file,mode:'demo',selected:[...BASIC_IDS],prompts:{},results:[],templates:defaultTemplates(),expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups});
+  const result=await createProjectFile({file,mode:'demo',selected:[...BASIC_IDS],prompts:{},results:[],templates:defaultTemplates(),expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups,groupMotionKeys});
   return new File([result],'sample-work.zip',{type:'application/zip'});
 }

@@ -14,7 +14,7 @@ export function createExpressionGroupEditor({getState,isLocked,onApply}) {
   <div class="touch-deform-history"><button id="group-turn-left" class="secondary">左に1度</button><button id="group-turn-right" class="secondary">右に1度</button><button id="group-smaller" class="secondary">5%小さく</button><button id="group-larger" class="secondary">5%大きく</button></div>
   <details><summary>数値で微調整</summary><form id="group-form"><div id="group-fields" class="group-fields"></div><button class="secondary" id="group-number-apply">数値を下書きに反映</button></form></details>
   <button id="group-center" class="secondary">素材の中心に合わせる</button><button id="group-reset" class="secondary">このグループを元に戻す</button>
-  <details><summary>素材のまとめ方と表示範囲</summary><p class="muted">表示範囲を一緒に動かす場合だけチェックします。瞬きの形には追従しません。</p><div id="group-assignments"></div><button id="group-clear" class="secondary">まとめて動かす設定を解除</button></details>
+  <details id="group-membership"><summary>素材のまとめ方と表示範囲</summary><p class="muted">表示範囲を一緒に動かす場合だけチェックします。瞬きの形には追従しません。</p><div id="group-assignments"></div><button id="group-clear" class="secondary">まとめて動かす設定を解除</button></details>
   <p id="group-status" role="status" aria-live="polite"></p><div class="touch-deform-history"><button id="group-undo" class="secondary">取り消し</button><button id="group-redo" class="secondary">やり直し</button></div>
   <div class="touch-deform-actions"><button id="group-cancel" class="secondary">変更せず戻る</button><button id="group-confirm" class="primary">まとめ方を確定</button></div>`;
   const $=s=>dialog.querySelector(s);
@@ -23,7 +23,7 @@ export function createExpressionGroupEditor({getState,isLocked,onApply}) {
   for(const [id,[label,min,max]] of Object.entries(fields)) {const l=document.createElement('label');l.textContent=label;const input=document.createElement('input');Object.assign(input,{id:`group-${id}`,type:'number',min:String(min),max:String(max),step:'any',required:true});l.append(input);$('#group-fields').append(l);}
   document.body.append(dialog);activateTouchButtons(dialog);
   const canvas=$('#group-canvas'),ctx=canvas.getContext('2d'),viewport=$('#group-viewport');
-  let draft=null,assets=[],clips={},render=null,gesture=null,undo=[],redo=[];
+  let draft=null,assets=[],clips={},render=null,gesture=null,undo=[],redo=[],confirm=onApply,keyReference=null;
   const id=()=>$('#group-id').value,setting=()=>draft.transforms[id()]||defaultGroupTransform(),clone=()=>structuredClone(draft);
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   function remember(before){if(JSON.stringify(before)===JSON.stringify(draft))return;undo.push(before);if(undo.length>30)undo.shift();redo=[];}
@@ -51,14 +51,14 @@ export function createExpressionGroupEditor({getState,isLocked,onApply}) {
     if(handle){ctx.fillStyle='#ffdb70';ctx.beginPath();ctx.arc(...handle,9*unit,0,Math.PI*2);ctx.fill();}ctx.restore();
   }
   function controls(){
-    if(!draft)return;const members=groupMembers(draft,id(),assets),s=setting();$('#group-members').textContent=`${id()==='face'?'親なし。子の目・口も対象。':'親：顔全体。'} ${members.length}素材。${members.length?'所属の確認・変更は下の「素材のまとめ方と表示範囲」へ。':'役割に合わせてまとめてください。'}`;
+    if(!draft)return;const members=groupMembers(draft,id(),assets),s=setting();$('#group-members').textContent=`${id()==='face'?'親なし。子の目・口も対象。':'親：顔全体。'} ${members.length}素材。${keyReference?'この位置だけを編集します。所属は通常のグループ画面で変更できます。':members.length?'所属の確認・変更は下の「素材のまとめ方と表示範囲」へ。':'役割に合わせてまとめてください。'}`;
     $('#group-status').textContent=`下書き：横 ${(s.dx*100).toFixed(2)}% ／ 縦 ${(s.dy*100).toFixed(2)}% ／ 角度 ${s.angle.toFixed(2)}度 ／ 大きさ ${(s.scale*100).toFixed(2)}%。`;
     $('#group-undo').disabled=!undo.length || Boolean(gesture);$('#group-redo').disabled=!redo.length || Boolean(gesture);$('#group-center').disabled=!members.length;
   }
   function refresh(withRows=false){numericFields();if(withRows)rows();draw();controls();}
   function change(fn){cancelGesture();if(!draft || isLocked())return;const before=clone();fn();remember(before);refresh();}
   function cancelGesture(){if(!gesture)return;const g=gesture;gesture=null;draft=g.before;if(canvas.hasPointerCapture(g.pointer))canvas.releasePointerCapture(g.pointer);refresh();}
-  function close(){cancelGesture();if(dialog.open)dialog.close();draft=null;assets=[];clips={};render=null;undo=[];redo=[];$('#group-assignments').replaceChildren();ctx.clearRect(0,0,canvas.width,canvas.height);}
+  function close(){cancelGesture();if(dialog.open)dialog.close();draft=null;assets=[];clips={};render=null;confirm=onApply;keyReference=null;undo=[];redo=[];$('#group-assignments').replaceChildren();ctx.clearRect(0,0,canvas.width,canvas.height);}
   function position(e){const r=canvas.getBoundingClientRect();return [(e.clientX-r.left)*canvas.width/r.width,(e.clientY-r.top)*canvas.height/r.height];}
   canvas.addEventListener('pointerdown',e=>{
     if(gesture){cancelGesture();return;}if(!draft || isLocked() || !e.isPrimary || e.button!==0)return;
@@ -85,7 +85,7 @@ export function createExpressionGroupEditor({getState,isLocked,onApply}) {
   for(const b of dialog.querySelectorAll('[data-group-nudge]'))b.addEventListener('click',()=>change(()=>{const s={...setting()},direction=b.dataset.groupNudge,step=['left','up'].includes(direction)?-.005:.005,delta=inversePoint(parentMatrix(draft,id(),canvas.width,canvas.height),['left','right'].includes(direction)?[step*canvas.width,0]:[0,step*canvas.height],true);s.dx=clamp(s.dx+delta[0]/canvas.width,-1,1);s.dy=clamp(s.dy+delta[1]/canvas.height,-1,1);draft.transforms[id()]=s;}));
   for(const [button,k,amount] of [['turn-left','angle',-1],['turn-right','angle',1],['smaller','scale',.95],['larger','scale',1.05]])$(`#group-${button}`).addEventListener('click',()=>change(()=>{const s={...setting()};s[k]=k==='angle'?clamp(s[k]+amount,-180,180):clamp(s[k]*amount,.1,4);draft.transforms[id()]=s;}));
   $('#group-center').addEventListener('click',()=>change(()=>{const members=groupMembers(draft,id(),assets);if(!members.length)return;const left=Math.min(...members.map(a=>a.placement.x)),right=Math.max(...members.map(a=>a.placement.x+a.placement.width)),top=Math.min(...members.map(a=>a.placement.y)),bottom=Math.max(...members.map(a=>a.placement.y+a.placement.height));draft.transforms[id()]={...setting(),pivotX:clamp((left+right)/2,0,1),pivotY:clamp((top+bottom)/2,0,1)};}));
-  $('#group-reset').addEventListener('click',()=>change(()=>{delete draft.transforms[id()];}));
+  $('#group-reset').addEventListener('click',()=>change(()=>{if(keyReference)draft.transforms[id()]={...keyReference};else delete draft.transforms[id()];}));
   $('#group-suggest').addEventListener('click',()=>{change(()=>{draft.assignments=suggestedAssignments(assets);});if(draft)rows();});
   $('#group-clear').addEventListener('click',()=>{change(()=>{draft=emptyGroups();});if(draft)rows();});
   function applyNumbers(){if(!draft || isLocked() || !$('#group-form').reportValidity())return false;const s=Object.fromEntries(Object.entries(fields).map(([k,[,,,factor]])=>[k,Number($(`#group-${k}`).value)/factor]));try{validateGroups({...draft,transforms:{...draft.transforms,[id()]:s}},assets,clips);change(()=>{draft.transforms[id()]=s;});return true;}catch(e){$('#group-status').textContent=e.message;return false;}}
@@ -94,7 +94,7 @@ export function createExpressionGroupEditor({getState,isLocked,onApply}) {
   $('#group-redo').addEventListener('click',()=>{cancelGesture();if(!redo.length)return;undo.push(clone());draft=redo.pop();refresh(true);});
   for(const k of ['close','cancel'])$(`#group-${k}`).addEventListener('click',close);
   dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
-  $('#group-confirm').addEventListener('click',()=>{cancelGesture();if(!draft || isLocked()){close();return;}try{const next=validateGroups(draft,assets,clips);if(onApply(next))close();}catch(e){$('#group-status').textContent=e.message;}});
+  $('#group-confirm').addEventListener('click',()=>{cancelGesture();if(!draft || isLocked()){close();return;}try{const next=validateGroups(draft,assets,clips);if(confirm(next))close();}catch(e){$('#group-status').textContent=e.message;}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelGesture();});window.addEventListener('resize',()=>{cancelGesture();if(dialog.open)draw();});
-  return {close,open({width,height,renderPreview}){close();const state=getState();draft=structuredClone(state.groups);assets=[...state.assets];clips=state.clips;render=renderPreview;canvas.width=width;canvas.height=height;canvas.style.width='100%';$('#group-id').value='face';$('#group-mode').value='move';$('#group-zoom').value='1';dialog.showModal();viewport.scrollLeft=0;viewport.scrollTop=0;refresh(true);}};
+  return {close,open({width,height,renderPreview,editGroup,initialGroups,onConfirm,keyLabel}){close();const state=getState();draft=structuredClone(initialGroups||state.groups);confirm=onConfirm||onApply;keyReference=editGroup?{...(state.groups.transforms[editGroup]||defaultGroupTransform())}:null;assets=[...state.assets];clips=state.clips;render=renderPreview;canvas.width=width;canvas.height=height;canvas.style.width='100%';$('#group-id').value=editGroup||'face';$('#group-id').disabled=Boolean(editGroup);$('#group-suggest').hidden=Boolean(editGroup);$('#group-membership').hidden=Boolean(editGroup);$('#group-title').textContent=editGroup?`${GROUP_LABELS[editGroup]}：${keyLabel}の動き`:'素材をまとめて動かす';$('#group-confirm').textContent=editGroup?'この位置の動きを確定':'まとめ方を確定';$('#group-mode').value='move';$('#group-zoom').value='1';dialog.showModal();viewport.scrollLeft=0;viewport.scrollTop=0;refresh(true);}};
 }

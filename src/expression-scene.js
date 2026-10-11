@@ -1,5 +1,6 @@
+import {GROUP_KEY_LABELS,defaultGroupKeys,evaluateGroupKeys,validateGroupKeys} from './group-motion-keys.js';
 import {createExpressionGroupEditor} from './expression-group-editor.js';
-import {validateGroups,hasGroups,groupMatrix,IDENTITY} from './expression-groups.js';
+import {validateGroups,hasGroups,groupMatrix,IDENTITY,GROUP_LABELS,groupMembers,defaultGroupTransform} from './expression-groups.js';
 import {createAssetPlacementEditor} from './asset-placement-editor.js';
 import {validateClips,clipPath} from './expression-clips.js';
 import {createExpressionTouchEditor} from './expression-touch-editor.js';
@@ -7,13 +8,16 @@ import {GRID,TRIANGLES,defaultDeform,validateDeforms,interpolateShape,drawDeform
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {EXPRESSION_CONDITIONS,defaultExpressionLayer,expressionLayerVisible} from './expression-layer-state.js';
 
-export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups}) {
+export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys}) {
   const section=document.createElement('section');section.className='panel expression-scene';section.hidden=true;
   section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。Live2Dモデルの出力は未対応です。</p>
   <p id="scene-status" role="status" aria-live="polite"></p><div class="motion-workspace"><div class="motion-stage"><canvas id="scene-canvas" width="1" height="1" aria-label="表情素材の合成と開閉プレビュー"></canvas></div><div class="motion-controls">
   <label>背景<select id="scene-background"><option value="transparent">透明背景・追加素材だけ</option><option value="source">元画像・位置確認用</option></select></label>
-  <label>左目の開き（0＝閉じる、1＝開く）<input id="scene-left" type="range" min="0" max="1" step="0.1" value="1"></label><label>右目の開き（0＝閉じる、1＝開く）<input id="scene-right" type="range" min="0" max="1" step="0.1" value="1"></label><label>口の開き（0＝閉じる、1＝開く）<input id="scene-mouth" type="range" min="0" max="1" step="0.1" value="0"></label><p id="scene-values" class="muted"></p><button id="scene-play" class="secondary">瞬き・口の切替を再生</button>
+  <label>左目の開き（0＝閉じる、1＝開く）<input id="scene-left" type="range" min="0" max="1" step="0.1" value="1"></label><label>右目の開き（0＝閉じる、1＝開く）<input id="scene-right" type="range" min="0" max="1" step="0.1" value="1"></label><label>口の開き（0＝閉じる、1＝開く）<input id="scene-mouth" type="range" min="0" max="1" step="0.1" value="0"></label><label>顔の向きの試作（左 −1・中央 0・右 1）<input id="scene-turn" type="range" min="-1" max="1" step="0.05" value="0"></label><p id="scene-values" class="muted"></p><button id="scene-play" class="secondary">瞬き・口の切替を再生</button>
   <button id="scene-groups" class="secondary">素材をまとめて動かす</button><p id="scene-group-status" class="muted"></p>
+  <details id="group-key-panel"><summary>スライダーで動く位置を設定</summary><p class="muted">グループごとに左・中央・右の位置を作ります。設定ありのグループは通常の配置をこの3位置で置き換えて動きます。実際の立体的な顔の向きやLive2D出力ではありません。</p>
+  <label>動かすグループ<select id="key-group"></select></label><label>編集する位置<select id="key-position"></select></label><button id="key-edit" class="secondary">この位置の動きを編集</button><button id="key-use-base" class="secondary">通常の配置から3位置を作る</button><button id="key-remove" class="secondary">このグループの動きを解除</button><p id="key-status" role="status" aria-live="polite"></p></details>
+  <button id="scene-motion-play" class="secondary">向きと表情の動きを再生</button>
   <form id="scene-layer"><label>調整する素材<select id="scene-role"></select></label><label>重なり順（大きいほど手前）<input id="scene-order" type="number" min="0" max="99" step="1" required></label><label>表示する条件<select id="scene-condition"></select></label><label class="motion-check"><input id="scene-enabled" type="checkbox"> この素材を表示対象にする</label><button id="scene-apply" class="secondary">表示設定を反映</button></form>
   <form id="clip-form"><h3>選択素材を表示する範囲</h3><p class="muted">範囲の外側を隠します。元画像上の範囲を指定します。既定は固定です。「素材をまとめて動かす」で範囲の追従を選べます。9点の変形には追従しません。細かな輪郭や開閉に合わせた範囲の変形は今後対応します。</p>
   <label>範囲の形<select id="clip-shape"><option value="ellipse">楕円</option><option value="rect">長方形</option></select></label>
@@ -30,6 +34,8 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   document.querySelector('.asset-panel').after(section);
   const $=s=>section.querySelector(s),canvas=$('#scene-canvas'),ctx=canvas.getContext('2d');
   for(const [value,text] of Object.entries(EXPRESSION_CONDITIONS)){const o=document.createElement('option');o.value=value;o.textContent=text;$('#scene-condition').append(o);}
+  for(const [value,label] of Object.entries(GROUP_LABELS)){const o=document.createElement('option');o.value=value;o.textContent=label;$('#key-group').append(o);}
+  for(const [value,label] of Object.entries(GROUP_KEY_LABELS)){const o=document.createElement('option');o.value=value;o.textContent=label;$('#key-position').append(o);}$('#key-position').value='center';
   const pointLabels=['左上','上中央','右上','左中央','中央','右中央','左下','下中央','右下'];
   pointLabels.forEach((text,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}：${text}`;$('#deform-point').append(o);});
   let source=null,assets=[],bitmaps=[],background=null,current='',generation=0,loading=false,error='',playing=false,raf=0,start=0,lastFrame='',lastTime=0;
@@ -40,8 +46,9 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     if(getState().locked || loading)return false;
     try{validateGroups(setting,getState().assets,getState().clips);stop();onGroups(setting);controls();draw();return true;}catch(e){$('#scene-group-status').textContent=e.message;return false;}
   }});
-  const manual=()=>Object.fromEntries(['left','right','mouth'].map(id=>[id,Number($(`#scene-${id}`).value)]));
-  function render(ctx,values,override,groups=getState().groups) {
+  const manual=()=>Object.fromEntries(['left','right','mouth','turn'].map(id=>[id,Number($(`#scene-${id}`).value)]));
+  function render(ctx,values,override,groups=getState().groups,withKeys=true) {
+    if(withKeys)groups=evaluateGroupKeys(groups,getState().groupKeys,values.turn||0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(background && $('#scene-background').value==='source')ctx.drawImage(background,0,0,canvas.width,canvas.height);
     for(const item of bitmaps.slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
@@ -59,15 +66,15 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     render(ctx,values);
     if($('#deform-grid').checked) {
       const p=getState().assets.find(a=>a.role===current)?.placement,setting=getState().deforms[current];
-      if(p && setting && expressionLayerVisible(layer(current),values)){const points=interpolateShape(setting,values[setting.driver]).map(([x,y])=>[(p.x+x*p.width)*canvas.width,(p.y+y*p.height)*canvas.height]);ctx.save();ctx.transform(...groupMatrix(getState().groups,getState().groups.assignments[current],canvas.width,canvas.height));ctx.strokeStyle='#00ffff';ctx.fillStyle='#00ffff';ctx.lineWidth=1;for(const ids of TRIANGLES){ctx.beginPath();ids.forEach((i,j)=>j?ctx.lineTo(...points[i]):ctx.moveTo(...points[i]));ctx.closePath();ctx.stroke();}points.forEach((point,i)=>{ctx.beginPath();ctx.arc(...point,i===Number($('#deform-point').value)?5:3,0,Math.PI*2);ctx.fill();});ctx.restore();}
+      if(p && setting && expressionLayerVisible(layer(current),values)){const points=interpolateShape(setting,values[setting.driver]).map(([x,y])=>[(p.x+x*p.width)*canvas.width,(p.y+y*p.height)*canvas.height]);ctx.save();ctx.transform(...groupMatrix(evaluateGroupKeys(getState().groups,getState().groupKeys,values.turn||0),getState().groups.assignments[current],canvas.width,canvas.height));ctx.strokeStyle='#00ffff';ctx.fillStyle='#00ffff';ctx.lineWidth=1;for(const ids of TRIANGLES){ctx.beginPath();ids.forEach((i,j)=>j?ctx.lineTo(...points[i]):ctx.moveTo(...points[i]));ctx.closePath();ctx.stroke();}points.forEach((point,i)=>{ctx.beginPath();ctx.arc(...point,i===Number($('#deform-point').value)?5:3,0,Math.PI*2);ctx.fill();});ctx.restore();}
     }
-    $('#scene-values').textContent=`${playing?'再生中：':'手動：'}左目 ${values.left.toFixed(2)} ／ 右目 ${values.right.toFixed(2)} ／ 口 ${values.mouth.toFixed(2)}`;
+    $('#scene-values').textContent=`${playing?'再生中：':'手動：'}左目 ${values.left.toFixed(2)} ／ 右目 ${values.right.toFixed(2)} ／ 口 ${values.mouth.toFixed(2)} ／ 向き ${(values.turn||0).toFixed(2)}`;
   }
-  function stop(){playing=false;cancelAnimationFrame(raf);raf=0;$('#scene-play').textContent='瞬き・口の切替を再生';draw();}
+  function stop(){playing=false;cancelAnimationFrame(raf);raf=0;$('#scene-play').textContent='瞬き・口の切替を再生';$('#scene-motion-play').textContent='向きと表情の動きを再生';draw();}
   function frame(now) {
     if(!playing)return;const t=(now-start)/1000,values={left:t%4>=3.6?0:1,right:t%4>=3.5 && t%4<3.9?0:1,mouth:t%2>=1?1:0},key=JSON.stringify(values);
-    if(Object.keys(getState().deforms).length){
-      if(now-lastTime>=33){const blink=phase=>phase<3.5?1:Math.abs((phase-3.5)/.25-1);draw({left:blink(t%4),right:blink((t+.1)%4),mouth:(1-Math.cos(t*Math.PI))/2});lastTime=now;}
+    if(Object.keys(getState().deforms).length || Object.keys(getState().groupKeys).length){
+      if(now-lastTime>=33){const blink=phase=>phase<3.5?1:Math.abs((phase-3.5)/.25-1);draw({left:blink(t%4),right:blink((t+.1)%4),mouth:(1-Math.cos(t*Math.PI))/2,turn:Math.sin(t*Math.PI/2)});lastTime=now;}
     }else if(key!==lastFrame){lastFrame=key;draw(values);}raf=requestAnimationFrame(frame);
   }
   function fields(){const s=layer(current);$('#scene-order').value=s.order;$('#scene-condition').value=s.condition;$('#scene-enabled').checked=s.enabled;deformFields();clipFields();}
@@ -99,7 +106,8 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     for(const input of $('#clip-form').querySelectorAll('input,select,button'))input.disabled=disabled || playing;
     $('#clip-remove').disabled=disabled || playing || !state.clips[current];
     $('#deform-remove').disabled=disabled || playing || !state.deforms[current];
-    for(const id of ['left','right','mouth'])$(`#scene-${id}`).disabled=disabled || playing;
+    for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).disabled=disabled || playing;
+    const group=$('#key-group').value,assigned=groupMembers(state.groups,group,state.assets).length;for(const id of ['edit','use-base'])$(`#key-${id}`).disabled=disabled || playing || !assigned;$('#key-remove').disabled=disabled || playing || !state.groupKeys[group];$('#key-group').disabled=disabled || playing;$('#key-position').disabled=disabled || playing;$('#key-status').textContent=state.groupKeys[group]?'左・中央・右の動きあり。向きのスライダーで途中も確認できます。':assigned?'動きは未設定です。編集を確定するまで通常の配置を使います。':'先に「素材をまとめて動かす」でこのグループへ素材を割り当ててください。';
     $('#scene-group-status').textContent=hasGroups(state.groups)?'まとめて動かす設定あり。個別の配置・点の編集はグループを適用する前の値です。':'素材をまとめて移動・回転できます。設定は確定するまで適用しません。';
     $('#scene-status').textContent=loading?'表情の合成を準備しています…':error || (assets.length?`${assets.length}素材。切替時の隙間や重なりを確認してください。読み込み済みでも品質・動作は未確認です。`:'上の「表情素材の読み込み・位置合わせ」でPNGを用意してください。');
   }
@@ -122,7 +130,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     const state=getState(),changed=source!==state.file || assets.length!==state.assets.length || state.assets.some((a,i)=>a.role!==assets[i].role || a.blob!==assets[i].blob);
     if(changed || state.locked){touchEditor.close();clipEditor.close();groupEditor.close();}
     if(!changed && state.assets.some((a,i)=>['x','y','width','height'].some(k=>a.placement[k]!==assets[i].placement[k]))){clipEditor.close();groupEditor.close();stop();assets=[...state.assets];if(current)clipFields();}
-    if(source!==state.file){$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
+    if(source!==state.file){$('#scene-turn').value='0';$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
     if(changed) {
       stop();generation++;release();source=state.file;assets=[...state.assets];loading=Boolean(source && assets.length);error='';
       if(!assets.some(a=>a.role===current))current=assets[0]?.role||'';
@@ -133,27 +141,37 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     controls();if(!playing)draw();
   }
   $('#scene-role').addEventListener('change',()=>{groupEditor.close();clipEditor.close();touchEditor.close();stop();current=$('#scene-role').value;fields();draw();controls();});
-  for(const id of ['left','right','mouth'])$(`#scene-${id}`).addEventListener('input',()=>draw());
+  for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).addEventListener('input',()=>draw());
   $('#scene-background').addEventListener('change',()=>{stop();controls();});
   $('#scene-layer').addEventListener('submit',event=>{
     event.preventDefault();if(getState().locked || loading || !current || !$('#scene-layer').reportValidity())return;
     stop();onChange(current,{order:Number($('#scene-order').value),condition:$('#scene-condition').value,enabled:$('#scene-enabled').checked});draw();controls();
   });
   for(const id of ['key','point'])$(`#deform-${id}`).addEventListener('change',()=>{deformFields();const setting=getState().deforms[current];if(setting && id==='key')$(`#scene-${setting.driver}`).value=$('#deform-key').value==='closed'?'0':'1';draw();});
-  $('#scene-groups').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();groupEditor.open({width:canvas.width,height:canvas.height,renderPreview:(target,groups)=>render(target,manual(),undefined,groups)});});
+  $('#scene-groups').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();groupEditor.open({width:canvas.width,height:canvas.height,renderPreview:(target,groups)=>render(target,manual(),undefined,groups,false)});});
   $('#deform-touch').addEventListener('click',()=>{const item=bitmaps.find(a=>a.role===current);if(getState().locked || loading || !item)return;stop();controls();touchEditor.open({role:current,bitmap:item.bitmap,setting:getState().deforms[current],key:$('#deform-key').value,name:EXPRESSION_ROLES.find(([id])=>id===current)[1]});});
   $('#clip-form').addEventListener('submit',e=>{e.preventDefault();if(getState().locked || loading || playing || !$('#clip-form').reportValidity())return;applyClip(inputClip());});
   $('#clip-touch').addEventListener('click',()=>{
     if(getState().locked || loading || playing || !current || !background || !$('#clip-form').reportValidity())return;
     const s=inputClip();try{validateClips({[current]:s},getState().assets);}catch(e){$('#clip-status').textContent=e.message;return;}
-    stop();controls();clipEditor.open({asset:{name:EXPRESSION_ROLES.find(([id])=>id===current)[1],placement:s},sourceBitmap:canvas,sourceVisible:false,shape:s.shape,outlineMatrix:getState().groups.clipFollow[current]?groupMatrix(getState().groups,getState().groups.assignments[current],canvas.width,canvas.height):IDENTITY,renderPreview:(target,p)=>render(target,manual(),{role:current,setting:{shape:s.shape,...p}})});
+    stop();controls();clipEditor.open({asset:{name:EXPRESSION_ROLES.find(([id])=>id===current)[1],placement:s},sourceBitmap:canvas,sourceVisible:false,shape:s.shape,outlineMatrix:getState().groups.clipFollow[current]?groupMatrix(evaluateGroupKeys(getState().groups,getState().groupKeys,manual().turn),getState().groups.assignments[current],canvas.width,canvas.height):IDENTITY,renderPreview:(target,p)=>render(target,manual(),{role:current,setting:{shape:s.shape,...p}})});
   });
   $('#clip-remove').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;stop();onClip(current,null);clipFields();draw();controls();});
   $('#deform-grid').addEventListener('change',()=>draw());
   $('#deform-form').addEventListener('submit',event=>{event.preventDefault();if(getState().locked || loading || playing || !current || !$('#deform-form').reportValidity())return;const s=structuredClone(getState().deforms[current]||defaultDeform(current));s.driver=$('#deform-driver').value;s[$('#deform-key').value][Number($('#deform-point').value)]=[Number($('#deform-x').value)/100,Number($('#deform-y').value)/100];applyShape(s);});
   $('#deform-reset').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;const s=structuredClone(getState().deforms[current]||defaultDeform(current));s.driver=$('#deform-driver').value;s[$('#deform-key').value]=GRID.map(p=>[...p]);applyShape(s);});
   $('#deform-remove').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;stop();onDeform(current,null);fields();draw();controls();});
-  $('#scene-play').addEventListener('click',()=>{if(playing){stop();controls();return;}if(getState().locked || loading || !bitmaps.length)return;playing=true;start=performance.now();lastFrame='';$('#scene-play').textContent='再生を停止';controls();raf=requestAnimationFrame(frame);});
+  for(const id of ['group','position'])$(`#key-${id}`).addEventListener('change',()=>{groupEditor.close();controls();});
+  function applyKeys(next){if(getState().locked || loading)return false;try{validateGroupKeys(next,getState().groups,getState().assets,getState().clips);stop();onGroupKeys(next);controls();draw();return true;}catch(e){$('#key-status').textContent=e.message;return false;}}
+  $('#key-use-base').addEventListener('click',()=>{if(getState().locked || playing || loading)return;const id=$('#key-group').value;applyKeys({...getState().groupKeys,[id]:defaultGroupKeys(getState().groups,id)});});
+  $('#key-remove').addEventListener('click',()=>{if(getState().locked || playing || loading)return;const next={...getState().groupKeys};delete next[$('#key-group').value];applyKeys(next);});
+  $('#key-edit').addEventListener('click',()=>{
+    const state=getState(),id=$('#key-group').value,key=$('#key-position').value;if(state.locked || loading || playing || !groupMembers(state.groups,id,state.assets).length)return;
+    stop();const value={negative:-1,center:0,positive:1}[key],setting=structuredClone(state.groupKeys[id]||defaultGroupKeys(state.groups,id)),initial=evaluateGroupKeys(state.groups,state.groupKeys,value);initial.transforms[id]={...setting[key]};
+    groupEditor.open({width:canvas.width,height:canvas.height,editGroup:id,keyLabel:GROUP_KEY_LABELS[key],initialGroups:initial,renderPreview:(target,groups)=>render(target,{...manual(),turn:value},undefined,groups,false),onConfirm:groups=>{setting[key]={...(groups.transforms[id]||defaultGroupTransform())};const ok=applyKeys({...getState().groupKeys,[id]:setting});if(ok){$('#scene-turn').value=String(value);draw();}return ok;}});
+  });
+  function togglePlayback(){if(playing){stop();controls();return;}if(getState().locked || loading || !bitmaps.length)return;playing=true;start=performance.now();lastFrame='';lastTime=0;$('#scene-play').textContent='再生を停止';$('#scene-motion-play').textContent='再生を停止';controls();raf=requestAnimationFrame(frame);}
+  $('#scene-play').addEventListener('click',togglePlayback);$('#scene-motion-play').addEventListener('click',togglePlayback);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();controls();}});
   return {update};
 }
