@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/shape-adjustments` です。
+最新の開発ブランチは `feature/shape-composite-preview` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/shape-adjustments https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/shape-composite-preview https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/shape-adjustments` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/shape-composite-preview` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -338,3 +338,5 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 ## 閉じた・途中の形の調整
 
 「指で形を編集」の「形全体をまとめて調整」で、選んだ閉じた/開いた形の幅・厚み・位置を一度に変更できます。もう一方の形のコピー、取り消し、途中の開きの確認に対応。途中確認中は編集を止め、チェックを外してから反映します。元PNGと従来の保存形式を維持。[操作と制限](docs/SHAPE_ADJUSTMENTS.md)。
+
+編集中に「重なりを確認（下書き）」を開くと、他の素材・表示範囲・親子の動きを合わせて確認できます。調整中も画像を画面上部に保ち、背景と向きの確認は設定を変えずに操作できます。[使い方](docs/SHAPE_ADJUSTMENTS.md)。

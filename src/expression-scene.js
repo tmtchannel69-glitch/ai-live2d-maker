@@ -46,7 +46,11 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   pointLabels.forEach((text,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}：${text}`;$('#deform-point').append(o);});
   let source=null,assets=[],bitmaps=[],background=null,current='',generation=0,loading=false,error='',playing=false,raf=0,start=0,lastFrame='',lastTime=0;
   const layer=role=>getState().layers[role]||defaultExpressionLayer(role);
-  const touchEditor=createExpressionTouchEditor({getState,onApply:(setting,key)=>{$('#deform-key').value=key;return applyShape(setting);}});
+  const touchEditor=createExpressionTouchEditor({getState,renderDraft:(target,draft)=>{
+    const width=Math.min(320,canvas.width,480*canvas.width/canvas.height),height=width*canvas.height/canvas.width;
+    if(target.canvas.width!==Math.round(width))target.canvas.width=Math.max(1,Math.round(width));if(target.canvas.height!==Math.round(height))target.canvas.height=Math.max(1,Math.round(height));
+    render(target,{...manual(),[draft.setting.driver]:draft.value,turn:draft.turn},undefined,undefined,true,{draft,sourceOpacity:draft.source?1:0});
+  },onApply:(setting,key)=>{$('#deform-key').value=key;return applyShape(setting);}});
   const clipEditor=createAssetPlacementEditor({prefix:'clip-placement',region:true,isLocked:()=>getState().locked || loading,onApply:p=>applyClip({shape:$('#clip-shape').value,...p})});
   const groupEditor=createExpressionGroupEditor({getState,isLocked:()=>getState().locked || loading,onApply:setting=>{
     if(getState().locked || loading)return false;
@@ -61,8 +65,9 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     const opacity=view.sourceOpacity??($('#scene-background').value==='source'?1:0);
     if((view.detail?.background || background) && opacity){ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(view.detail?.background || background,0,0,width,height);ctx.restore();}
     for(const item of (view.detail?.bitmaps || bitmaps).slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
-      if((view.role && item.role!==view.role) || !expressionLayerVisible(layer(item.role),values))continue;
-      const p=getState().assets.find(a=>a.role===item.role)?.placement,setting=getState().deforms[item.role];
+      const itemLayer=view.draft?.role===item.role?{...layer(item.role),condition:'always'}:layer(item.role);
+      if((view.role && item.role!==view.role) || !expressionLayerVisible(itemLayer,values))continue;
+      const p=getState().assets.find(a=>a.role===item.role)?.placement,setting=view.draft?.role===item.role?view.draft.setting:getState().deforms[item.role];
       const motionClip=getState().clipKeys[item.role];
       const clip=override?.role===item.role?override.setting:motionClip?interpolateClip(motionClip,values[motionClip.driver]):getState().clips[item.role];
       const follow=groups.clipFollow[item.role],matrix=groupMatrix(groups,groups.assignments[item.role],width,height);
@@ -177,7 +182,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   });
   for(const id of ['key','point'])$(`#deform-${id}`).addEventListener('change',()=>{deformFields();const setting=getState().deforms[current];if(setting && id==='key')$(`#scene-${setting.driver}`).value=$('#deform-key').value==='closed'?'0':'1';draw();});
   $('#scene-groups').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();groupEditor.open({width:canvas.width,height:canvas.height,renderPreview:(target,groups)=>render(target,manual(),undefined,groups,false)});});
-  $('#deform-touch').addEventListener('click',()=>{const item=bitmaps.find(a=>a.role===current);if(getState().locked || loading || !item)return;stop();controls();touchEditor.open({role:current,bitmap:item.bitmap,setting:getState().deforms[current],key:$('#deform-key').value,name:EXPRESSION_ROLES.find(([id])=>id===current)[1]});});
+  $('#deform-touch').addEventListener('click',()=>{const item=bitmaps.find(a=>a.role===current);if(getState().locked || loading || !item)return;stop();controls();touchEditor.open({role:current,bitmap:item.bitmap,setting:getState().deforms[current],key:$('#deform-key').value,name:EXPRESSION_ROLES.find(([id])=>id===current)[1],turn:manual().turn});});
   $('#clip-form').addEventListener('submit',e=>{e.preventDefault();if(getState().locked || loading || playing || !$('#clip-form').reportValidity())return;applyClip(inputClip());});
   $('#clip-touch').addEventListener('click',()=>{
     if(getState().locked || loading || playing || !current || !background || !$('#clip-form').reportValidity())return;
