@@ -40,3 +40,5 @@ button,a,select,input,summary{touch-action:manipulation}
 .motion-checklist summary{min-height:48px;padding:12px 0;font-size:14px;cursor:pointer}
 
 #scene-quick-driver{min-height:48px;font-size:16px;width:100%;min-width:0}
+
+.handoff-export{margin-top:24px;padding-top:20px;border-top:1px solid #3c3150}.handoff-export button{min-height:48px;max-width:100%;white-space:normal}.handoff-export [role=status]{overflow-wrap:anywhere}@media(max-width:700px){.handoff-export button{width:100%}}

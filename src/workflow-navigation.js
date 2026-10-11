@@ -15,6 +15,7 @@ export function createWorkflowNavigation({getState}) {
   save.innerHTML=`<h2>作業の保存・再開</h2><p class="muted">今日はここまで、というときは作業ファイルを端末に保存してください。画像・指定・補正済み結果・表情設定をまとめて、あとから再開できます。</p>
     <div class="workflow-save-actions"><button id="workflow-save" class="primary">この作業を端末に保存</button><button id="workflow-open" class="secondary">保存した作業を再開</button></div>
     <p id="workflow-save-status" class="muted"></p>
+    <div class="handoff-export"><h3>制作工程へ引き継ぐ</h3><p class="muted">すべての分離PNG・追加した表情PNG・配置・動きの設定・確認一覧を一つにまとめます。元画像は含みません。選択中の構成以外や非表示の素材も含みます。</p><button id="download-handoff" class="secondary" disabled>素材と動きの設定をZIP保存</button><p class="muted">独自形式です。Cubism・VTube Studioへ直接読み込めるモデルではありません。アプリで続ける場合は上の作業保存を使ってください。</p><p id="handoff-status" role="status" aria-live="polite"></p></div>
     <details><summary>制作素材を取り出したいとき</summary><p class="muted">PNG・まとめたZIP・確認記録付きの制作素材ZIP・レイヤー付きPSDは、結果の画面から保存できます。これらでは作業を再開できません。VTube Studio用のモデル出力はまだ未対応です。</p><button id="workflow-exports" class="secondary">結果と素材の出力へ</button></details>`;
   main.querySelector('footer').before(save);
   let current='image',frame=0;

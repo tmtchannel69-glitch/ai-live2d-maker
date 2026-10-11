@@ -1,3 +1,4 @@
+import {createAuthoringHandoff} from './authoring-handoff.js';
 import {createMotionChecklist} from './motion-checklist.js';
 import {pruneClipKeys} from './expression-clip-keys.js';
 import {pruneGroupKeys} from './group-motion-keys.js';
@@ -205,6 +206,7 @@ function updateButton() {
   expressionPanel?.update();
   reviewPanel?.update();
   const locked=busy || projectBusy || materialBusy || assetBusy;
+  $('#download-handoff').disabled=!file || locked || archiveBusy;
   $('#download-materials').disabled=!file || !selected().length || locked || archiveBusy;
   $('#download-psd').disabled=!file || !isAi() || !visibleResults().some(part=>part.ai && selected().includes(part.id)) || locked || archiveBusy;
   $('#save-project').disabled=!file || locked || archiveBusy;
@@ -226,7 +228,7 @@ function updateButton() {
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
-function cancelProjectOperation() {assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
+function cancelProjectOperation() {assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';$('#handoff-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
 async function loadFile(next) {
   cancelProjectOperation();
   const version = ++uploadVersion;
@@ -299,6 +301,20 @@ $('#download-all').addEventListener('click', async () => {
     $('#status').textContent=`${snapshot.length} 個のパーツをまとめた ZIP の保存を開始しました。${snapshot.some(dirty)?'指定変更前の結果も含みます。':''}`;
   } catch { if(snapshotAll===results) $('#status').textContent='ZIP の作成に失敗しました。もう一度お試しください。個別 PNG 保存も利用できます。'; }
   finally { archiveBusy=false; $('#download-all').textContent='まとめて ZIP 保存'; updateButton(); }
+});
+$('#download-handoff').addEventListener('click',async()=>{
+  if($('#download-handoff').disabled)return;
+  brushEditor.close();editor.clearView();reviewPanel.close();
+  const version=uploadVersion,snapshotResults=results;
+  const snapshot={file,results:[...results],assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),...structuredClone({prompts:editor.prompts,reviews,motion,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys})};
+  const isCurrent=()=>version===uploadVersion && file===snapshot.file && results===snapshotResults;
+  materialBusy=true;archiveBusy=true;updateButton();$('#handoff-status').textContent='制作引き継ぎZIPを準備しています…';
+  try {
+    const blob=await createAuthoringHandoff(snapshot);if(!isCurrent())return;
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='ai-live2d-handoff.zip';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);
+    $('#handoff-status').textContent=`分離PNG ${snapshot.results.length}個・追加素材 ${snapshot.assets.length}役割と設定の保存を開始しました。Live2Dモデルではありません。`;
+  } catch(error){if(isCurrent())$('#handoff-status').textContent=`引き継ぎZIPの作成に失敗しました。現在の作業は保持しています。${error.message}`;}
+  finally{materialBusy=false;archiveBusy=false;updateButton();}
 });
 $('#download-materials').addEventListener('click',async()=>{
   if(!file || !selected().length || busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
