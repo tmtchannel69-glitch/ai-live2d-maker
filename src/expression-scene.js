@@ -49,7 +49,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   const touchEditor=createExpressionTouchEditor({getState,renderDraft:(target,draft)=>{
     const width=Math.min(320,canvas.width,480*canvas.width/canvas.height),height=width*canvas.height/canvas.width;
     if(target.canvas.width!==Math.round(width))target.canvas.width=Math.max(1,Math.round(width));if(target.canvas.height!==Math.round(height))target.canvas.height=Math.max(1,Math.round(height));
-    render(target,{...manual(),[draft.setting.driver]:draft.value,turn:draft.turn},undefined,undefined,true,{draft,sourceOpacity:draft.source?1:0});
+    render(target,{...manual(),[draft.setting.driver]:draft.value,turn:draft.turn},undefined,undefined,true,{draft,role:draft.isolated?draft.role:undefined,sourceOpacity:draft.source?1:0});
   },onApply:(setting,key)=>{$('#deform-key').value=key;return applyShape(setting);}});
   const clipEditor=createAssetPlacementEditor({prefix:'clip-placement',region:true,isLocked:()=>getState().locked || loading,onApply:p=>applyClip({shape:$('#clip-shape').value,...p})});
   const groupEditor=createExpressionGroupEditor({getState,isLocked:()=>getState().locked || loading,onApply:setting=>{

@@ -57,3 +57,7 @@ button,a,select,input,summary{touch-action:manipulation}
 #touch-deform-dialog .touch-deform-actions{z-index:3}
 
 #touch-composite-controls[hidden]{display:none}#touch-composite-controls{margin-top:8px}
+
+#touch-composite-viewport{height:20dvh;max-height:200px;width:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;background:repeating-conic-gradient(#333447 0 25%,#191a26 0 50%) 0/16px 16px}#touch-composite-content{display:flex;align-items:center;justify-content:center}#touch-composite-canvas{width:auto;height:auto;max-width:none;max-height:none;flex-shrink:0;background:none}.touch-composite-navigation{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;margin:8px 0}.touch-composite-navigation label{grid-column:1/-1}#touch-composite-view-status{font-size:14px;overflow-wrap:anywhere}
+
+#touch-composite-zoom{min-height:48px}
