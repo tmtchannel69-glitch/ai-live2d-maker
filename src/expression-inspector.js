@@ -13,7 +13,7 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
   <div id="inspector-viewport" tabindex="0" aria-label="拡大プレビュー。指でスクロール、キーボードは矢印で移動"><div id="inspector-content"><canvas id="inspector-canvas" aria-label="表情の詳細プレビュー"></canvas></div></div>
   <p id="inspector-status" role="status" aria-live="polite"></p>
   <button id="inspector-detail" class="secondary" aria-pressed="false">鮮明に確認</button><p id="inspector-detail-status" role="status" aria-live="polite"></p>
-  <div class="inspector-options"><label><input id="inspector-isolate" type="checkbox">選択素材だけを確認</label><label><input id="inspector-reference" type="checkbox">元画像を薄く重ねる（位置比較）</label></div>
+  <label>重なりの確認<select id="inspector-overlap"><option value="normal">通常の合成</option><option value="without">選んだ素材を一時的に隠す</option><option value="source">元画像だけを表示</option></select></label><p id="inspector-overlap-help" class="muted" role="status">選んだ素材の有無を切り替え、重複や下地を確認できます。元画像だけの表示では元の目・口が残っているか確認してください。保存設定は変わりません。</p><div class="inspector-options"><label><input id="inspector-isolate" type="checkbox">選択素材だけを確認</label><label><input id="inspector-reference" type="checkbox">元画像を薄く重ねる（位置比較）</label></div>
   <div class="inspector-values">${[['left','左目'],['right','右目'],['mouth','口'],['turn','顔の向き']].map(([id,label])=>`<label>${label}<input id="inspector-${id}" type="range" min="${id==='turn'?-1:0}" max="1" step="0.05"></label>`).join('')}</div><p id="inspector-values-text" class="muted"></p>
   <p class="muted">指で画像内をスクロールできます。拡大・移動・比較は確認用で、画像や保存設定を変えません。元画像の目・口は比較表示に残り、動きません。</p>
   <div class="inspector-edit"><button id="inspector-edit-layer" class="secondary">この素材の表示を調整</button><button id="inspector-edit-deform" class="secondary">この素材の形を調整</button><button id="inspector-edit-clip" class="secondary">この素材の範囲を調整</button></div>`;
@@ -30,7 +30,7 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
   previewPanel.insertBefore(comparison.panel,$('#inspector-status'));
   function syncComparison(){viewport.hidden=comparison.active;$('#inspector-focus').disabled=comparison.active || !bounds || isLocked();$('#inspector-fit').disabled=comparison.active;$('#inspector-zoom').disabled=comparison.active;if(!comparison.active)layout();}
   controlsPanel.addEventListener('comparisonchange',()=>{syncComparison();draw();});
-  const noteEditor=createExpressionNoteEditor({container:controlsPanel,getNotes,isLocked,onRecord:onNote,getContext:()=>({pose:values(),isolated:$('#inspector-isolate').checked,reference:$('#inspector-reference').checked,comparing:comparison.active}),onRecall:note=>{comparison.close();syncComparison();for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=note.pose[id];$('#inspector-isolate').checked=note.isolated;$('#inspector-reference').checked=note.reference;draw();focusSelected();}});
+  const noteEditor=createExpressionNoteEditor({container:controlsPanel,getNotes,isLocked:()=>isLocked() || $('#inspector-overlap').value!=='normal',onRecord:onNote,getContext:()=>({pose:values(),isolated:$('#inspector-isolate').checked,reference:$('#inspector-reference').checked,comparing:comparison.active}),onRecall:note=>{comparison.close();syncComparison();for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=note.pose[id];$('#inspector-isolate').checked=note.isolated;$('#inspector-reference').checked=note.reference;draw();focusSelected();}});
   function releaseDetail(){
     detailGeneration++;detail?.close();detail=null;detailLoading=false;
     releaseDeformationLayer(ctx);releaseDeformationLayer(isolatedCtx);
@@ -57,9 +57,12 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
   const values=()=>Object.fromEntries(['left','right','mouth','turn'].map(id=>[id,Number($(`#inspector-${id}`).value)]));
   function draw(){
     if(!dialog.open)return;
-    const v=values(),role=$('#inspector-role').value;noteEditor.update(role);
-    comparison.draw({ctx,values:v,role,view:{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail},width:baseWidth,height:baseHeight});
-    render(ctx,v,{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail});
+    const v=values(),role=$('#inspector-role').value,mode=$('#inspector-overlap').value;noteEditor.update(role);
+    const view={role:mode==='normal' && $('#inspector-isolate').checked?role:null,sourceOpacity:mode==='source'?1:$('#inspector-reference').checked?.25:0,detail,excludeRole:mode==='without'?role:null,sourceOnly:mode==='source'};
+    for(const id of ['isolate','reference'])$(`#inspector-${id}`).disabled=mode!=='normal' || isLocked();
+    $('#inspector-overlap-help').textContent=mode==='normal'?'素材の有無を切り替えて重複や下地を確認できます。確認だけでは保存設定を変えません。':mode==='without'?'選んだ素材だけを一時的に隠しています。残る絵は他素材または元画像です。通常の合成へ戻すと確認メモを記録できます。':'元画像だけを表示しています。元の目・口の絵が残っているか確認してください。通常の合成へ戻すと確認メモを記録できます。';
+    comparison.draw({ctx,values:v,role,view,width:baseWidth,height:baseHeight});
+    render(ctx,v,view);
     render(isolatedCtx,v,{role,sourceOpacity:0,detail});
     const data=isolatedCtx.getImageData(0,0,isolated.width,isolated.height).data;let left=isolated.width,top=isolated.height,right=-1,bottom=-1;
     for(let y=0;y<isolated.height;y++)for(let x=0;x<isolated.width;x++)if(data[(y*isolated.width+x)*4+3]>0){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
@@ -87,7 +90,7 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
   $('#inspector-zoom').addEventListener('change',()=>layout());
   $('#inspector-focus').addEventListener('click',focusSelected);
   $('#inspector-fit').addEventListener('click',()=>{$('#inspector-zoom').value='1';layout(false);});
-  for(const id of ['role','isolate','reference'])$(`#inspector-${id}`).addEventListener('change',draw);
+  for(const id of ['role','isolate','reference','overlap'])$(`#inspector-${id}`).addEventListener('change',draw);
   for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).addEventListener('input',draw);
   for(const kind of ['layer','deform','clip'])$(`#inspector-edit-${kind}`).addEventListener('click',()=>{if(isLocked())return;const role=$('#inspector-role').value,v=values();close(false);onEdit({kind,role},v);});
   new ResizeObserver(()=>layout()).observe(viewport);
@@ -97,7 +100,7 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
     baseWidth=width;baseHeight=height;originalFile=file;originalAssets=[...assets];releaseDetail();canvas.width=isolated.width=width;canvas.height=isolated.height=height;
     comparison.reset($('#inspector-role').value);noteEditor.reset();syncComparison();
     for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=pose[id];
-    $('#inspector-zoom').value='1';$('#inspector-isolate').checked=false;$('#inspector-reference').checked=false;
+    $('#inspector-overlap').value='normal';$('#inspector-zoom').value='1';$('#inspector-isolate').checked=false;$('#inspector-reference').checked=false;
     dialog.showModal();controlsPanel.scrollTop=0;layout(false);draw();if(noteFocus)noteEditor.focus();else $('#inspector-close').focus();return true;
   }};
 }

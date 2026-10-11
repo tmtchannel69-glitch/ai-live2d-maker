@@ -66,7 +66,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     if((view.detail?.background || background) && opacity){ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(view.detail?.background || background,0,0,width,height);ctx.restore();}
     for(const item of (view.detail?.bitmaps || bitmaps).slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
       const itemLayer=view.draft?.role===item.role?{...layer(item.role),condition:'always'}:layer(item.role);
-      if((view.role && item.role!==view.role) || !expressionLayerVisible(itemLayer,values))continue;
+      if(view.sourceOnly || item.role===view.excludeRole || (view.role && item.role!==view.role) || !expressionLayerVisible(itemLayer,values))continue;
       const p=getState().assets.find(a=>a.role===item.role)?.placement,setting=view.draft?.role===item.role?view.draft.setting:getState().deforms[item.role];
       const motionClip=getState().clipKeys[item.role];
       const clip=override?.role===item.role?override.setting:motionClip?interpolateClip(motionClip,values[motionClip.driver]):getState().clips[item.role];

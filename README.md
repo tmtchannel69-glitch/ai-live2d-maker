@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/material-assignment-preview` です。
+最新の開発ブランチは `feature/expression-overlap-check` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/material-assignment-preview https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-overlap-check https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/material-assignment-preview` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-overlap-check` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -348,3 +348,5 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 「動きの設定チェック」のガイドで、素材準備→表示/形の調整→開閉確認の順に進めます。左右の目・口ごとの不足素材と、選んだ素材の次の操作を案内し、読込・編集・拡大確認/メモへ移動できます。歯・舌や別の閉じた絵は用途に応じて準備。[使い方](docs/EXPRESSION_EDIT_GUIDE.md)。
 
 分離結果をコピーする前に透明背景で確認し、コピー先と置換内容を確認できます。顔の下地・閉じた形・口内部など、役割別に必要な素材を案内します。[素材準備の操作](docs/PRACTICAL_MATERIAL_WORKFLOW.md)。
+
+拡大確認の「重なりの確認」で通常の合成・選択素材を一時的に隠す・元画像だけの表示を切り替えられます。表示設定は保存へ反映せず、確認メモは通常の合成へ戻して記録します。[確認方法](docs/EXPRESSION_OVERLAP_CHECK.md)。

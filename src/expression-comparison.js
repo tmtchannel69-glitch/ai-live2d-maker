@@ -24,7 +24,7 @@ export function createExpressionComparison({container,render,isLocked,onSelect})
     const scale=Math.min(1,320/width,480/height);probe.width=Math.max(1,Math.round(width*scale));probe.height=Math.max(1,Math.round(height*scale));
     let left=probe.width,top=probe.height,right=-1,bottom=-1;const visible=[];
     for(const value of poses()){
-      render(probeCtx,{...values,[driver.value]:value},{...view,role,sourceOpacity:0});
+      render(probeCtx,{...values,[driver.value]:value},{...view,role,sourceOpacity:0,excludeRole:null,sourceOnly:false});
       const data=probeCtx.getImageData(0,0,probe.width,probe.height).data;let found=false;
       for(let y=0;y<probe.height;y++)for(let x=0;x<probe.width;x++)if(data[(y*probe.width+x)*4+3]>0){found=true;left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
       visible.push(found);
