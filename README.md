@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/expression-clip-regions` です。
+最新の開発ブランチは `feature/expression-groups` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/expression-clip-regions https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-groups https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/expression-clip-regions` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-groups` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -275,6 +275,16 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 
 範囲は元画像上に固定され、素材の移動や変形には追従しません。「表示範囲の制限を解除」で元の表示に戻せます。設定ありの作業ZIPは版8になり、このアプリでは旧版1〜7も開けます。古いアプリは版8を開けません。元PNG・制作素材ZIP・PSDは変わりません。自然な目・口の輪郭やLive2D出力の完成を意味しません。[詳細](docs/EXPRESSION_CLIPPING.md)。
 
-## 次の開発案
+## 素材をまとめて動かす
 
-顔全体・左右の目・口の素材をまとめて動かす[設計案](docs/EXPRESSION_GROUPS_DESIGN.md)を保存しました。グループ操作と作業ファイル版9は未実装です。現在のアプリは版8までに対応します。最新の設計記録は `docs/expression-group-design`、アプリの最新実装は `feature/expression-clip-regions` です。
+合成画面の「素材をまとめて動かす」を開き、「役割に合わせてまとめる」で顔全体・左右の目・口へ素材を割り当てます。顔全体には子の目・口の動きも含まれ、目や口だけを個別に調整することもできます。下側の「素材のまとめ方と表示範囲」で、素材ごとの所属と範囲の追従を変更できます。
+
+指の操作を移動・回転・大きさ・中心点から選びます。拡大、矢印、大小・回転ボタン、数値、取り消しも使えます。数値は「数値を下書きに反映」で確認し、「まとめ方を確定」で全体へ反映します。閉じる・変更せず戻るは元の設定を保ちます。元のPNG・素材ごとの配置は変えません。
+
+グループ設定ありの作業ZIPは版9で保存し、旧版1〜8も開けます。以前のアプリでは版9を開けません。表示範囲は既定では元画像上に固定され、必要な素材だけ「表示範囲も一緒に動かす」を選べます。9点の瞬き・口の変形に範囲の形が追従する機能は未対応です。[操作・制限](docs/EXPRESSION_GROUPS.md)。
+
+## 素材を用意する前に試す
+
+画像を選ぶ前に「動作サンプルを試す」を押すと、自作図形の顔と11素材を用意した状態で始められます。左右の目・口のスライダーや再生、素材をまとめて動かす操作を試し、作業ZIPで保存・再開できます。画像を選択済みのときはサンプルの入口を無効にし、作業を置き換えません。
+
+サンプルはブラウザ内で図形から作成し、AI・外部サービス・画像送信は使いません。実キャラクターの分離品質や自然な表情品質の証明ではなく、Live2Dモデル・VTube Studio用データでもありません。

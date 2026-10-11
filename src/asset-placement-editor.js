@@ -1,3 +1,4 @@
+import {IDENTITY,inversePoint} from './expression-groups.js';
 import {activateTouchButtons} from './touch-controls.js';
 
 export function createAssetPlacementEditor({isLocked,onApply,prefix='placement',region=false}) {
@@ -17,7 +18,7 @@ export function createAssetPlacementEditor({isLocked,onApply,prefix='placement',
   }
   document.body.append(dialog);activateTouchButtons(dialog);
   const $=s=>dialog.querySelector(s.replace('#placement-',`#${prefix}-`)),canvas=$('#placement-canvas'),ctx=canvas.getContext('2d'),view=$('#placement-viewport');
-  let draft=null,background=null,image=null,showBackground=true,gesture=null,undo=[],redo=[],renderer=null,outlineShape='rect';
+  let draft=null,background=null,image=null,showBackground=true,gesture=null,undo=[],redo=[],renderer=null,outlineShape='rect',outlineMatrix=IDENTITY;
   if(region) {
     $('#placement-title').textContent='指で表示範囲を調整';$('#placement-help').textContent='明るい枠の内側だけに選択素材を表示します。枠を動かすか、右下の点で大きさを変えます。確定まで元の設定は変わりません。「幅・高さを変える」では縦横を別々に調整できます。';
     const stretch=document.createElement('option');stretch.value='stretch';stretch.textContent='幅・高さを変える';$('#placement-mode').append(stretch);
@@ -34,16 +35,16 @@ export function createAssetPlacementEditor({isLocked,onApply,prefix='placement',
     if(renderer)renderer(ctx,draft);else if(showBackground)ctx.drawImage(background,0,0,canvas.width,canvas.height);
     const p=draft,x=p.x*canvas.width,y=p.y*canvas.height,w=p.width*canvas.width,h=p.height*canvas.height;
     if(!renderer){ctx.save();ctx.globalAlpha=Number($('#placement-opacity').value);ctx.drawImage(image,x,y,w,h);ctx.restore();}
-    const scale=canvas.width/(canvas.getBoundingClientRect().width||canvas.width);ctx.save();ctx.strokeStyle='#7ef4ff';ctx.lineWidth=2*scale;if(outlineShape==='ellipse'){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.stroke();}else ctx.strokeRect(x,y,w,h);ctx.fillStyle='#ffdb70';ctx.beginPath();ctx.arc(x+w,y+h,9*scale,0,Math.PI*2);ctx.fill();ctx.restore();
+    const scale=canvas.width/(canvas.getBoundingClientRect().width||canvas.width)/Math.hypot(outlineMatrix[0],outlineMatrix[1]);ctx.save();ctx.transform(...outlineMatrix);ctx.strokeStyle='#7ef4ff';ctx.lineWidth=2*scale;if(outlineShape==='ellipse'){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.stroke();}else ctx.strokeRect(x,y,w,h);ctx.fillStyle='#ffdb70';ctx.beginPath();ctx.arc(x+w,y+h,9*scale,0,Math.PI*2);ctx.fill();ctx.restore();
   }
   function remember(before){if(equal(before,draft))return;undo.push(before);if(undo.length>30)undo.shift();redo=[];}
   function scalePlacement(before,factor){const f=Math.max(Math.max(.0001/before.width,.0001/before.height),Math.min(Math.min(1/before.width,1/before.height),factor));return {...before,width:Math.max(.0001,Math.min(1,before.width*f)),height:Math.max(.0001,Math.min(1,before.height*f))};}
   function cancelGesture(){if(!gesture)return;const g=gesture;gesture=null;if(g.before)draft=g.before;if(canvas.hasPointerCapture(g.id))canvas.releasePointerCapture(g.id);draw();controls();}
   function close(){cancelGesture();if(dialog.open)dialog.close();draft=null;background=null;image=null;renderer=null;undo=[];redo=[];ctx.clearRect(0,0,canvas.width,canvas.height);}
-  function position(e){const r=canvas.getBoundingClientRect();return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];}
+  function position(e){const r=canvas.getBoundingClientRect(),p=inversePoint(outlineMatrix,[(e.clientX-r.left)/r.width*canvas.width,(e.clientY-r.top)/r.height*canvas.height]);return [p[0]/canvas.width,p[1]/canvas.height];}
   canvas.addEventListener('pointerdown',e=>{
     if(gesture){cancelGesture();return;}if(!draft || !e.isPrimary || e.button!==0)return;
-    const mode=$('#placement-mode').value,start=position(e),r=canvas.getBoundingClientRect(),p=draft;
+    const mode=$('#placement-mode').value,start=position(e),raw=canvas.getBoundingClientRect(),factor=Math.hypot(outlineMatrix[0],outlineMatrix[1]),r={width:raw.width*factor,height:raw.height*factor},p=draft;
     if(['resize','stretch'].includes(mode) && Math.hypot((start[0]-p.x-p.width)*r.width,(start[1]-p.y-p.height)*r.height)>24)return;
     if(mode==='move' && (start[0]<p.x-24/r.width || start[0]>p.x+p.width+24/r.width || start[1]<p.y-24/r.height || start[1]>p.y+p.height+24/r.height))return;
     gesture={id:e.pointerId,mode,start,before:clone(draft),client:[e.clientX,e.clientY],scroll:[view.scrollLeft,view.scrollTop]};canvas.setPointerCapture(e.pointerId);controls();
@@ -67,5 +68,5 @@ export function createAssetPlacementEditor({isLocked,onApply,prefix='placement',
   dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
   $('#placement-confirm').addEventListener('click',()=>{cancelGesture();if(!draft || isLocked()){close();return;}if(onApply(clone(draft)))close();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelGesture();});window.addEventListener('resize',()=>{cancelGesture();if(dialog.open)draw();});
-  return {close,open({asset,sourceBitmap,assetBitmap,sourceVisible,renderPreview,shape='rect'}){close();draft=clone(asset.placement);background=sourceBitmap;image=assetBitmap;renderer=renderPreview;outlineShape=shape;showBackground=sourceVisible;canvas.width=background.width;canvas.height=background.height;canvas.style.width='100%';$('#placement-mode').value='move';$('#placement-zoom').value='1';$('#placement-opacity').value='.7';$('#placement-name').textContent=asset.name;dialog.showModal();view.scrollLeft=0;view.scrollTop=0;draw();controls();}};
+  return {close,open({asset,sourceBitmap,assetBitmap,sourceVisible,renderPreview,shape='rect',outlineMatrix:matrix=IDENTITY}){close();draft=clone(asset.placement);background=sourceBitmap;image=assetBitmap;renderer=renderPreview;outlineShape=shape;outlineMatrix=matrix;showBackground=sourceVisible;canvas.width=background.width;canvas.height=background.height;canvas.style.width='100%';$('#placement-mode').value='move';$('#placement-zoom').value='1';$('#placement-opacity').value='.7';$('#placement-name').textContent=asset.name;dialog.showModal();view.scrollLeft=0;view.scrollTop=0;draw();controls();}};
 }
