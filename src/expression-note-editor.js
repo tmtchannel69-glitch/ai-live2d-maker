@@ -1,0 +1,13 @@
+import {NOTE_STATUSES} from './expression-notes.js';
+export function createExpressionNoteEditor({container,getNotes,getContext,isLocked,onRecord,onRecall}){
+  const form=document.createElement('form');form.className='expression-note-editor';
+  form.innerHTML='<h3>この素材の確認メモ</h3><p class="muted">3状態から「この状態を詳しく」で選び、記録してください。「記録を反映」でアプリの作業に保持します。端末への保存は作業ファイルを使います。未反映の入力はこの画面を閉じると破棄します。</p><label>確認状態<select id="expression-note-status"></select></label><label>問題や確認した内容（1000文字まで）<textarea id="expression-note-text" maxlength="1000" rows="3"></textarea></label><button id="expression-note-record" class="secondary">記録を反映</button><button id="expression-note-recall" type="button" class="secondary">記録した状態を表示</button><p id="expression-note-info" role="status" aria-live="polite"></p>';
+  container.append(form);const $=s=>form.querySelector(s);for(const [id,label] of Object.entries(NOTE_STATUSES))$('#expression-note-status').add(new Option(label,id));let role='',signature='',drafts={};
+  for(const id of ['status','text'])$(`#expression-note-${id}`).addEventListener('input',()=>{drafts[role]={status:$('#expression-note-status').value,note:$('#expression-note-text').value};});
+  form.addEventListener('submit',e=>{e.preventDefault();if(isLocked() || !role)return;const context=getContext();if(context.comparing){$('#expression-note-info').textContent='比較画像の「この状態を詳しく」で記録する状態を選んでください。';return;}const note={status:$('#expression-note-status').value,note:$('#expression-note-text').value,pose:context.pose,isolated:context.isolated,reference:context.reference,stale:false};try{if(onRecord(role,note)!==false){delete drafts[role];signature='';update(role);}}catch(error){$('#expression-note-info').textContent=error.message;}});
+  $('#expression-note-recall').addEventListener('click',()=>{const note=getNotes()[role];if(!isLocked() && note)onRecall(note);});
+  function update(nextRole){const note=getNotes()[nextRole],next=JSON.stringify([nextRole,note]);if(signature!==next){role=nextRole;signature=next;const d=drafts[role]||note;$('#expression-note-status').value=d?.status||'unchecked';$('#expression-note-text').value=d?.note||'';$('#expression-note-info').textContent=note?`${note.stale?'素材/設定が変わったため再確認が必要です。前の記録とメモを保持しています。':NOTE_STATUSES[note.status]} 記録した値：左目 ${note.pose.left} / 右目 ${note.pose.right} / 口 ${note.pose.mouth} / 向き ${note.pose.turn}`:'記録はまだありません。確認済みは記録した状態だけを指します。';}
+    $('#expression-note-record').disabled=isLocked() || getContext().comparing;$('#expression-note-recall').disabled=isLocked() || !note;
+  }
+  return {update,focus(){$('#expression-note-text').scrollIntoView({block:'nearest'});$('#expression-note-text').focus({preventScroll:true});},reset(){role='';signature='';drafts={};$('#expression-note-text').value='';}};
+}

@@ -1,3 +1,4 @@
+import {expressionNoteReport} from './expression-notes.js';
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {defaultExpressionLayer,expressionLayerVisible} from './expression-layer-state.js';
 import {GROUP_LABELS} from './expression-groups.js';
@@ -27,6 +28,8 @@ export function motionChecks(state){
     }
     const unassigned=assets.filter(a=>!state.groups.assignments[a.role]),other=assets.find(a=>state.groups.assignments[a.role] && ![group.id,'face'].includes(state.groups.assignments[a.role]));
     add('groups','まとめ方',other?`${roleName(other.role)}は${GROUP_LABELS[state.groups.assignments[other.role]]}に所属しています。意図したまとめ方か確認してください。`:unassigned.length?`${unassigned.length}素材がグループ未所属です。まとめて動かす場合は割り当ててください。`:'読み込んだ素材にグループの割り当てがあります。',Boolean(other)||Boolean(unassigned.length),'groups');
+    const notes=assets.filter(a=>state.notes?.[a.role]),fix=notes.filter(a=>state.notes[a.role].stale || state.notes[a.role].status==='needs_fix');
+    add('notes','表情の確認メモ',`${notes.length}素材に記録 / ${fix.length}素材が修正・再確認の候補。記録した状態のみの確認です。`,Boolean(fix.length),'note',fix[0]?.role||role);
     add('keys','向きの動き',state.groupKeys[group.id]?'左・中央・右の設定あり。動きの品質は未確認です。':'このグループの3位置は未設定です。通常の配置や親の動きは利用できます。',false,'keys');
     return {...group,assets:assets.length,rows};
   });
@@ -34,6 +37,7 @@ export function motionChecks(state){
 export function motionCheckReport(state){
   const lines=['AI Live2D Maker — 動きの設定チェック','設定の有無から作る確認候補です。自然な表情・立体的な向き・Live2Dモデルの完成を判定しません。','画像は含みません。作業再開には作業ファイルを別途保存してください。',''];
   for(const card of motionChecks(state)){lines.push(`【${card.label}】`);for(const row of card.rows)lines.push(`- ${row.label}：${row.attention?'確認候補':'設定情報'} ／ ${row.detail}`);lines.push('');}
+  lines.push(expressionNoteReport(state.notes||{}));
   lines.push('VTube Studio用モデル出力（moc3）：未実装。');return '\uFEFF'+lines.join('\r\n');
 }
 export function createMotionChecklist({getState,onNavigate}){
@@ -41,7 +45,7 @@ export function createMotionChecklist({getState,onNavigate}){
   section.innerHTML='<h3 id="motion-check-heading" tabindex="-1">動きの設定チェック</h3><p class="muted">設定の有無から確認候補を表示します。自然な動きやLive2Dモデルの完成を判定するものではありません。</p><p id="motion-check-summary" role="status" aria-live="polite"></p><div id="motion-check-cards"></div><button id="motion-check-report" class="secondary">動きの確認一覧を保存</button><p id="motion-check-status" role="status" aria-live="polite"></p>';
   document.querySelector('#expression-assets-summary').before(section);
   let signature='',source=null;
-  const labels={asset:'素材を読み込む',layer:'表示を調整',deform:'形を調整',clip:'範囲を調整',groups:'まとめ方を調整',keys:'3位置を調整'};
+  const labels={asset:'素材を読み込む',layer:'表示を調整',deform:'形を調整',clip:'範囲を調整',groups:'まとめ方を調整',keys:'3位置を調整',note:'確認メモを開く'};
   function update(){const state=getState();section.hidden=!state.file;const changed=source!==state.file;if(changed){source=state.file;section.querySelector('#motion-check-status').textContent='';}const cards=motionChecks(state),next=JSON.stringify(cards);
     if(next!==signature){signature=next;const open=new Map([...section.querySelectorAll('[data-check-group]')].map(a=>[a.dataset.checkGroup,a.querySelector('details').open]));const fragments=[];
       for(const card of cards){const article=document.createElement('article');article.dataset.checkGroup=card.id;const h=document.createElement('h4');h.textContent=card.label;article.append(h);

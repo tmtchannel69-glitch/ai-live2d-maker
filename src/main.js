@@ -1,3 +1,4 @@
+import {validateExpressionNotes,invalidateExpressionNotes} from './expression-notes.js';
 import {createAuthoringHandoff} from './authoring-handoff.js';
 import {createMotionChecklist} from './motion-checklist.js';
 import {pruneClipKeys} from './expression-clip-keys.js';
@@ -49,7 +50,7 @@ let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
 let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow,motionChecklist;
-let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={},expressionClipKeys={};
+let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={},expressionClipKeys={},expressionNotes={};
 let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
 const dirty = part => part.ai && part.signature !== promptSignature(editor?.prompts[part.id]);
@@ -85,31 +86,37 @@ expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:edito
 }});
 assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,results,prompts:editor.prompts,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
   if(busy || projectBusy || archiveBusy || materialBusy)return;
-  expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,assets,expressionClips);groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,assets);assetPanel.update();expressionPanel.update();expressionScene?.update();motionChecklist?.update();
+  expressionAssets=assets;expressionNotes=invalidateExpressionNotes(expressionNotes,assets);expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,assets,expressionClips);groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,assets);assetPanel.update();expressionPanel.update();expressionScene?.update();motionChecklist?.update();
 }});
-expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(role,setting)=>{
+expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys,notes:expressionNotes,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onNote:(role,note)=>{if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return false;validateExpressionNotes({[role]:note},expressionAssets);expressionNotes={...expressionNotes,[role]:structuredClone(note)};motionChecklist?.update();return true;},onChange:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   expressionLayers={...expressionLayers,[role]:setting};expressionScene.update();motionChecklist?.update();expressionPanel.update();
 },onClip:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   expressionClips={...expressionClips};if(setting)expressionClips[role]=setting;else delete expressionClips[role];
   expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,expressionAssets,expressionClips);expressionScene.update();motionChecklist?.update();
 },onClipKeys:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   expressionClipKeys={...expressionClipKeys};if(setting)expressionClipKeys[role]=setting;else delete expressionClipKeys[role];expressionScene.update();motionChecklist?.update();
 },onGroups:setting=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   expressionGroups=setting;groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,expressionAssets);expressionScene.update();motionChecklist?.update();expressionPanel.update();
 },onGroupKeys:setting=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   groupMotionKeys=setting;expressionScene.update();motionChecklist?.update();
 },onDeform:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
+  expressionNotes=invalidateExpressionNotes(expressionNotes,expressionAssets);
   if(setting){expressionDeforms={...expressionDeforms,[role]:setting};expressionLayers={...expressionLayers,[role]:{...(expressionLayers[role]||defaultExpressionLayer(role)),condition:'always'}};}
   else {expressionDeforms={...expressionDeforms};delete expressionDeforms[role];}
   expressionScene.update();motionChecklist?.update();expressionPanel.update();
 }});
-motionChecklist=createMotionChecklist({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,clipKeys:expressionClipKeys,groups:expressionGroups,groupKeys:groupMotionKeys,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onNavigate:action=>{
+motionChecklist=createMotionChecklist({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,clipKeys:expressionClipKeys,notes:expressionNotes,groups:expressionGroups,groupKeys:groupMotionKeys,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onNavigate:action=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy || !file)return;
   if(action.kind==='asset'){const input=$('#asset-role');input.value=action.role;input.dispatchEvent(new Event('change'));$('.asset-panel').scrollIntoView({block:'start'});input.focus({preventScroll:true});}
   else if(!expressionScene.navigate(action))$('#motion-check-status').textContent='合成画面を準備しています。素材の読み込みが終わってから、もう一度操作してください。';
@@ -245,7 +252,7 @@ async function loadFile(next) {
     if (tooLarge) { $('#status').textContent = '画像が大きすぎます。各辺 4096 px 以下・1600 万画素以下に縮小してから選択してください。現在の画像と結果は保持しています。'; return; }
     controller?.abort(); busy=false;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-    reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={};expressionGroups=emptyGroups();groupMotionKeys={};expressionClipKeys={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
+    reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={};expressionGroups=emptyGroups();groupMotionKeys={};expressionClipKeys={};expressionNotes={};clearResults(); editor.clear(); file=next; sourceUrl=URL.createObjectURL(next);
     $('#source-preview').src=sourceUrl; $('#source-preview').hidden=false; $('#upload-hint').hidden=true;
     $('#file-info').textContent=`${next.name} · ${dimensions}`; $('#reset').disabled=false;
     updateSelectionStatus(); updateButton();
@@ -257,7 +264,7 @@ $('#dropzone').addEventListener('dragleave', () => $('#dropzone').classList.remo
 $('#dropzone').addEventListener('drop', event => { event.preventDefault(); $('#dropzone').classList.remove('dragging'); loadFile(event.dataTransfer.files[0]); });
 $('.part-options').addEventListener('change', () => {rememberTemplate();updateButton();updateSelectionStatus();});
 $('#reset').addEventListener('click', () => {
-  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={};expressionGroups=emptyGroups();groupMotionKeys={};expressionClipKeys={}; editor.clear();
+  cancelProjectOperation();uploadVersion++; controller?.abort(); busy=false; file=null;reviews={};motion={};expressionAssets=[];expressionLayers={};expressionDeforms={};expressionClips={};expressionGroups=emptyGroups();groupMotionKeys={};expressionClipKeys={};expressionNotes={}; editor.clear();
   if (sourceUrl) URL.revokeObjectURL(sourceUrl); sourceUrl=null;
   $('#source-preview').hidden=true; $('#source-preview').removeAttribute('src'); $('#upload-hint').hidden=false;
   $('#file-info').textContent='背景がシンプルな正面画像がおすすめです';
@@ -320,7 +327,7 @@ $('#download-handoff').addEventListener('click',async()=>{
   if($('#download-handoff').disabled)return;
   brushEditor.close();editor.clearView();reviewPanel.close();
   const version=uploadVersion,snapshotResults=results;
-  const snapshot={file,results:[...results],assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),...structuredClone({prompts:editor.prompts,reviews,motion,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys})};
+  const snapshot={file,results:[...results],assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),...structuredClone({prompts:editor.prompts,reviews,motion,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys,notes:expressionNotes})};
   const isCurrent=()=>version===uploadVersion && file===snapshot.file && results===snapshotResults;
   materialBusy=true;archiveBusy=true;updateButton();$('#handoff-status').textContent='制作引き継ぎZIPを準備しています…';
   try {
@@ -365,7 +372,7 @@ $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#save-project').addEventListener('click',async()=>{
   if(!file || busy || projectBusy || archiveBusy || assetBusy)return;
   rememberTemplate();
-  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion),expressions:expressionAssets.map(a=>({...a,placement:{...a.placement}})),expressionLayers:structuredClone(expressionLayers),expressionDeforms:structuredClone(expressionDeforms),expressionClips:structuredClone(expressionClips),expressionGroups:structuredClone(expressionGroups),groupMotionKeys:structuredClone(groupMotionKeys),expressionClipKeys:structuredClone(expressionClipKeys)};
+  const ticket=++projectVersion,snapshot={file,mode:$('#processing-mode').value,selected:selected(),prompts:editor.prompts,results,template,templates:structuredClone(templates),reviews:structuredClone(reviews),motion:structuredClone(motion),expressions:expressionAssets.map(a=>({...a,placement:{...a.placement}})),expressionLayers:structuredClone(expressionLayers),expressionDeforms:structuredClone(expressionDeforms),expressionClips:structuredClone(expressionClips),expressionGroups:structuredClone(expressionGroups),groupMotionKeys:structuredClone(groupMotionKeys),expressionClipKeys:structuredClone(expressionClipKeys),expressionNotes:structuredClone(expressionNotes)};
   projectBusy=true;updateButton();$('#project-status').textContent='作業ファイルを準備しています…';
   try {
     const blob=await createProjectFile(snapshot);if(ticket!==projectVersion)return;
@@ -386,7 +393,7 @@ async function openProjectFile(next){
       const nextResults=restored.results.map(part=>{const url=URL.createObjectURL(part.blob);nextUrls.push(url);return{...part,url};});
       controller?.abort();busy=false;clearResults();editor.clear();
       if(sourceUrl)URL.revokeObjectURL(sourceUrl);
-      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;expressionAssets=restored.expressions;expressionLayers=restored.expressionLayers;expressionDeforms=restored.expressionDeforms;expressionClips=restored.expressionClips;expressionGroups=restored.expressionGroups;groupMotionKeys=restored.groupMotionKeys;expressionClipKeys=restored.expressionClipKeys;
+      file=restored.file;sourceUrl=nextSource;results=nextResults;reviews=restored.reviews;motion=restored.motion;expressionAssets=restored.expressions;expressionLayers=restored.expressionLayers;expressionDeforms=restored.expressionDeforms;expressionClips=restored.expressionClips;expressionGroups=restored.expressionGroups;groupMotionKeys=restored.groupMotionKeys;expressionClipKeys=restored.expressionClipKeys;expressionNotes=restored.expressionNotes;
       template=restored.template;templates=restored.templates;renderPartChoices();
       $('#source-preview').src=sourceUrl;$('#source-preview').hidden=false;$('#upload-hint').hidden=true;
       $('#file-info').textContent=`${file.name} · ${restored.dimensions.width} × ${restored.dimensions.height}`;$('#reset').disabled=false;

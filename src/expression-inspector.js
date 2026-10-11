@@ -1,10 +1,11 @@
+import {createExpressionNoteEditor} from './expression-note-editor.js';
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {loadInspectionDetail} from './inspection-detail.js';
 import {releaseDeformationLayer} from './expression-deform.js';
 import {createExpressionComparison} from './expression-comparison.js';
 
 // View-only settings: never written to the project or exported images.
-export function createExpressionInspector({isLocked,render,onEdit}) {
+export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>({}),onNote=()=>false}) {
   const dialog=document.createElement('dialog');dialog.id='expression-inspector';dialog.className='expression-inspector';dialog.setAttribute('aria-labelledby','inspector-heading');
   dialog.innerHTML=`<div class="dialog-header"><h2 id="inspector-heading">表情を拡大して確認</h2><button id="inspector-close" class="secondary">確認画面を戻る</button></div>
   <label>確認する素材<select id="inspector-role"></select></label>
@@ -29,6 +30,7 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
   previewPanel.insertBefore(comparison.panel,$('#inspector-status'));
   function syncComparison(){viewport.hidden=comparison.active;$('#inspector-focus').disabled=comparison.active || !bounds || isLocked();$('#inspector-fit').disabled=comparison.active;$('#inspector-zoom').disabled=comparison.active;if(!comparison.active)layout();}
   controlsPanel.addEventListener('comparisonchange',()=>{syncComparison();draw();});
+  const noteEditor=createExpressionNoteEditor({container:controlsPanel,getNotes,isLocked,onRecord:onNote,getContext:()=>({pose:values(),isolated:$('#inspector-isolate').checked,reference:$('#inspector-reference').checked,comparing:comparison.active}),onRecall:note=>{comparison.close();syncComparison();for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=note.pose[id];$('#inspector-isolate').checked=note.isolated;$('#inspector-reference').checked=note.reference;draw();focusSelected();}});
   function releaseDetail(){
     detailGeneration++;detail?.close();detail=null;detailLoading=false;
     releaseDeformationLayer(ctx);releaseDeformationLayer(isolatedCtx);
@@ -55,7 +57,7 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
   const values=()=>Object.fromEntries(['left','right','mouth','turn'].map(id=>[id,Number($(`#inspector-${id}`).value)]));
   function draw(){
     if(!dialog.open)return;
-    const v=values(),role=$('#inspector-role').value;
+    const v=values(),role=$('#inspector-role').value;noteEditor.update(role);
     comparison.draw({ctx,values:v,role,view:{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail},width:baseWidth,height:baseHeight});
     render(ctx,v,{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail});
     render(isolatedCtx,v,{role,sourceOpacity:0,detail});
@@ -78,9 +80,9 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
     if(!bounds || isLocked())return;$('#inspector-zoom').value='4';layout(false);
     viewport.scrollLeft=(content.offsetWidth-displayWidth)/2+bounds.x*displayWidth-viewport.clientWidth/2;viewport.scrollTop=(content.offsetHeight-displayHeight)/2+bounds.y*displayHeight-viewport.clientHeight/2;viewport.focus({preventScroll:true});
   }
-  function close(restore=true){restoreFocus=restore;comparison.close();syncComparison();releaseDetail();if(dialog.open)dialog.close();}
+  function close(restore=true){restoreFocus=restore;comparison.close();noteEditor.reset();syncComparison();releaseDetail();if(dialog.open)dialog.close();}
   $('#inspector-close').addEventListener('click',()=>close());
-  dialog.addEventListener('close',()=>{comparison.close();syncComparison();releaseDetail();originalFile=null;originalAssets=[];ctx.clearRect(0,0,canvas.width,canvas.height);isolatedCtx.clearRect(0,0,isolated.width,isolated.height);bounds=null;if(restoreFocus)opener?.focus({preventScroll:true});});
+  dialog.addEventListener('close',()=>{comparison.close();noteEditor.reset();syncComparison();releaseDetail();originalFile=null;originalAssets=[];ctx.clearRect(0,0,canvas.width,canvas.height);isolatedCtx.clearRect(0,0,isolated.width,isolated.height);bounds=null;if(restoreFocus)opener?.focus({preventScroll:true});});
   $('#inspector-detail').addEventListener('click',toggleDetail);
   $('#inspector-zoom').addEventListener('change',()=>layout());
   $('#inspector-focus').addEventListener('click',focusSelected);
@@ -89,13 +91,13 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
   for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).addEventListener('input',draw);
   for(const kind of ['layer','deform','clip'])$(`#inspector-edit-${kind}`).addEventListener('click',()=>{if(isLocked())return;const role=$('#inspector-role').value,v=values();close(false);onEdit({kind,role},v);});
   new ResizeObserver(()=>layout()).observe(viewport);
-  return {close,open({width,height,assets,file,role,pose}){
+  return {close,open({width,height,assets,file,role,pose,noteFocus=false}){
     if(isLocked() || !assets.length)return false;
     restoreFocus=true;opener=document.activeElement;roles=assets.map(a=>a.role);$('#inspector-role').replaceChildren(...roles.map(id=>new Option(EXPRESSION_ROLES.find(([key])=>key===id)[1],id)));$('#inspector-role').value=roles.includes(role)?role:roles[0];
     baseWidth=width;baseHeight=height;originalFile=file;originalAssets=[...assets];releaseDetail();canvas.width=isolated.width=width;canvas.height=isolated.height=height;
-    comparison.reset($('#inspector-role').value);syncComparison();
+    comparison.reset($('#inspector-role').value);noteEditor.reset();syncComparison();
     for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=pose[id];
     $('#inspector-zoom').value='1';$('#inspector-isolate').checked=false;$('#inspector-reference').checked=false;
-    dialog.showModal();controlsPanel.scrollTop=0;layout(false);draw();$('#inspector-close').focus();return true;
+    dialog.showModal();controlsPanel.scrollTop=0;layout(false);draw();if(noteFocus)noteEditor.focus();else $('#inspector-close').focus();return true;
   }};
 }
