@@ -1,3 +1,4 @@
+import {validateClipKeys} from './expression-clip-keys.js';
 import {validateGroupKeys} from './group-motion-keys.js';
 import {emptyGroups,hasGroups,validateGroups} from './expression-groups.js';
 import {validateClips} from './expression-clips.js';
@@ -54,9 +55,10 @@ async function imageSize(blob) {
   finally {bitmap?.close();}
 }
 function validateMetadata(data) {
-  object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms','expressionClips','expressionGroups','groupMotionKeys']);
+  object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms','expressionClips','expressionGroups','groupMotionKeys','expressionClipKeys']);
   if (data.format!=='ai-live2d-maker') invalid('AI Live2D Maker の作業ファイルではありません。');
-  if (![1,2,3,4,5,6,7,8,9,10].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if (![1,2,3,4,5,6,7,8,9,10,11].includes(data.version)) invalid('この版の作業ファイルには対応していません。');
+  if(data.version===10)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms','expressionClips','expressionGroups','groupMotionKeys']);
   if(data.version===9)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms','expressionClips','expressionGroups']);
   if(data.version===8)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms','expressionClips']);
   if(data.version===7)object(data,['format','version','source','mode','selected','prompts','parts','template','templates','reviews','motion','expressions','expressionLayers','expressionDeforms']);
@@ -100,10 +102,10 @@ function validateMetadata(data) {
   const expressionDeforms=data.version>=7?validateDeforms(data.expressionDeforms,expressions):{};
   const expressionClips=data.version>=8?validateClips(data.expressionClips,expressions):{};
   const expressionGroups=data.version>=9?validateGroups(data.expressionGroups,expressions,expressionClips):emptyGroups();
-  return {...data,template,templates,reviews,motion,expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups,groupMotionKeys:data.version>=10?validateGroupKeys(data.groupMotionKeys,expressionGroups,expressions,expressionClips):{}};
+  return {...data,template,templates,reviews,motion,expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups,groupMotionKeys:data.version>=10?validateGroupKeys(data.groupMotionKeys,expressionGroups,expressions,expressionClips):{},expressionClipKeys:data.version>=11?validateClipKeys(data.expressionClipKeys,expressions,expressionClips):{}};
 }
 
-export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates,reviews={},motion={},expressions=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={}}) {
+export async function createProjectFile({file,mode,selected,prompts,results,template='basic',templates,reviews={},motion={},expressions=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={},expressionClipKeys={}}) {
   const sizes = await imageSize(file);
   const metadata = {
     format:'ai-live2d-maker',version:1,
@@ -128,11 +130,12 @@ export async function createProjectFile({file,mode,selected,prompts,results,temp
   }
   if(Object.keys(expressionDeforms).length){metadata.version=7;metadata.expressionLayers=expressionLayers;metadata.expressionDeforms=expressionDeforms;}
   if(Object.keys(expressionClips).length){metadata.version=8;metadata.expressionLayers=expressionLayers;metadata.expressionDeforms=expressionDeforms;metadata.expressionClips=expressionClips;}
-  if(hasGroups(expressionGroups) || Object.keys(groupMotionKeys).length){
+  if(hasGroups(expressionGroups) || Object.keys(groupMotionKeys).length || Object.keys(expressionClipKeys).length){
     metadata.version=9;metadata.template=template;metadata.templates=structuredClone(templates||defaultTemplates());metadata.templates[template]={mode,selected};metadata.reviews=reviews;metadata.motion=motion;
     metadata.expressions ||= [];metadata.expressionLayers=expressionLayers;metadata.expressionDeforms=expressionDeforms;metadata.expressionClips=expressionClips;metadata.expressionGroups=expressionGroups;
   }
   if(Object.keys(groupMotionKeys).length){metadata.version=10;metadata.groupMotionKeys=groupMotionKeys;}
+  if(Object.keys(expressionClipKeys).length){metadata.version=11;metadata.groupMotionKeys=groupMotionKeys;metadata.expressionClipKeys=expressionClipKeys;}
   validateMetadata(metadata);
   const manifest=strToU8(JSON.stringify(metadata));
   if(file.size>10*MIB || results.some(part=>part.blob.size>MAX_PART_BYTES) || expressions.some(a=>a.blob.size>MAX_EXPRESSION_BYTES) || manifest.length>MAX_METADATA_BYTES || file.size+manifest.length+results.reduce((sum,p)=>sum+p.blob.size,0)+expressions.reduce((sum,a)=>sum+a.blob.size,0)>MAX_PROJECT_BYTES-4096) invalid('作業ファイルが大きすぎます。上限は 100 MiB、各パーツ 32 MiB、各表情素材 10 MiB です。');
@@ -187,5 +190,5 @@ export async function readProjectFile(file) {
     const blob=new Blob([entries[asset.path]],{type:'image/png'});await imageSize(blob);
     expressions.push({role:asset.role,name:asset.name,width:asset.width,height:asset.height,placement:asset.placement,blob});
   }
-  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates,reviews:metadata.reviews,motion:metadata.motion,expressions,expressionLayers:metadata.expressionLayers,expressionDeforms:metadata.expressionDeforms,expressionClips:metadata.expressionClips,expressionGroups:metadata.expressionGroups,groupMotionKeys:metadata.groupMotionKeys};
+  return {file:source,dimensions:sourceSize,mode:metadata.mode,selected:metadata.selected,prompts:metadata.prompts,results,template:metadata.template,templates:metadata.templates,reviews:metadata.reviews,motion:metadata.motion,expressions,expressionLayers:metadata.expressionLayers,expressionDeforms:metadata.expressionDeforms,expressionClips:metadata.expressionClips,expressionGroups:metadata.expressionGroups,groupMotionKeys:metadata.groupMotionKeys,expressionClipKeys:metadata.expressionClipKeys};
 }

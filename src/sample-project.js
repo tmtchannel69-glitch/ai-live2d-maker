@@ -1,3 +1,4 @@
+import {defaultClipKeys} from './expression-clip-keys.js';
 import {defaultGroupKeys} from './group-motion-keys.js';
 import {createProjectFile} from './project-file.js';
 import {BASIC_IDS,defaultTemplates} from './parts.js';
@@ -29,6 +30,7 @@ export async function createSampleProject() {
   await add('mouth_upper',34,5,{x:.43,y:.51,width:34/width,height:5/height},ctx=>{ctx.strokeStyle='#a55e6c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(2,2);ctx.quadraticCurveTo(17,5,32,2);ctx.stroke();});
   for(const side of ['l','r']){const white=expressions.find(a=>a.role===`eye_white_${side}`);expressionClips[`eye_iris_${side}`]={shape:'ellipse',...white.placement};}
   expressionClips.mouth_inside={shape:'ellipse',...expressions.find(a=>a.role==='mouth_inside').placement};
+  const expressionClipKeys={mouth_inside:defaultClipKeys(expressionClips.mouth_inside,'mouth')};const closed=expressionClipKeys.mouth_inside.closed;closed.y+=(closed.height-.0001)/2;closed.height=.0001;
   const expressionGroups=emptyGroups();expressionGroups.assignments=suggestedAssignments(expressions);expressionGroups.clipFollow=Object.fromEntries(Object.keys(expressionClips).map(role=>[role,true]));
   expressionGroups.transforms.face={dx:0,dy:0,pivotX:.5,pivotY:.4,angle:0,scale:1};
   const groupMotionKeys={face:defaultGroupKeys(expressionGroups,'face')};groupMotionKeys.face.negative={...groupMotionKeys.face.center,dx:-.025,angle:-8};groupMotionKeys.face.positive={...groupMotionKeys.face.center,dx:.025,angle:8};
@@ -36,6 +38,6 @@ export async function createSampleProject() {
   ctx.drawImage(face,.15*width,.08*height,.7*width,.65*height);
   for(const a of expressions.filter(a=>a.role!=='face_base' && !a.role.startsWith('eye_closed'))){const bitmap=await createImageBitmap(a.blob);try{const p=a.placement;ctx.drawImage(bitmap,p.x*width,p.y*height,p.width*width,p.height*height);}finally{bitmap.close();}}
   const file=new File([await blob(source)],'sample-character.png',{type:'image/png'});
-  const result=await createProjectFile({file,mode:'demo',selected:[...BASIC_IDS],prompts:{},results:[],templates:defaultTemplates(),expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups,groupMotionKeys});
+  const result=await createProjectFile({file,mode:'demo',selected:[...BASIC_IDS],prompts:{},results:[],templates:defaultTemplates(),expressions,expressionLayers,expressionDeforms,expressionClips,expressionGroups,groupMotionKeys,expressionClipKeys});
   return new File([result],'sample-work.zip',{type:'application/zip'});
 }

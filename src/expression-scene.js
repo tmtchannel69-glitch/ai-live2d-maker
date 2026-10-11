@@ -1,3 +1,4 @@
+import {CLIP_DRIVERS,defaultClipKeys,validateClipKeys,interpolateClip} from './expression-clip-keys.js';
 import {GROUP_KEY_LABELS,defaultGroupKeys,evaluateGroupKeys,validateGroupKeys} from './group-motion-keys.js';
 import {createExpressionGroupEditor} from './expression-group-editor.js';
 import {validateGroups,hasGroups,groupMatrix,IDENTITY,GROUP_LABELS,groupMembers,defaultGroupTransform} from './expression-groups.js';
@@ -8,7 +9,7 @@ import {GRID,TRIANGLES,defaultDeform,validateDeforms,interpolateShape,drawDeform
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {EXPRESSION_CONDITIONS,defaultExpressionLayer,expressionLayerVisible} from './expression-layer-state.js';
 
-export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys}) {
+export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys,onClipKeys}) {
   const section=document.createElement('section');section.className='panel expression-scene';section.hidden=true;
   section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。Live2Dモデルの出力は未対応です。</p>
   <p id="scene-status" role="status" aria-live="polite"></p><div class="motion-workspace"><div class="motion-stage"><canvas id="scene-canvas" width="1" height="1" aria-label="表情素材の合成と開閉プレビュー"></canvas></div><div class="motion-controls">
@@ -19,7 +20,11 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   <label>動かすグループ<select id="key-group"></select></label><label>編集する位置<select id="key-position"></select></label><button id="key-edit" class="secondary">この位置の動きを編集</button><button id="key-use-base" class="secondary">通常の配置から3位置を作る</button><button id="key-remove" class="secondary">このグループの動きを解除</button><p id="key-status" role="status" aria-live="polite"></p></details>
   <button id="scene-motion-play" class="secondary">向きと表情の動きを再生</button>
   <form id="scene-layer"><label>調整する素材<select id="scene-role"></select></label><label>重なり順（大きいほど手前）<input id="scene-order" type="number" min="0" max="99" step="1" required></label><label>表示する条件<select id="scene-condition"></select></label><label class="motion-check"><input id="scene-enabled" type="checkbox"> この素材を表示対象にする</label><button id="scene-apply" class="secondary">表示設定を反映</button></form>
-  <form id="clip-form"><h3>選択素材を表示する範囲</h3><p class="muted">範囲の外側を隠します。元画像上の範囲を指定します。既定は固定です。「素材をまとめて動かす」で範囲の追従を選べます。9点の変形には追従しません。細かな輪郭や開閉に合わせた範囲の変形は今後対応します。</p>
+  <form id="clip-form"><h3>選択素材を表示する範囲</h3><p class="muted">範囲の外側を隠します。元画像上の範囲を指定します。既定は固定です。「素材をまとめて動かす」で範囲の追従を選べます。開閉の2範囲は独立に調整でき、9点の輪郭を自動で写す機能はありません。</p>
+  <label>編集する範囲<select id="clip-key"><option value="base">固定範囲（開閉設定なしで使う）</option><option value="closed">閉じた範囲（0）</option><option value="open">開いた範囲（1）</option></select></label>
+  <label id="clip-driver-label" hidden>範囲の動きに使う値<select id="clip-driver"><option value="left">左目の開き</option><option value="right">右目の開き</option><option value="mouth">口の開き</option></select></label>
+  <p class="muted">先に固定範囲を反映し、閉じた・開いた範囲を調整します。2つの範囲はスライダーで滑らかにつながります。設定ありでは固定範囲を置き換えます。範囲の形は2位置で共通です。</p>
+  <button id="clip-thin" type="button" class="secondary" hidden>閉じた範囲を薄くする</button><button id="clip-keys-remove" type="button" class="secondary">範囲の開閉を解除</button>
   <label>範囲の形<select id="clip-shape"><option value="ellipse">楕円</option><option value="rect">長方形</option></select></label>
   <label>左端（元画像の%）<input id="clip-x" type="number" min="0" max="100" step="any" required></label><label>上端（元画像の%）<input id="clip-y" type="number" min="0" max="100" step="any" required></label>
   <label>幅（元画像の%）<input id="clip-width" type="number" min="0.01" max="100" step="any" required></label><label>高さ（元画像の%）<input id="clip-height" type="number" min="0.01" max="100" step="any" required></label>
@@ -54,7 +59,8 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     for(const item of bitmaps.slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
       if(!expressionLayerVisible(layer(item.role),values))continue;
       const p=getState().assets.find(a=>a.role===item.role)?.placement,setting=getState().deforms[item.role];
-      const clip=override?.role===item.role?override.setting:getState().clips[item.role];
+      const motionClip=getState().clipKeys[item.role];
+      const clip=override?.role===item.role?override.setting:motionClip?interpolateClip(motionClip,values[motionClip.driver]):getState().clips[item.role];
       const follow=groups.clipFollow[item.role],matrix=groupMatrix(groups,groups.assignments[item.role],canvas.width,canvas.height);
       ctx.save();if(clip && !follow){clipPath(ctx,clip,canvas.width,canvas.height);ctx.clip();}
       ctx.transform(...matrix);if(clip && follow){clipPath(ctx,clip,canvas.width,canvas.height);ctx.clip();}
@@ -73,7 +79,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   function stop(){playing=false;cancelAnimationFrame(raf);raf=0;$('#scene-play').textContent='瞬き・口の切替を再生';$('#scene-motion-play').textContent='向きと表情の動きを再生';draw();}
   function frame(now) {
     if(!playing)return;const t=(now-start)/1000,values={left:t%4>=3.6?0:1,right:t%4>=3.5 && t%4<3.9?0:1,mouth:t%2>=1?1:0},key=JSON.stringify(values);
-    if(Object.keys(getState().deforms).length || Object.keys(getState().groupKeys).length){
+    if(Object.keys(getState().deforms).length || Object.keys(getState().groupKeys).length || Object.keys(getState().clipKeys).length){
       if(now-lastTime>=33){const blink=phase=>phase<3.5?1:Math.abs((phase-3.5)/.25-1);draw({left:blink(t%4),right:blink((t+.1)%4),mouth:(1-Math.cos(t*Math.PI))/2,turn:Math.sin(t*Math.PI/2)});lastTime=now;}
     }else if(key!==lastFrame){lastFrame=key;draw(values);}raf=requestAnimationFrame(frame);
   }
@@ -84,14 +90,27 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     $('#deform-status').textContent=getState().deforms[current]?'変形設定あり。スライダーで途中の形も確認してください。':'変形は未設定です。反映してから動きを確認してください。';
   }
   function clipFields(){
-    const s=getState().clips[current]||{shape:'ellipse',...getState().assets.find(a=>a.role===current)?.placement};
+    const state=getState(),key=$('#clip-key').value,base=state.clips[current]||{shape:'ellipse',...state.assets.find(a=>a.role===current)?.placement},motionClip=state.clipKeys[current];
+    const s=key==='base'?base:motionClip?.[key]||base;
+    $('#clip-driver').value=motionClip?.driver||defaultDeform(current).driver;
+    $('#clip-driver-label').hidden=key==='base';$('#clip-thin').hidden=key!=='closed';
     $('#clip-shape').value=s.shape;for(const k of ['x','y','width','height'])$(`#clip-${k}`).value=Number((s[k]*100).toFixed(4));
-    $('#clip-status').textContent=getState().clips[current]?'表示範囲を設定済み。合成画面で隠れる部分を確認してください。':'範囲は未設定です。反映するまで素材全体を表示します。';
+    $('#clip-status').textContent=motionClip?'開閉する範囲を設定済み。固定範囲は保持しています。スライダーで途中も確認してください。':state.clips[current]?'表示範囲を設定済み。合成画面で隠れる部分を確認してください。':'範囲は未設定です。先に固定範囲を反映してください。';
   }
+  function clipPreviewValues(){return $('#clip-key').value==='base'?manual():{...manual(),[$('#clip-driver').value]:$('#clip-key').value==='closed'?0:1};}
   function inputClip(){return {shape:$('#clip-shape').value,...Object.fromEntries(['x','y','width','height'].map(k=>[k,Number($(`#clip-${k}`).value)/100]))};}
   function applyClip(setting){
     if(getState().locked || loading || !current)return false;
-    try {validateClips({[current]:setting},getState().assets);stop();onClip(current,setting);clipFields();draw();controls();return true;}
+    try {
+      const state=getState(),key=$('#clip-key').value;
+      validateClips({[current]:setting},state.assets);
+      if(key==='base'){stop();onClip(current,setting);}
+      else {
+        const next=structuredClone(state.clipKeys[current]||defaultClipKeys(state.clips[current],$('#clip-driver').value));next.driver=$('#clip-driver').value;next[key]=setting;
+        validateClipKeys({[current]:next},state.assets,state.clips);stop();onClipKeys(current,next);$(`#scene-${next.driver}`).value=key==='closed'?'0':'1';
+      }
+      clipFields();draw();controls();return true;
+    }
     catch(e){$('#clip-status').textContent=e.message;return false;}
   }
   function applyShape(setting){
@@ -104,6 +123,9 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     if(state.locked && playing)stop();
     for(const input of $('#deform-form').querySelectorAll('input,select,button'))input.disabled=disabled || playing;
     for(const input of $('#clip-form').querySelectorAll('input,select,button'))input.disabled=disabled || playing;
+    $('#clip-keys-remove').disabled=disabled || playing || !state.clipKeys[current];
+    for(const option of $('#clip-key').options)option.disabled=option.value!=='base' && !state.clips[current];
+    const keyed=$('#clip-key').value!=='base';$('#clip-shape').disabled=disabled || playing || keyed;$('#clip-apply').disabled=disabled || playing || (keyed && !state.clips[current]);$('#clip-touch').disabled=$('#clip-apply').disabled;
     $('#clip-remove').disabled=disabled || playing || !state.clips[current];
     $('#deform-remove').disabled=disabled || playing || !state.deforms[current];
     for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).disabled=disabled || playing;
@@ -130,17 +152,17 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     const state=getState(),changed=source!==state.file || assets.length!==state.assets.length || state.assets.some((a,i)=>a.role!==assets[i].role || a.blob!==assets[i].blob);
     if(changed || state.locked){touchEditor.close();clipEditor.close();groupEditor.close();}
     if(!changed && state.assets.some((a,i)=>['x','y','width','height'].some(k=>a.placement[k]!==assets[i].placement[k]))){clipEditor.close();groupEditor.close();stop();assets=[...state.assets];if(current)clipFields();}
-    if(source!==state.file){$('#scene-turn').value='0';$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
+    if(source!==state.file){$('#clip-key').value='base';$('#scene-turn').value='0';$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
     if(changed) {
       stop();generation++;release();source=state.file;assets=[...state.assets];loading=Boolean(source && assets.length);error='';
-      if(!assets.some(a=>a.role===current))current=assets[0]?.role||'';
+      if(!assets.some(a=>a.role===current)){current=assets[0]?.role||'';$('#clip-key').value='base';}
       $('#scene-role').replaceChildren(...assets.map(a=>{const o=document.createElement('option');o.value=a.role;o.textContent=EXPRESSION_ROLES.find(([id])=>id===a.role)[1];return o;}));$('#scene-role').value=current;
       if(current)fields();if(loading)void load(generation,source,[...assets]);
       if(!source){$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
     }
     controls();if(!playing)draw();
   }
-  $('#scene-role').addEventListener('change',()=>{groupEditor.close();clipEditor.close();touchEditor.close();stop();current=$('#scene-role').value;fields();draw();controls();});
+  $('#scene-role').addEventListener('change',()=>{groupEditor.close();clipEditor.close();touchEditor.close();stop();$('#clip-key').value='base';current=$('#scene-role').value;fields();draw();controls();});
   for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).addEventListener('input',()=>draw());
   $('#scene-background').addEventListener('change',()=>{stop();controls();});
   $('#scene-layer').addEventListener('submit',event=>{
@@ -154,9 +176,13 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   $('#clip-touch').addEventListener('click',()=>{
     if(getState().locked || loading || playing || !current || !background || !$('#clip-form').reportValidity())return;
     const s=inputClip();try{validateClips({[current]:s},getState().assets);}catch(e){$('#clip-status').textContent=e.message;return;}
-    stop();controls();clipEditor.open({asset:{name:EXPRESSION_ROLES.find(([id])=>id===current)[1],placement:s},sourceBitmap:canvas,sourceVisible:false,shape:s.shape,outlineMatrix:getState().groups.clipFollow[current]?groupMatrix(evaluateGroupKeys(getState().groups,getState().groupKeys,manual().turn),getState().groups.assignments[current],canvas.width,canvas.height):IDENTITY,renderPreview:(target,p)=>render(target,manual(),{role:current,setting:{shape:s.shape,...p}})});
+    stop();controls();const values=clipPreviewValues();clipEditor.open({asset:{name:EXPRESSION_ROLES.find(([id])=>id===current)[1]+($('#clip-key').value==='base'?'':`：${$('#clip-key').value==='closed'?'閉じた範囲（0）':'開いた範囲（1）'}・${CLIP_DRIVERS[$('#clip-driver').value]}`),placement:s},sourceBitmap:canvas,sourceVisible:false,shape:s.shape,outlineMatrix:getState().groups.clipFollow[current]?groupMatrix(evaluateGroupKeys(getState().groups,getState().groupKeys,manual().turn),getState().groups.assignments[current],canvas.width,canvas.height):IDENTITY,renderPreview:(target,p)=>render(target,values,{role:current,setting:{shape:s.shape,...p}})});
   });
-  $('#clip-remove').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;stop();onClip(current,null);clipFields();draw();controls();});
+  $('#clip-key').addEventListener('change',()=>{clipEditor.close();stop();clipFields();controls();});
+  $('#clip-driver').addEventListener('change',()=>clipEditor.close());
+  $('#clip-thin').addEventListener('click',()=>{if(getState().locked || loading || playing || $('#clip-key').value!=='closed' || !getState().clips[current])return;const base=inputClip(),height=Math.max(.0001,base.height*.05);applyClip({...base,y:Math.min(1,base.y+(base.height-height)/2),height});});
+  $('#clip-keys-remove').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;stop();onClipKeys(current,null);$('#clip-key').value='base';clipFields();controls();draw();});
+  $('#clip-remove').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;stop();onClip(current,null);$('#clip-key').value='base';clipFields();draw();controls();});
   $('#deform-grid').addEventListener('change',()=>draw());
   $('#deform-form').addEventListener('submit',event=>{event.preventDefault();if(getState().locked || loading || playing || !current || !$('#deform-form').reportValidity())return;const s=structuredClone(getState().deforms[current]||defaultDeform(current));s.driver=$('#deform-driver').value;s[$('#deform-key').value][Number($('#deform-point').value)]=[Number($('#deform-x').value)/100,Number($('#deform-y').value)/100];applyShape(s);});
   $('#deform-reset').addEventListener('click',()=>{if(getState().locked || loading || playing || !current)return;const s=structuredClone(getState().deforms[current]||defaultDeform(current));s.driver=$('#deform-driver').value;s[$('#deform-key').value]=GRID.map(p=>[...p]);applyShape(s);});
