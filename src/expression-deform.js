@@ -33,6 +33,9 @@ export function validateDeforms(value,assets) {
 // Composite the finished asset once so parent transforms, clipping and opacity
 // still apply normally and other assets are never added to this layer.
 const layers=new WeakMap();
+export function releaseDeformationLayer(ctx){
+  const layer=layers.get(ctx);if(layer){layer.width=layer.height=1;layers.delete(ctx);}
+}
 export function drawDeformed(ctx,bitmap,placement,points,width,height) {
   const target=points.map(([x,y])=>[(placement.x+x*placement.width)*width,(placement.y+y*placement.height)*height]);
   const left=Math.floor(Math.min(...target.map(p=>p[0])))-1,top=Math.floor(Math.min(...target.map(p=>p[1])))-1;

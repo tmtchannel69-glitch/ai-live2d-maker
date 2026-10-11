@@ -56,18 +56,19 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   const manual=()=>Object.fromEntries(['left','right','mouth','turn'].map(id=>[id,Number($(`#scene-${id}`).value)]));
   function render(ctx,values,override,groups=getState().groups,withKeys=true,view={}) {
     if(withKeys)groups=evaluateGroupKeys(groups,getState().groupKeys,values.turn||0);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const width=ctx.canvas.width,height=ctx.canvas.height;
+    ctx.clearRect(0,0,width,height);
     const opacity=view.sourceOpacity??($('#scene-background').value==='source'?1:0);
-    if(background && opacity){ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(background,0,0,canvas.width,canvas.height);ctx.restore();}
-    for(const item of bitmaps.slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
+    if((view.detail?.background || background) && opacity){ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(view.detail?.background || background,0,0,width,height);ctx.restore();}
+    for(const item of (view.detail?.bitmaps || bitmaps).slice().sort((a,b)=>layer(a.role).order-layer(b.role).order || EXPRESSION_ROLES.findIndex(([id])=>id===a.role)-EXPRESSION_ROLES.findIndex(([id])=>id===b.role))) {
       if((view.role && item.role!==view.role) || !expressionLayerVisible(layer(item.role),values))continue;
       const p=getState().assets.find(a=>a.role===item.role)?.placement,setting=getState().deforms[item.role];
       const motionClip=getState().clipKeys[item.role];
       const clip=override?.role===item.role?override.setting:motionClip?interpolateClip(motionClip,values[motionClip.driver]):getState().clips[item.role];
-      const follow=groups.clipFollow[item.role],matrix=groupMatrix(groups,groups.assignments[item.role],canvas.width,canvas.height);
-      ctx.save();if(clip && !follow){clipPath(ctx,clip,canvas.width,canvas.height);ctx.clip();}
-      ctx.transform(...matrix);if(clip && follow){clipPath(ctx,clip,canvas.width,canvas.height);ctx.clip();}
-      if(p){if(setting)drawDeformed(ctx,item.bitmap,p,interpolateShape(setting,values[setting.driver]),canvas.width,canvas.height);else ctx.drawImage(item.bitmap,p.x*canvas.width,p.y*canvas.height,p.width*canvas.width,p.height*canvas.height);}
+      const follow=groups.clipFollow[item.role],matrix=groupMatrix(groups,groups.assignments[item.role],width,height);
+      ctx.save();if(clip && !follow){clipPath(ctx,clip,width,height);ctx.clip();}
+      ctx.transform(...matrix);if(clip && follow){clipPath(ctx,clip,width,height);ctx.clip();}
+      if(p){if(setting)drawDeformed(ctx,item.bitmap,p,interpolateShape(setting,values[setting.driver]),width,height);else ctx.drawImage(item.bitmap,p.x*width,p.y*height,p.width*width,p.height*height);}
       ctx.restore();
     }
   }
@@ -166,7 +167,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     }
     controls();if(!playing)draw();
   }
-  $('#scene-inspect').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();inspector.open({width:canvas.width,height:canvas.height,assets:getState().assets,role:current,pose:manual()});});
+  $('#scene-inspect').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();inspector.open({width:canvas.width,height:canvas.height,assets:getState().assets,file:source,role:current,pose:manual()});});
   $('#scene-role').addEventListener('change',()=>{groupEditor.close();clipEditor.close();touchEditor.close();stop();$('#clip-key').value='base';current=$('#scene-role').value;fields();draw();controls();});
   for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).addEventListener('input',()=>draw());
   $('#scene-background').addEventListener('change',()=>{stop();controls();});
