@@ -1,3 +1,5 @@
+import {PART_LABELS} from './parts.js';
+import {promptSignature} from './prompt-state.js';
 import {createAssetPlacementEditor} from './asset-placement-editor.js';
 import {EXPRESSION_ROLES,readExpressionImage,defaultExpressionPlacement} from './expression-assets.js';
 
@@ -5,6 +7,7 @@ export function createExpressionAssetPanel({getState,onChange,onBusy}) {
   const section=document.createElement('section');section.className='panel asset-panel';section.hidden=true;
   section.innerHTML=`<h2>表情素材の読み込み・位置合わせ</h2><p class="muted">用意したPNGを役割ごとに読み込みます。画像はブラウザ内で扱い、作業ファイルに保存できます。一つの役割に一枚まで。元画像にない形の生成は行いません。開閉の形は下の合成画面で編集できます。</p>
   <div class="asset-controls"><label>素材の役割<select id="asset-role"></select></label><button id="asset-open" class="secondary">PNGを読み込む・置き換える</button><input id="asset-file" type="file" accept="image/png" hidden><label>位置合わせの背景<select id="asset-view"><option value="source">元画像</option><option value="transparent">透明背景</option></select></label></div>
+  <details class="asset-result-import"><summary>分離済みのAIパーツを使う</summary><p class="muted">上で選んだ素材の役割へ、補正済みPNGを直接コピーします。元画像上の位置を保ち、分離結果は変更しません。素材の細分化や閉じた形の生成は行いません。</p><label>使う分離結果<select id="asset-result"></select></label><button id="asset-use-result" class="secondary">選んだ役割へコピー</button><p id="asset-result-note" class="muted"></p></details>
   <p id="asset-inventory" class="muted"></p><p id="asset-info" class="muted"></p><p id="asset-status" role="status" aria-live="polite"></p>
   <div class="motion-workspace"><div class="motion-stage"><canvas id="asset-canvas" width="1" height="1" aria-label="選択した表情素材の配置プレビュー"></canvas></div><div class="motion-controls">
   <button id="asset-touch" class="secondary">指で位置を合わせる</button><form id="asset-placement"><div class="coordinate-grid"><label>左端 X（%）<input id="asset-x" type="number" min="0" max="100" step="0.01" required></label><label>上端 Y（%）<input id="asset-y" type="number" min="0" max="100" step="0.01" required></label><label>幅（元画像に対する%）<input id="asset-width" type="number" min="0.01" max="100" step="0.01" required></label><label>高さ（元画像に対する%）<input id="asset-height" type="number" min="0.01" max="100" step="0.01" required></label></div><button id="asset-apply" class="secondary">配置を反映</button></form>
@@ -30,6 +33,14 @@ export function createExpressionAssetPanel({getState,onChange,onBusy}) {
     $('#asset-touch').disabled=locked || loading || !current() || !sourceBitmap || !assetBitmap;
     if(locked)placementEditor.close();
     $('#asset-download').disabled=locked || !current();$('#asset-remove').disabled=locked || !current();
+    const choices=(state.results||[]).filter(p=>p.ai),previous=$('#asset-result').value;
+    const options=choices.map(p=>[p.id,`${PART_LABELS[p.id]}${p.manual?'・補正済み':''}${p.signature!==promptSignature(state.prompts?.[p.id])?'・指定変更あり':''}`]);
+    const signature=JSON.stringify(options);
+    if($('#asset-result').dataset.options!==signature){$('#asset-result').replaceChildren(...options.map(([id,label])=>new Option(label,id)));if(choices.some(p=>p.id===previous))$('#asset-result').value=previous;$('#asset-result').dataset.options=signature;}
+    $('#asset-result').disabled=locked || !choices.length;
+    $('#asset-use-result').disabled=locked || !choices.length;
+    $('#asset-use-result').textContent=current()?'選んだ役割の素材を置き換える':'選んだ役割へコピー';
+    $('#asset-result-note').textContent=choices.length?'全構成のAI結果が対象です。10 MiB以下。コピー後の素材は独立し、再分離・ブラシ補正で自動更新しません。既存素材を置き換える場合は配置を元位置へ戻し、表示や変形設定は保持します。':'AI分離の結果がまだありません。デモは元位置を保持しないため、この操作の対象外です。';
     $('#asset-inventory').textContent=`読み込み済み ${state.assets.length} / ${EXPRESSION_ROLES.length} 役割：${state.assets.map(a=>EXPRESSION_ROLES.find(([id])=>id===a.role)[1]).join('、')||'なし'}。読込済みでも素材の品質や動作は未確認です。`;
     const a=current();$('#asset-info').textContent=a?`${a.name} · ${a.width} × ${a.height} px`:'この役割の素材はまだありません。';
   }
@@ -78,6 +89,26 @@ export function createExpressionAssetPanel({getState,onChange,onBusy}) {
       onChange([...getState().assets.filter(a=>a.role!==role),{role,...next,placement}]);$('#asset-status').textContent='素材を読み込みました。配置を確認し、作業ファイルを保存してください。';
     } catch(e) {if(ticket===importTicket && file===getState().file)$('#asset-status').textContent=`読み込みに失敗しました。以前の素材は保持しています。${e.message}`;}
     finally {bitmap?.close();if(ticket===importTicket){importBusy=false;onBusy(false);controls();}}
+  });
+  $('#asset-use-result').addEventListener('click',async()=>{
+    const state=getState(),part=(state.results||[]).find(p=>p.id===$('#asset-result').value && p.ai);
+    if(!state.file || state.locked || importBusy || !part)return;
+    const ticket=++importTicket,file=state.file,role=$('#asset-role').value;
+    importBusy=true;onBusy(true);controls();$('#asset-status').textContent='分離結果を表情素材へコピーしています…';
+    let bitmap;
+    try {
+      const next=await readExpressionImage(new File([part.blob],`${part.id}.png`,{type:'image/png'}));
+      if(ticket!==importTicket || file!==getState().file)return;
+      bitmap=await createImageBitmap(file);
+      if(next.width!==bitmap.width || next.height!==bitmap.height)throw new Error('元画像と同じサイズのAI結果が必要です。');
+      bitmap.close();bitmap=null;
+      if(ticket!==importTicket || file!==getState().file)return;
+      const now=getState();if(now.locked || !(now.results||[]).includes(part))throw new Error('分離結果が変更されています。もう一度選んでください。');
+      if(now.baseBytes+now.assets.filter(a=>a.role!==role).reduce((sum,a)=>sum+a.blob.size,0)+next.blob.size>100*1024*1024-256*1024)throw new Error('作業全体が100 MiBの保存上限に近づいています。');
+      onChange([...now.assets.filter(a=>a.role!==role),{role,...next,placement:{x:0,y:0,width:1,height:1}}]);
+      $('#asset-status').textContent=`分離結果をコピーしました。元画像上の位置を保持しています。役割に合う素材か確認し、作業を保存してください。${part.signature!==promptSignature(now.prompts?.[part.id])?'指定変更前の結果です。再確認してください。':''}`;
+    } catch(e){if(ticket===importTicket && file===getState().file)$('#asset-status').textContent=`コピーに失敗しました。以前の素材は保持しています。${e.message}`;}
+    finally{bitmap?.close();if(ticket===importTicket){importBusy=false;onBusy(false);controls();}}
   });
   $('#asset-placement').addEventListener('submit',event=>{
     event.preventDefault();const state=getState(),a=current();if(state.locked || importBusy || loading || !a || !$('#asset-placement').reportValidity())return;

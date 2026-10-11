@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import {readPsd,initializeCanvas} from 'ag-psd';
+initializeCanvas(()=>{throw new Error('Use raw image data');},(width,height)=>({width,height,data:new Uint8ClampedArray(width*height*4)}));
 
 test('actual local SAM returns a full-size transparent PNG through the browser', async ({ page }) => {
   test.setTimeout(120000);
@@ -59,5 +61,10 @@ test('actual local SAM returns a full-size transparent PNG through the browser',
   await page.reload();await page.locator('#project-file').setInputFiles({name:'work.zip',mimeType:'application/zip',buffer:Buffer.concat(bytes)});
   await expect(page.locator('#project-status')).toContainText('作業を再開');await expect(page.locator('#parts-template')).toHaveValue('production');await expect(page.locator('[data-part=eye_l] img')).toBeVisible();
   await page.locator('#parts-template').selectOption('basic');await expect(page.locator('[data-part=hair] img')).toBeVisible();
+  // Continue with real SAM bytes through the new material and PSD workflow.
+  async function saveOutput(selector){const pending=page.waitForEvent('download');await page.locator(selector).click();const d=await pending,chunks=[];for await(const c of await d.createReadStream())chunks.push(c);return Buffer.concat(chunks);}
+  const raw=await saveOutput('[data-part=hair] a');await page.locator('#asset-role').selectOption('face_base');await page.locator('.asset-result-import summary').click();await page.locator('#asset-result').selectOption('hair');await page.locator('#asset-use-result').click();await expect(page.locator('#asset-status')).toContainText('コピーしました');await expect(page.locator('#asset-width')).toHaveValue('100');expect(await saveOutput('#asset-download')).toEqual(raw);
+  const psd=readPsd(await saveOutput('#download-expression-psd'),{useImageData:true,skipThumbnail:true});expect([psd.width,psd.height]).toEqual([256,384]);expect(psd.children[0].name).toBe('目・口の下地の肌 [face_base]');expect(psd.children[0].imageData.data[3]).toBe(0);expect(psd.children[0].imageData.data[(190*256+128)*4+3]).toBeGreaterThan(0);
+  const work=await saveOutput('#save-project');await page.reload();await page.locator('#project-file').setInputFiles({name:'work.zip',mimeType:'application/zip',buffer:work});await expect(page.locator('#project-status')).toContainText('作業を再開');await page.locator('#asset-role').selectOption('face_base');expect(await saveOutput('#asset-download')).toEqual(raw);
   await page.screenshot({path:'/tmp/live2d-real-ai-mobile.png',fullPage:true});
 });

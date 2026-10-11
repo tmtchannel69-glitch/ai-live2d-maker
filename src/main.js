@@ -10,7 +10,7 @@ import {createExpressionScene} from './expression-scene.js';
 import {createExpressionAssetPanel} from './expression-asset-panel.js';
 import {createExpressionPanel} from './expression-panel.js';
 import {createMotionPanel} from './motion-panel.js';
-import {createPsdExport} from './psd-export.js';
+import {createPsdExport,createExpressionPsdExport} from './psd-export.js';
 import {createMaterialArchive} from './material-archive.js';
 import {createReviewPanel} from './review-panel.js';
 import {invalidateReview} from './review-state.js';
@@ -83,7 +83,7 @@ expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:edito
   template='production';templates.production.selected=TEMPLATES.production.map(p=>p.id).filter(id=>templates.production.selected.includes(id) || ids.includes(id));
   renderPartChoices();renderResults();updateEditorNote();updateButton();updateSelectionStatus();
 }});
-assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
+assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,results,prompts:editor.prompts,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
   if(busy || projectBusy || archiveBusy || materialBusy)return;
   expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,assets,expressionClips);groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,assets);assetPanel.update();expressionPanel.update();expressionScene?.update();motionChecklist?.update();
 }});
@@ -207,6 +207,7 @@ function updateButton() {
   reviewPanel?.update();
   const locked=busy || projectBusy || materialBusy || assetBusy;
   $('#download-handoff').disabled=!file || locked || archiveBusy;
+  $('#download-expression-psd').disabled=!file || !expressionAssets.length || locked || archiveBusy;
   $('#download-materials').disabled=!file || !selected().length || locked || archiveBusy;
   $('#download-psd').disabled=!file || !isAi() || !visibleResults().some(part=>part.ai && selected().includes(part.id)) || locked || archiveBusy;
   $('#save-project').disabled=!file || locked || archiveBusy;
@@ -228,7 +229,7 @@ function updateButton() {
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
-function cancelProjectOperation() {assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#material-status').textContent='';$('#handoff-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
+function cancelProjectOperation() {assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#expression-psd-status').textContent='';$('#material-status').textContent='';$('#handoff-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
 async function loadFile(next) {
   cancelProjectOperation();
   const version = ++uploadVersion;
@@ -301,6 +302,19 @@ $('#download-all').addEventListener('click', async () => {
     $('#status').textContent=`${snapshot.length} 個のパーツをまとめた ZIP の保存を開始しました。${snapshot.some(dirty)?'指定変更前の結果も含みます。':''}`;
   } catch { if(snapshotAll===results) $('#status').textContent='ZIP の作成に失敗しました。もう一度お試しください。個別 PNG 保存も利用できます。'; }
   finally { archiveBusy=false; $('#download-all').textContent='まとめて ZIP 保存'; updateButton(); }
+});
+$('#download-expression-psd').addEventListener('click',async()=>{
+  if($('#download-expression-psd').disabled)return;
+  brushEditor.close();editor.clearView();reviewPanel.close();
+  const version=uploadVersion,snapshot={file,assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),layers:structuredClone(expressionLayers)},current=new AbortController();psdController=current;
+  const isCurrent=()=>version===uploadVersion && file===snapshot.file && !current.signal.aborted;
+  materialBusy=true;archiveBusy=true;updateButton();$('#expression-psd-status').textContent='表情素材のPSDを準備しています…';
+  try {
+    const blob=await createExpressionPsdExport(snapshot,{signal:current.signal,onProgress:text=>{if(isCurrent())$('#expression-psd-status').textContent=text;}});if(!isCurrent())return;
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='ai-live2d-expressions.psd';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);
+    $('#expression-psd-status').textContent=`${snapshot.assets.length}素材の配置済みPSDの保存を開始しました。変形・範囲・グループの動きは含みません。画像編集ソフトで確認してください。`;
+  }catch(e){if(isCurrent())$('#expression-psd-status').textContent=`表情PSDの作成に失敗しました。現在の作業は保持しています。${e.message}`;}
+  finally{if(psdController===current){psdController=null;materialBusy=false;archiveBusy=false;updateButton();}}
 });
 $('#download-handoff').addEventListener('click',async()=>{
   if($('#download-handoff').disabled)return;
