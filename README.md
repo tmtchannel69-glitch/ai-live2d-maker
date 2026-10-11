@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/practical-material-workflow` です。
+最新の開発ブランチは `feature/expression-inspector` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/practical-material-workflow https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-inspector https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/practical-material-workflow` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-inspector` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -320,3 +320,7 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 ## 分離結果を動きの素材へ直接使う
 
 「動き」の素材読込画面で役割を選び、「分離済みのAIパーツを使う」から補正済みPNGを元位置のままコピーできます。コピー後の素材は独立し、再分離しても自動更新しません。「保存」では追加した表情素材の位置と重なり順をそろえたPSDも取り出せます。動きの設定・表示範囲はPSDに含まず、作業/引き継ぎZIPで保持します。[使い方・保存の選び方](docs/PRACTICAL_MATERIAL_WORKFLOW.md)。VTube Studio用のモデル出力は未対応です。
+
+## 表情を拡大して確認
+
+合成画面の「表情を拡大して確認」で100/200/400%表示、選択素材の描画位置への移動、指でのスクロール、単独表示・元画像比較・開閉の確認ができます。そのまま対象素材の表示/形/範囲の編集へ戻れます。確認だけでは保存設定や画像を変えません。[操作と制限](docs/EXPRESSION_INSPECTOR.md)。
