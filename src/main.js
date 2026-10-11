@@ -1,3 +1,4 @@
+import {createMotionChecklist} from './motion-checklist.js';
 import {pruneClipKeys} from './expression-clip-keys.js';
 import {pruneGroupKeys} from './group-motion-keys.js';
 import {createSampleProject} from './sample-project.js';
@@ -46,7 +47,7 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow;
+let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow,motionChecklist;
 let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={},expressionClipKeys={};
 let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
@@ -83,29 +84,34 @@ expressionPanel=createExpressionPanel({getState:()=>({file,results,prompts:edito
 }});
 assetPanel=createExpressionAssetPanel({onBusy:value=>{assetBusy=value;updateButton();},getState:()=>({file,assets:expressionAssets,baseBytes:(file?.size||0)+results.reduce((sum,p)=>sum+p.blob.size,0),locked:busy || projectBusy || archiveBusy || materialBusy}),onChange:assets=>{
   if(busy || projectBusy || archiveBusy || materialBusy)return;
-  expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,assets,expressionClips);groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,assets);assetPanel.update();expressionPanel.update();expressionScene?.update();
+  expressionAssets=assets;expressionLayers=Object.fromEntries(Object.entries(expressionLayers).filter(([role])=>assets.some(a=>a.role===role)));expressionDeforms=Object.fromEntries(Object.entries(expressionDeforms).filter(([role])=>assets.some(a=>a.role===role)));expressionClips=Object.fromEntries(Object.entries(expressionClips).filter(([role])=>assets.some(a=>a.role===role)));expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,assets,expressionClips);groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,assets);assetPanel.update();expressionPanel.update();expressionScene?.update();motionChecklist?.update();
 }});
 expressionScene=createExpressionScene({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onChange:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
-  expressionLayers={...expressionLayers,[role]:setting};expressionScene.update();expressionPanel.update();
+  expressionLayers={...expressionLayers,[role]:setting};expressionScene.update();motionChecklist?.update();expressionPanel.update();
 },onClip:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   expressionClips={...expressionClips};if(setting)expressionClips[role]=setting;else delete expressionClips[role];
-  expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,expressionAssets,expressionClips);expressionScene.update();
+  expressionClipKeys=pruneClipKeys(expressionClipKeys,expressionClips);expressionGroups=pruneGroups(expressionGroups,expressionAssets,expressionClips);expressionScene.update();motionChecklist?.update();
 },onClipKeys:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
-  expressionClipKeys={...expressionClipKeys};if(setting)expressionClipKeys[role]=setting;else delete expressionClipKeys[role];expressionScene.update();
+  expressionClipKeys={...expressionClipKeys};if(setting)expressionClipKeys[role]=setting;else delete expressionClipKeys[role];expressionScene.update();motionChecklist?.update();
 },onGroups:setting=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
-  expressionGroups=setting;groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,expressionAssets);expressionScene.update();expressionPanel.update();
+  expressionGroups=setting;groupMotionKeys=pruneGroupKeys(groupMotionKeys,expressionGroups,expressionAssets);expressionScene.update();motionChecklist?.update();expressionPanel.update();
 },onGroupKeys:setting=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
-  groupMotionKeys=setting;expressionScene.update();
+  groupMotionKeys=setting;expressionScene.update();motionChecklist?.update();
 },onDeform:(role,setting)=>{
   if(busy || projectBusy || archiveBusy || materialBusy || assetBusy)return;
   if(setting){expressionDeforms={...expressionDeforms,[role]:setting};expressionLayers={...expressionLayers,[role]:{...(expressionLayers[role]||defaultExpressionLayer(role)),condition:'always'}};}
   else {expressionDeforms={...expressionDeforms};delete expressionDeforms[role];}
-  expressionScene.update();expressionPanel.update();
+  expressionScene.update();motionChecklist?.update();expressionPanel.update();
+}});
+motionChecklist=createMotionChecklist({getState:()=>({file,assets:expressionAssets,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,clipKeys:expressionClipKeys,groups:expressionGroups,groupKeys:groupMotionKeys,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onNavigate:action=>{
+  if(busy || projectBusy || archiveBusy || materialBusy || assetBusy || !file)return;
+  if(action.kind==='asset'){const input=$('#asset-role');input.value=action.role;input.dispatchEvent(new Event('change'));$('.asset-panel').scrollIntoView({block:'start'});input.focus({preventScroll:true});}
+  else if(!expressionScene.navigate(action))$('#motion-check-status').textContent='合成画面を準備しています。素材の読み込みが終わってから、もう一度操作してください。';
 }});
 workflow=createWorkflowNavigation({getState:()=>({file,resultCount:results.length,assetCount:expressionAssets.length})});
 function rememberTemplate() {templates[template]={mode:$('#processing-mode').value,selected:selected()};}
@@ -152,7 +158,7 @@ function clearResults(ids=null) {
   results=ids?results.filter(part=>!ids.includes(part.id)):[];renderResults();
 }
 function renderResults() {
-  expressionScene?.update();
+  expressionScene?.update();motionChecklist?.update();
   assetPanel?.update();
   motionPanel?.update();
   expressionPanel?.update();
@@ -193,7 +199,7 @@ function renderResults() {
   $('#results').replaceChildren(grid);
 }
 function updateButton() {
-  expressionScene?.update();
+  expressionScene?.update();motionChecklist?.update();
   assetPanel?.update();
   motionPanel?.update();
   expressionPanel?.update();

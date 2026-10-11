@@ -36,9 +36,9 @@ export function createWorkflowNavigation({getState}) {
     }
   });
   const motionLinks=document.createElement('div');motionLinks.className='workflow-motion-links';
-  for(const [selector,label] of [['.asset-panel','素材の読み込みへ'],['.expression-scene','表情の合成・編集へ'],['.motion-panel','頭・髪の動きへ']]) {
-    const target=document.querySelector(selector);target.classList.add('workflow-target');target.querySelector('h2').setAttribute('tabindex','-1');
-    const button=document.createElement('button');button.className='secondary';button.textContent=label;button.addEventListener('click',()=>{if(!getState().file)return;select('motion');target.scrollIntoView({block:'start',behavior:'auto'});target.querySelector('h2').focus({preventScroll:true});});motionLinks.append(button);continuations.push(button);
+  for(const [selector,label] of [['.motion-checklist','動きの設定チェックへ'],['.asset-panel','素材の読み込みへ'],['.expression-scene','表情の合成・編集へ'],['.motion-panel','頭・髪の動きへ']]) {
+    const target=document.querySelector(selector);target.classList.add('workflow-target');target.querySelector('h2,h3').setAttribute('tabindex','-1');
+    const button=document.createElement('button');button.className='secondary';button.textContent=label;button.addEventListener('click',()=>{if(!getState().file)return;select('motion');target.scrollIntoView({block:'start',behavior:'auto'});target.querySelector('h2,h3').focus({preventScroll:true});});motionLinks.append(button);continuations.push(button);
   }
   document.querySelector('.expression-panel h2').after(motionLinks);
   save.querySelector('#workflow-save').addEventListener('click',()=>{if(!document.querySelector('#save-project').disabled)document.querySelector('#save-project').click();});

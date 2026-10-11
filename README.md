@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/expression-clip-keys` です。
+最新の開発ブランチは `feature/motion-checklist` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/expression-clip-keys https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/motion-checklist https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/expression-clip-keys` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/motion-checklist` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -304,3 +304,11 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 閉じた範囲では「閉じた範囲を薄くする」で現在の入力範囲を中心から縦方向へ縮められます。反映後は開閉スライダーで途中の範囲も滑らかに動きます。グループへの追従や9点の形編集と併用できます。「範囲の開閉を解除」で保持している固定範囲へ戻します。固定範囲だけを編集しても、設定済みの2範囲は変わりません。
 
 設定ありは作業ZIP版11で保存し、旧版1〜10も開けます。サンプルにも口の範囲の開閉を設定しました。元PNG・素材配置・PSDは変わりません。自由な輪郭やメッシュからの範囲自動生成、VTube Studio向けモデル出力は未対応です。[詳細](docs/EXPRESSION_CLIP_KEYS.md)。
+
+## 動きの設定を一覧で確認する
+
+「動き」の入口に「動きの設定チェック」を追加しました。顔全体・左右の目・口について、読み込んだ素材、表示の無効化、開閉時に表示する素材の有無、変形と範囲の使う値、所属、左・中央・右の設定を確認できます。詳細を開き、各行のボタンから対象の素材・表示・形・範囲・まとめ方・3位置の編集へ進めます。
+
+各部位の「閉じた状態・半分・開いた状態」（顔は左・中央・右）でその状態を合成画面に表示します。合成画面にも「すぐ試す動き」と3つのボタンがあります。再生中なら停止し、選んだ値だけを変えます。設定や元画像は変更しません。「動きの確認一覧を保存」は画像なしのテキストです。設定を変えて保存した作業ファイルを開くと、一覧はその設定から作り直します。
+
+確認候補は設定の有無から作る案内です。範囲や変形は用途によって不要な場合があり、候補ゼロでも自然な動きやLive2Dモデルの完成を保証しません。作業ファイルの形式は版1〜11のまま、一覧の折りたたみやプレビュー値は保存しません。[仕様と確認内容](docs/MOTION_CHECKLIST.md)。

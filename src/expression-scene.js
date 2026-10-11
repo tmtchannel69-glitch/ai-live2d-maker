@@ -14,7 +14,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。Live2Dモデルの出力は未対応です。</p>
   <p id="scene-status" role="status" aria-live="polite"></p><div class="motion-workspace"><div class="motion-stage"><canvas id="scene-canvas" width="1" height="1" aria-label="表情素材の合成と開閉プレビュー"></canvas></div><div class="motion-controls">
   <label>背景<select id="scene-background"><option value="transparent">透明背景・追加素材だけ</option><option value="source">元画像・位置確認用</option></select></label>
-  <label>左目の開き（0＝閉じる、1＝開く）<input id="scene-left" type="range" min="0" max="1" step="0.1" value="1"></label><label>右目の開き（0＝閉じる、1＝開く）<input id="scene-right" type="range" min="0" max="1" step="0.1" value="1"></label><label>口の開き（0＝閉じる、1＝開く）<input id="scene-mouth" type="range" min="0" max="1" step="0.1" value="0"></label><label>顔の向きの試作（左 −1・中央 0・右 1）<input id="scene-turn" type="range" min="-1" max="1" step="0.05" value="0"></label><p id="scene-values" class="muted"></p><button id="scene-play" class="secondary">瞬き・口の切替を再生</button>
+  <label>左目の開き（0＝閉じる、1＝開く）<input id="scene-left" type="range" min="0" max="1" step="0.1" value="1"></label><label>右目の開き（0＝閉じる、1＝開く）<input id="scene-right" type="range" min="0" max="1" step="0.1" value="1"></label><label>口の開き（0＝閉じる、1＝開く）<input id="scene-mouth" type="range" min="0" max="1" step="0.1" value="0"></label><label>顔の向きの試作（左 −1・中央 0・右 1）<input id="scene-turn" type="range" min="-1" max="1" step="0.05" value="0"></label><p id="scene-values" class="muted"></p><label>すぐ試す動き<select id="scene-quick-driver"><option value="left">左目</option><option value="right">右目</option><option value="mouth">口</option><option value="turn">顔の向きの試作</option></select></label><div id="scene-quick-poses"><button type="button" id="scene-pose-low" class="secondary">閉じた状態</button><button type="button" id="scene-pose-middle" class="secondary">半分</button><button type="button" id="scene-pose-high" class="secondary">開いた状態</button></div><button id="scene-play" class="secondary">瞬き・口の切替を再生</button>
   <button id="scene-groups" class="secondary">素材をまとめて動かす</button><p id="scene-group-status" class="muted"></p>
   <details id="group-key-panel"><summary>スライダーで動く位置を設定</summary><p class="muted">グループごとに左・中央・右の位置を作ります。設定ありのグループは通常の配置をこの3位置で置き換えて動きます。実際の立体的な顔の向きやLive2D出力ではありません。</p>
   <label>動かすグループ<select id="key-group"></select></label><label>編集する位置<select id="key-position"></select></label><button id="key-edit" class="secondary">この位置の動きを編集</button><button id="key-use-base" class="secondary">通常の配置から3位置を作る</button><button id="key-remove" class="secondary">このグループの動きを解除</button><p id="key-status" role="status" aria-live="polite"></p></details>
@@ -123,6 +123,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     if(state.locked && playing)stop();
     for(const input of $('#deform-form').querySelectorAll('input,select,button'))input.disabled=disabled || playing;
     for(const input of $('#clip-form').querySelectorAll('input,select,button'))input.disabled=disabled || playing;
+    for(const input of [$('#scene-quick-driver'),...$('#scene-quick-poses').querySelectorAll('button')])input.disabled=disabled;
     $('#clip-keys-remove').disabled=disabled || playing || !state.clipKeys[current];
     for(const option of $('#clip-key').options)option.disabled=option.value!=='base' && !state.clips[current];
     const keyed=$('#clip-key').value!=='base';$('#clip-shape').disabled=disabled || playing || keyed;$('#clip-apply').disabled=disabled || playing || (keyed && !state.clips[current]);$('#clip-touch').disabled=$('#clip-apply').disabled;
@@ -198,6 +199,21 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   });
   function togglePlayback(){if(playing){stop();controls();return;}if(getState().locked || loading || !bitmaps.length)return;playing=true;start=performance.now();lastFrame='';lastTime=0;$('#scene-play').textContent='再生を停止';$('#scene-motion-play').textContent='再生を停止';controls();raf=requestAnimationFrame(frame);}
   $('#scene-play').addEventListener('click',togglePlayback);$('#scene-motion-play').addEventListener('click',togglePlayback);
+  function poseLabels(){const turn=$('#scene-quick-driver').value==='turn';for(const [id,text] of turn?[['low','左'],['middle','中央'],['high','右']]:[['low','閉じた状態'],['middle','半分'],['high','開いた状態']])$(`#scene-pose-${id}`).textContent=text;}
+  function pose(driver,value){if(getState().locked || loading || !bitmaps.length)return false;touchEditor.close();clipEditor.close();groupEditor.close();stop();$('#scene-quick-driver').value=driver;poseLabels();$(`#scene-${driver}`).value=String(value);draw();controls();return true;}
+  $('#scene-quick-driver').addEventListener('change',poseLabels);
+  for(const [id,index] of [['low',0],['middle',1],['high',2]])$(`#scene-pose-${id}`).addEventListener('click',()=>{const driver=$('#scene-quick-driver').value;pose(driver,(driver==='turn'?[-1,0,1]:[0,.5,1])[index]);});
+  function navigate(action){
+    if(getState().locked || loading || !bitmaps.length)return false;
+    if(action.kind==='pose'){if(!pose(action.driver,action.value))return false;canvas.setAttribute('tabindex','-1');canvas.scrollIntoView({block:'start'});canvas.focus({preventScroll:true});return true;}
+    touchEditor.close();clipEditor.close();groupEditor.close();stop();
+    if(getState().assets.some(a=>a.role===action.role)){current=action.role;$('#scene-role').value=current;$('#clip-key').value='base';fields();}
+    let target;
+    if(action.kind==='keys'){$('#group-key-panel').open=true;$('#key-group').value=action.group;target=$('#group-key-panel');}
+    else if(action.kind==='groups')target=$('#scene-groups');
+    else target=$({layer:'#scene-layer',clip:'#clip-form',deform:'#deform-form'}[action.kind]);
+    controls();draw();if(!target)return false;target.setAttribute('tabindex','-1');target.scrollIntoView({block:'start'});target.focus({preventScroll:true});return true;
+  }
   document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();controls();}});
-  return {update};
+  return {update,navigate};
 }
