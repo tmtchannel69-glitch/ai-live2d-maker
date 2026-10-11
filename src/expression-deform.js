@@ -26,16 +26,31 @@ export function validateDeforms(value,assets) {
   return structuredClone(value);
 }
 
-// Piecewise affine texture mapping. Coordinates are local to the asset's
-// placement; the original PNG remains untouched.
+// Reuse one temporary layer per destination context (not per asset/frame).
+// Adjacent triangle clips have complementary antialiased coverage. Adding
+// their premultiplied colors on an isolated layer avoids source-over alpha
+// loss at shared edges, without thickening/overlapping the triangle geometry.
+// Composite the finished asset once so parent transforms, clipping and opacity
+// still apply normally and other assets are never added to this layer.
+const layers=new WeakMap();
 export function drawDeformed(ctx,bitmap,placement,points,width,height) {
   const target=points.map(([x,y])=>[(placement.x+x*placement.width)*width,(placement.y+y*placement.height)*height]);
+  const left=Math.floor(Math.min(...target.map(p=>p[0])))-1,top=Math.floor(Math.min(...target.map(p=>p[1])))-1;
+  const layerWidth=Math.ceil(Math.max(...target.map(p=>p[0])))-left+1,layerHeight=Math.ceil(Math.max(...target.map(p=>p[1])))-top+1;
+  let layer=layers.get(ctx);
+  if(!layer){layer=typeof OffscreenCanvas==='function'?new OffscreenCanvas(1,1):document.createElement('canvas');layers.set(ctx,layer);}
+  if(layer.width!==layerWidth)layer.width=layerWidth;if(layer.height!==layerHeight)layer.height=layerHeight;
+  const paint=layer.getContext('2d');paint.clearRect(0,0,layer.width,layer.height);
+  paint.globalCompositeOperation='lighter';paint.imageSmoothingEnabled=ctx.imageSmoothingEnabled;paint.imageSmoothingQuality=ctx.imageSmoothingQuality;
+  paint.save();paint.translate(-left,-top);
   for(const ids of TRIANGLES) {
     const [s0,s1,s2]=ids.map(i=>[GRID[i][0]*bitmap.width,GRID[i][1]*bitmap.height]),[d0,d1,d2]=ids.map(i=>target[i]);
     const ux=s1[0]-s0[0],uy=s1[1]-s0[1],vx=s2[0]-s0[0],vy=s2[1]-s0[1],det=ux*vy-uy*vx;
     const dx=d1[0]-d0[0],dy=d1[1]-d0[1],ex=d2[0]-d0[0],ey=d2[1]-d0[1];
     const a=(dx*vy-ex*uy)/det,b=(dy*vy-ey*uy)/det,c=(ex*ux-dx*vx)/det,d=(ey*ux-dy*vx)/det;
-    ctx.save();ctx.beginPath();ctx.moveTo(...d0);ctx.lineTo(...d1);ctx.lineTo(...d2);ctx.closePath();ctx.clip();
-    ctx.transform(a,b,c,d,d0[0]-a*s0[0]-c*s0[1],d0[1]-b*s0[0]-d*s0[1]);ctx.drawImage(bitmap,0,0);ctx.restore();
+    paint.save();paint.beginPath();paint.moveTo(...d0);paint.lineTo(...d1);paint.lineTo(...d2);paint.closePath();paint.clip();
+    paint.transform(a,b,c,d,d0[0]-a*s0[0]-c*s0[1],d0[1]-b*s0[0]-d*s0[1]);paint.drawImage(bitmap,0,0);paint.restore();
   }
+  paint.restore();
+  try{ctx.drawImage(layer,left,top);}finally{paint.clearRect(0,0,layer.width,layer.height);}
 }
