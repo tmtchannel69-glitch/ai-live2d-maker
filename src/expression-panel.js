@@ -21,7 +21,7 @@ export function createExpressionPanel({getState,onPrepare}) {
     const state=getState();section.hidden=!state.file;
     assetSummary.textContent=`追加の表情素材：${state.assets?.length||0}役割を読み込み済み。読み込み・位置合わせは下の画面で行います。読込済みでも形や動作品質は未確認です。`;
     if(state.file!==source){source=state.file;section.querySelector('#expression-status').textContent='';}
-    for(const button of section.querySelectorAll('button'))button.disabled=state.locked || !state.file;
+    for(const button of section.querySelectorAll('#expression-report,[data-prepare]'))button.disabled=state.locked || !state.file;
     if(!state.file)section.querySelector('#expression-status').textContent='';
     for(const group of expressionPlan(state))for(const part of group.parts) {
       const row=rows.get(`${group.id}:${part.id}`);row.dataset.state=part.status;row.textContent=`${part.label}：${EXPRESSION_STATUS[part.status]} ／ ${fillLabel(part.fill)}`;

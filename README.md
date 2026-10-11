@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/draft-preview-zoom` です。
+最新の開発ブランチは `feature/expression-edit-guide` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/draft-preview-zoom https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-edit-guide https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/draft-preview-zoom` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-edit-guide` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -342,3 +342,7 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 編集中に「重なりを確認（下書き）」を開くと、他の素材・表示範囲・親子の動きを合わせて確認できます。調整中も画像を画面上部に保ち、背景と向きの確認は設定を変えずに操作できます。[使い方](docs/SHAPE_ADJUSTMENTS.md)。
 
 下書きの合成確認でも100/200/400%の拡大と指でのスクロールができます。「選んだ素材へ移動」で透明な余白を除いた描画位置を400%表示。「全体を表示」で戻ります。確認の操作だけでは画像・作業設定を変更しません。[操作と制限](docs/SHAPE_ADJUSTMENTS.md)。
+
+## 目・口の編集ガイド
+
+「動きの設定チェック」のガイドで、素材準備→表示/形の調整→開閉確認の順に進めます。左右の目・口ごとの不足素材と、選んだ素材の次の操作を案内し、読込・編集・拡大確認/メモへ移動できます。歯・舌や別の閉じた絵は用途に応じて準備。[使い方](docs/EXPRESSION_EDIT_GUIDE.md)。

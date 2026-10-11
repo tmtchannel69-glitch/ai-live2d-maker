@@ -1,3 +1,4 @@
+import {createExpressionEditGuide,editGuideReport} from './expression-edit-guide.js';
 import {expressionNoteReport} from './expression-notes.js';
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {defaultExpressionLayer,expressionLayerVisible} from './expression-layer-state.js';
@@ -37,6 +38,7 @@ export function motionChecks(state){
 export function motionCheckReport(state){
   const lines=['AI Live2D Maker — 動きの設定チェック','設定の有無から作る確認候補です。自然な表情・立体的な向き・Live2Dモデルの完成を判定しません。','画像は含みません。作業再開には作業ファイルを別途保存してください。',''];
   for(const card of motionChecks(state)){lines.push(`【${card.label}】`);for(const row of card.rows)lines.push(`- ${row.label}：${row.attention?'確認候補':'設定情報'} ／ ${row.detail}`);lines.push('');}
+  lines.push(editGuideReport(state),'');
   lines.push(expressionNoteReport(state.notes||{}));
   lines.push('VTube Studio用モデル出力（moc3）：未実装。');return '\uFEFF'+lines.join('\r\n');
 }
@@ -44,9 +46,10 @@ export function createMotionChecklist({getState,onNavigate}){
   const section=document.createElement('section');section.className='motion-checklist workflow-target';section.setAttribute('aria-labelledby','motion-check-heading');
   section.innerHTML='<h3 id="motion-check-heading" tabindex="-1">動きの設定チェック</h3><p class="muted">設定の有無から確認候補を表示します。自然な動きやLive2Dモデルの完成を判定するものではありません。</p><p id="motion-check-summary" role="status" aria-live="polite"></p><div id="motion-check-cards"></div><button id="motion-check-report" class="secondary">動きの確認一覧を保存</button><p id="motion-check-status" role="status" aria-live="polite"></p>';
   document.querySelector('#expression-assets-summary').before(section);
+  const guide=createExpressionEditGuide({getState,onNavigate});section.querySelector('#motion-check-summary').after(guide.element);
   let signature='',source=null;
   const labels={asset:'素材を読み込む',layer:'表示を調整',deform:'形を調整',clip:'範囲を調整',groups:'まとめ方を調整',keys:'3位置を調整',note:'確認メモを開く'};
-  function update(){const state=getState();section.hidden=!state.file;const changed=source!==state.file;if(changed){source=state.file;section.querySelector('#motion-check-status').textContent='';}const cards=motionChecks(state),next=JSON.stringify(cards);
+  function update(){guide.update();const state=getState();section.hidden=!state.file;const changed=source!==state.file;if(changed){source=state.file;section.querySelector('#motion-check-status').textContent='';}const cards=motionChecks(state),next=JSON.stringify(cards);
     if(next!==signature){signature=next;const open=new Map([...section.querySelectorAll('[data-check-group]')].map(a=>[a.dataset.checkGroup,a.querySelector('details').open]));const fragments=[];
       for(const card of cards){const article=document.createElement('article');article.dataset.checkGroup=card.id;const h=document.createElement('h4');h.textContent=card.label;article.append(h);
         const poses=document.createElement('div');poses.className='motion-check-poses';for(const [value,label] of card.driver==='turn'?[[-1,'左'],[0,'中央'],[1,'右']]:[[0,'閉じた状態'],[.5,'半分'],[1,'開いた状態']]){const button=document.createElement('button');button.className='secondary';button.textContent=label;button.setAttribute('aria-label',`${card.label}：${label}を試す`);button.dataset.pose=value;button.addEventListener('click',()=>{if(!getState().locked)onNavigate({kind:'pose',driver:card.driver,value});});poses.append(button);}article.append(poses);
@@ -54,7 +57,7 @@ export function createMotionChecklist({getState,onNavigate}){
       }section.querySelector('#motion-check-cards').replaceChildren(...fragments);
     }
     const count=cards.reduce((n,c)=>n+c.rows.filter(r=>r.attention).length,0);section.querySelector('#motion-check-summary').textContent=`${state.assets.length}役割を読込済み ／ ${count}件の確認候補。範囲・変形・所属は用途に合わせて選べます。`;
-    for(const button of section.querySelectorAll('button'))button.disabled=state.locked || !state.file || (button.dataset.pose!==undefined && !state.assets.length);
+    for(const button of [...section.querySelectorAll('button')].filter(b=>!guide.element.contains(b)))button.disabled=state.locked || !state.file || (button.dataset.pose!==undefined && !state.assets.length);
   }
   section.querySelector('#motion-check-report').addEventListener('click',()=>{const state=getState();if(state.locked || !state.file)return;const url=URL.createObjectURL(new Blob([motionCheckReport(state)],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='ai-live2d-motion-check.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);section.querySelector('#motion-check-status').textContent='確認一覧の保存を開始しました。画像は含みません。作業ファイルも別途保存してください。';});
   return {update};
