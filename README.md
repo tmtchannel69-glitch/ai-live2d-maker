@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/inspection-detail` です。
+最新の開発ブランチは `feature/expression-comparison` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/inspection-detail https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/expression-comparison https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/inspection-detail` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/expression-comparison` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -328,3 +328,5 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 変形プレビューの三角形境界に出ていた細い隙間を改善しました。半透明の素材を含め、一枚ごとに合成してから重ねます。元PNG・PSD・保存した設定は変えません。[描画改善と検証範囲](docs/MESH_RENDERING_QUALITY.md)。
 
 表情の詳細確認に「鮮明に確認」を追加。必要なときだけ元PNGから確認用画像を読み直し、通常表示より細い線を確認しやすくします。読込は中止/再試行でき、戻ると追加画像を解放します。[使い方と上限](docs/EXPRESSION_INSPECTOR.md)。
+
+詳細確認の「3状態を並べて比較」で、目/口の閉じた・途中・開いた状態や、顔の左・中央・右を同じ範囲で見比べられます。スマホでは左右にスクロールし、各画像の「この状態を詳しく」から拡大と編集へ戻れます。[比較の使い方](docs/EXPRESSION_COMPARISON.md)。

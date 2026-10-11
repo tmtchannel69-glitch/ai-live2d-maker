@@ -1,6 +1,7 @@
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {loadInspectionDetail} from './inspection-detail.js';
 import {releaseDeformationLayer} from './expression-deform.js';
+import {createExpressionComparison} from './expression-comparison.js';
 
 // View-only settings: never written to the project or exported images.
 export function createExpressionInspector({isLocked,render,onEdit}) {
@@ -23,6 +24,11 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
   const isolated=document.createElement('canvas'),isolatedCtx=isolated.getContext('2d',{willReadFrequently:true});
   let bounds=null,fitWidth=1,fitHeight=1,displayWidth=1,displayHeight=1,roles=[],opener=null,restoreFocus=true;
   let detail=null,detailLoading=false,detailGeneration=0,baseWidth=1,baseHeight=1,originalFile=null,originalAssets=[];
+  const comparison=createExpressionComparison({container:controlsPanel,render,isLocked,onSelect:v=>{for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=v[id];syncComparison();draw();focusSelected();}});
+  controlsPanel.insertBefore(comparison.tools,$('#inspector-detail'));
+  previewPanel.insertBefore(comparison.panel,$('#inspector-status'));
+  function syncComparison(){viewport.hidden=comparison.active;$('#inspector-focus').disabled=comparison.active || !bounds || isLocked();$('#inspector-fit').disabled=comparison.active;$('#inspector-zoom').disabled=comparison.active;if(!comparison.active)layout();}
+  controlsPanel.addEventListener('comparisonchange',()=>{syncComparison();draw();});
   function releaseDetail(){
     detailGeneration++;detail?.close();detail=null;detailLoading=false;
     releaseDeformationLayer(ctx);releaseDeformationLayer(isolatedCtx);
@@ -50,13 +56,14 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
   function draw(){
     if(!dialog.open)return;
     const v=values(),role=$('#inspector-role').value;
+    comparison.draw({ctx,values:v,role,view:{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail},width:baseWidth,height:baseHeight});
     render(ctx,v,{role:$('#inspector-isolate').checked?role:null,sourceOpacity:$('#inspector-reference').checked?.25:0,detail});
     render(isolatedCtx,v,{role,sourceOpacity:0,detail});
     const data=isolatedCtx.getImageData(0,0,isolated.width,isolated.height).data;let left=isolated.width,top=isolated.height,right=-1,bottom=-1;
     for(let y=0;y<isolated.height;y++)for(let x=0;x<isolated.width;x++)if(data[(y*isolated.width+x)*4+3]>0){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
     bounds=right<0?null:{x:(left+right+1)/2/isolated.width,y:(top+bottom+1)/2/isolated.height};
-    $('#inspector-focus').disabled=!bounds || isLocked();
-    $('#inspector-status').textContent=bounds?'選択素材の描画位置を確認できました。素材へ移動すると400%で表示します。重なりは合成表示でも確認してください。':'選択素材はこの状態では見えません。開閉値・表示条件・表示範囲を確認してください。';
+    $('#inspector-focus').disabled=comparison.active || !bounds || isLocked();
+    $('#inspector-status').textContent=comparison.active?'気になる状態の「この状態を詳しく」から拡大確認し、表示・形・範囲の編集へ戻れます。':bounds?'選択素材の描画位置を確認できました。素材へ移動すると400%で表示します。重なりは合成表示でも確認してください。':'選択素材はこの状態では見えません。開閉値・表示条件・表示範囲を確認してください。';
     $('#inspector-values-text').textContent=`左目 ${v.left.toFixed(2)} ／ 右目 ${v.right.toFixed(2)} ／ 口 ${v.mouth.toFixed(2)} ／ 向き ${v.turn.toFixed(2)}`;
   }
   function layout(keep=true){
@@ -71,9 +78,9 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
     if(!bounds || isLocked())return;$('#inspector-zoom').value='4';layout(false);
     viewport.scrollLeft=(content.offsetWidth-displayWidth)/2+bounds.x*displayWidth-viewport.clientWidth/2;viewport.scrollTop=(content.offsetHeight-displayHeight)/2+bounds.y*displayHeight-viewport.clientHeight/2;viewport.focus({preventScroll:true});
   }
-  function close(restore=true){restoreFocus=restore;releaseDetail();if(dialog.open)dialog.close();}
+  function close(restore=true){restoreFocus=restore;comparison.close();syncComparison();releaseDetail();if(dialog.open)dialog.close();}
   $('#inspector-close').addEventListener('click',()=>close());
-  dialog.addEventListener('close',()=>{releaseDetail();originalFile=null;originalAssets=[];ctx.clearRect(0,0,canvas.width,canvas.height);isolatedCtx.clearRect(0,0,isolated.width,isolated.height);bounds=null;if(restoreFocus)opener?.focus({preventScroll:true});});
+  dialog.addEventListener('close',()=>{comparison.close();syncComparison();releaseDetail();originalFile=null;originalAssets=[];ctx.clearRect(0,0,canvas.width,canvas.height);isolatedCtx.clearRect(0,0,isolated.width,isolated.height);bounds=null;if(restoreFocus)opener?.focus({preventScroll:true});});
   $('#inspector-detail').addEventListener('click',toggleDetail);
   $('#inspector-zoom').addEventListener('change',()=>layout());
   $('#inspector-focus').addEventListener('click',focusSelected);
@@ -86,6 +93,7 @@ export function createExpressionInspector({isLocked,render,onEdit}) {
     if(isLocked() || !assets.length)return false;
     restoreFocus=true;opener=document.activeElement;roles=assets.map(a=>a.role);$('#inspector-role').replaceChildren(...roles.map(id=>new Option(EXPRESSION_ROLES.find(([key])=>key===id)[1],id)));$('#inspector-role').value=roles.includes(role)?role:roles[0];
     baseWidth=width;baseHeight=height;originalFile=file;originalAssets=[...assets];releaseDetail();canvas.width=isolated.width=width;canvas.height=isolated.height=height;
+    comparison.reset($('#inspector-role').value);syncComparison();
     for(const id of ['left','right','mouth','turn'])$(`#inspector-${id}`).value=pose[id];
     $('#inspector-zoom').value='1';$('#inspector-isolate').checked=false;$('#inspector-reference').checked=false;
     dialog.showModal();controlsPanel.scrollTop=0;layout(false);draw();$('#inspector-close').focus();return true;
