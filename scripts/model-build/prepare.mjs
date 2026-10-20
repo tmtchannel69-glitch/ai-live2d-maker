@@ -1,3 +1,4 @@
+import {findFaceFeatureOverlap} from './source-overlap.mjs';
 import {unzipSync,strFromU8} from 'fflate';
 import {writePsd} from 'ag-psd';
 import {pixels,over} from '../../src/psd-pixels.js';
@@ -6,6 +7,7 @@ import {defaultExpressionLayer,expressionLayerVisible,EXPRESSION_CONDITIONS,vali
 const MIB=1024*1024;
 const PARTS={hair:'front hair',face:'face',body:'topwear',eyes:'eyes combined',hair_front:'front hair',hair_back:'back hair',hair_side_l:'front hair left',hair_side_r:'front hair right',face_skin:'face',neck:'neck',eye_l:'eye combined left',eye_r:'eye combined right',brow_l:'eyebrow left',brow_r:'eyebrow right',mouth_visible:'mouth open',top:'topwear',jacket:'topwear jacket',sleeve_l:'handwear left',sleeve_r:'handwear right'};
 const ROLES={face_base:'face',eye_white_l:'eyewhite left',eye_white_r:'eyewhite right',eye_iris_l:'irides left',eye_iris_r:'irides right',eye_lash_l:'eyelash left',eye_lash_r:'eyelash right',eye_closed_l:'eye close left',eye_closed_r:'eye close right',mouth_upper:'mouth open upper',mouth_lower:'mouth open lower',mouth_inside:'mouth open',mouth_teeth:'tooth-t',mouth_tongue:'tongue',mouth_closed:'mouth close'};
+const DIFFERENCE_ROLES=new Set(['eye_closed_l','eye_closed_r','mouth_closed']);
 const fail=message=>{throw new Error(message);};
 export function prepareModelPsd(bytes){
   if(!bytes.length || bytes.length>100*MIB)fail('入力ZIPは100 MiB以下にしてください。');
@@ -36,8 +38,11 @@ export function prepareModelPsd(bytes){
     const p=a.placement;if(!p || ![p.x,p.y].every(n=>Number.isFinite(n) && n>=0 && n<=1) || ![p.width,p.height].every(n=>Number.isFinite(n) && n>=.0001 && n<=1))fail('素材の配置が正しくありません。');
     const layer=meta.settings?.layers?.[a.role]||defaultExpressionLayer(a.role);
     if(!Number.isInteger(layer.order) || layer.order<0 || layer.order>99 || typeof layer.enabled!=='boolean' || !Object.hasOwn(EXPRESSION_CONDITIONS,layer.condition))fail('素材の表示設定が正しくありません。');
-    if(!expressionLayerVisible(layer,{left:1,right:1,mouth:1})){warnings.push(`${a.role}: 開いた状態で非表示のため除外`);continue;}
-    layerSpecs.push({...a,name:ROLES[a.role],order:20+layer.order});
+    const initiallyVisible=expressionLayerVisible(layer,{left:1,right:1,mouth:1}),difference=DIFFERENCE_ROLES.has(a.role);
+    if(!layer.enabled){warnings.push(`${a.role}: 無効な素材のため除外`);continue;}
+    if(!initiallyVisible && !difference){warnings.push(`${a.role}: 開いた状態で非表示のため除外`);continue;}
+    if(difference)warnings.push(`${a.role}: 閉じた動きの差分として生成へ渡します。初期表示は生成器の開閉パラメーターで制御します。`);
+    layerSpecs.push({...a,name:ROLES[a.role],order:20+layer.order,initiallyVisible,difference});
   }
   if(!layerSpecs.length)fail('モデル化できるAI結果または追加素材がありません。');
   const largest=Math.max(...layerSpecs.map(s=>s.width*s.height));if((width*height*(layerSpecs.length+3)+largest*2)*4>128*MIB)fail('素材を配置するための画像量が上限を超えています。');
@@ -47,12 +52,18 @@ export function prepareModelPsd(bytes){
     const input=pixels(entries[s.path],s.width,s.height),data=new Uint8ClampedArray(width*height*4),p=s.placement;
     // Place raw PNGs only. The app's mesh/clip/group keys are not compiler inputs.
     for(let y=Math.max(0,Math.floor(p.y*height));y<Math.min(height,Math.ceil((p.y+p.height)*height));y++)for(let x=Math.max(0,Math.floor(p.x*width));x<Math.min(width,Math.ceil((p.x+p.width)*width));x++){
-      const sx=Math.min(s.width-1,Math.max(0,Math.floor((x-p.x*width)/(p.width*width)*s.width))),sy=Math.min(s.height-1,Math.max(0,Math.floor((y-p.y*height)/(p.height*height)*s.height)));data.set(input.subarray((sy*s.width+sx)*4,(sy*s.width+sx)*4+4),(y*width+x)*4);
+      const sx=Math.min(s.width-1,Math.max(0,Math.floor((x-p.x*width)/(p.width*width)*s.width))),sy=Math.min(s.height-1,Math.max(0,Math.floor((y-p.y*height)/(p.height*height)*s.height)));const sourceIndex=(sy*s.width+sx)*4;if(input[sourceIndex+3]>0)data.set(input.subarray(sourceIndex,sourceIndex+4),(y*width+x)*4);
     }
-    children.push({name:s.name,top:0,left:0,imageData:{width,height,data}});over(composite,data);
+    // PsdReader retains source visibility, and RigBuilder seeds isVisible from it.
+    // Closed variants must remain visible *compiler inputs*; EYE_CLOSE/MOUTH_CLOSE
+    // get inverse parameter opacity in psd2live, not a permanently hidden flag.
+    children.push({name:s.name,top:0,left:0,hidden:false,imageData:{width,height,data}});
+    if(s.initiallyVisible!==false)over(composite,data);
   }
+  const overlaps=findFaceFeatureOverlap(children);
+  if(overlaps.length)warnings.push('顔の下地と目・口などの素材に同じ色の画素が重なる候補があります。元の顔に絵が残っていないか、開閉時の二重表示を確認してください。同色になる別の絵もあるため自動の不良判定ではありません。');
   warnings.push('アプリの変形・表示範囲・親子・確認メモは転写しません。変換ツールが新しい初期リグを作ります。','隠れた肌・口内部の生成と表情品質の自動保証は行いません。');
   const psd=new Uint8Array(writePsd({width,height,children,imageData:{width,height,data:composite}},{trimImageData:false,noBackground:true,generateThumbnail:false}));
-  if(psd.length>100*MIB)fail('PSDが100 MiBを超えました。');return {psd,report:{source:{width,height},layers:children.map(c=>c.name),warnings}};
+  if(psd.length>100*MIB)fail('PSDが100 MiBを超えました。');return {psd,report:{source:{width,height},layers:children.map(c=>c.name),differenceRolesIncluded:layerSpecs.filter(s=>s.difference).map(s=>s.role),warnings,sourceOverlapCandidates:overlaps}};
 }
 function baseOrder(id){if(id==='hair_back')return 0;if(['body','top','jacket','sleeve_l','sleeve_r'].includes(id))return 1;if(id==='neck')return 2;if(['face','face_skin'].includes(id))return 3;if(id.startsWith('hair'))return 90;return 40;}

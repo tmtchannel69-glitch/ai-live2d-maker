@@ -112,6 +112,9 @@ def separate(image: UploadFile = File(...), prompts: str = Form(...)):
                 raise ValueError('分離結果のサイズが一致しません。')
             pixels = original.copy()
             pixels[:, :, 3] = np.where(mask, pixels[:, :, 3], 0)
+            # Fully transparent output must not retain the original RGB image.
+            # Keep every visible pixel (including partial alpha) unchanged.
+            pixels[pixels[:, :, 3] == 0] = 0
             if not pixels[:, :, 3].any():
                 raise ValueError('透明な領域だけが選ばれました。点や枠を変更してください。')
             stream = io.BytesIO()

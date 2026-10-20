@@ -24,7 +24,8 @@ export function createModelBuildPanel({getState,getSnapshot,onBusy}){
       if(r.headers.get('Content-Type')?.split(';')[0]!=='application/zip')throw new Error('モデルの応答形式が正しくありません。');
       const output=await r.blob();if(active!==job)return;if(!output.size || output.size>110*1024*1024)throw new Error('モデル出力のサイズが正しくありません。');
       const url=URL.createObjectURL(output),a=document.createElement('a');a.href=url;a.download='ai-live2d-experimental-model.zip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);
-      $('#model-build-status').textContent='実験的な初期モデルの保存を開始しました。検証結果はZIP内のBUILD_REPORTをご確認ください。公式Core/VTube Studioでの実読込と表情品質は未確認です。';
+      const overlapCount=Number(r.headers.get('X-AI-Live2D-Overlap-Candidates')),motionCount=Number(r.headers.get('X-AI-Live2D-Unconfirmed-Motions'));
+      $('#model-build-status').textContent=(Number.isInteger(overlapCount) && overlapCount>0?'顔と目・口などに同じ画素が重なる候補があります。下地と開閉時の二重表示を確認してください。 ':'')+(Number.isInteger(motionCount) && motionCount>0?'瞬きなどに、動きが確認できない項目があります。 ':'')+'実験的な初期モデルの保存を開始しました。検証結果はZIP内のBUILD_REPORTをご確認ください。公式Core/VTube Studioでの実読込と表情品質は未確認です。';
     }catch(e){if(active===job)$('#model-build-status').textContent=`${e.message} 現在の作業は保持しています。`;}
     finally{if(active===job){active=null;onBusy(false);controls();}}
   });

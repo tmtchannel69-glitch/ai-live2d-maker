@@ -22,7 +22,7 @@ npm run dev
 5. 各パーツの「PNG」で個別保存、「まとめて ZIP 保存」で表示中の全パーツを保存できます。
 6. リセット、または画像の再選択で結果を消去します。
 
-現在の分離は、元画像の決められた矩形領域を切り出すデモです。デモモードでは画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、隠れた部分の補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能として追加しました。公式Core/VTube Studio実読込と実AI画像の自然な品質は未確認です。
+デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、隠れた部分の補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能として追加しました。提供キャラクター画像でも実MOC3の生成・独立描画まで確認しましたが、瞬きが動かず、顔の向きで隙間が出るため、自然に使える完成品質には達していません。公式Core/VTube Studio実読込は未確認です。[実画像の評価と次の改善](docs/CHARACTER_MODEL_EVALUATION.md)。
 
 ## AI 分離処理の接続
 
@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/model-build-validation` です。
+最新の開発ブランチは `feature/character-model-evaluation` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/model-build-validation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/character-model-evaluation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/model-build-validation` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/character-model-evaluation` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -355,4 +355,4 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 
 ## 素材から実モデルを生成する実験
 
-「保存」→「Live2Dモデルを生成する（実験）」で開発用サーバーを確認し、現在の素材からMOC3/model3/テクスチャ入りZIPを作成します。外部CLIのpsd2liveをローカルで別途構築する必要があります。自作PSDと画面のサンプルで実生成・独立ランタイムの読み込み/形状変化まで確認済みです。公式Core/VTube Studio本体の実読込と、実AIキャラクターの品質は未検証です。アプリのメッシュ/範囲/親子キーは移植せず、新しい初期リグを作ります。[検証結果・起動・利用条件](docs/MODEL_BUILD_TRIAL.md)。
+「保存」→「Live2Dモデルを生成する（実験）」で開発用サーバーを確認し、現在の素材からMOC3/model3/テクスチャ入りZIPを作成します。外部CLIのpsd2liveをローカルで別途構築する必要があります。自作サンプルと提供キャラクター画像で実生成・独立ランタイムの読み込み/描画を確認済みです。顔と目・口の画素の重なり候補や、指定値を変えても形が変わらない項目をレポートと画面へ通知します。これらは確認の手がかりで、自然な品質を自動保証しません。公式Core/VTube Studio本体の実読込は未確認です。アプリのメッシュ/範囲/親子キーは移植せず、新しい初期リグを作ります。[検証結果・起動・利用条件](docs/MODEL_BUILD_TRIAL.md)。

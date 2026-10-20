@@ -28,7 +28,7 @@ def test_full_size_png_preserves_rgb_alpha_and_coordinates(monkeypatch):
     image = Image.open(io.BytesIO(base64.b64decode(part['png'])))
     assert image.size == (40, 60)
     assert image.getpixel((5,10)) == (120,80,200,123)
-    assert image.getpixel((4,10))[3] == 0
+    assert image.getpixel((4,10)) == (0,0,0,0)
 
 def test_prompt_validation():
     invalid = [[], [{'id':'unknown','point':[.5,.5]}], [{'id':'hair','point':[2,.5]}],
@@ -135,3 +135,22 @@ def test_all_production_ids_preserve_id_and_coordinates(monkeypatch):
     health=client.get('/api/health').json()
     assert len(health['supported_parts'])==19
     assert health['max_parts_per_request']==4
+
+
+def test_transparent_rgb_is_removed_without_changing_visible_colors_or_partial_alpha(monkeypatch):
+    source = np.arange(3 * 4 * 4, dtype=np.uint8).reshape((3, 4, 4)) + 20
+    source[:, :, 3] = np.array([[0, 64, 128, 255], [255, 128, 64, 0], [90, 255, 0, 160]], dtype=np.uint8)
+    original = source.copy()
+    mask = np.array([[True, True, True, False], [False, True, True, True], [True, False, True, True]], dtype=bool)
+    monkeypatch.setattr(module.engine, 'segment', lambda image, prompts: [mask])
+    stream = io.BytesIO()
+    Image.fromarray(source).save(stream, 'PNG')
+    result = request([{'id': 'face', 'point': [.25, .25]}], stream.getvalue())
+    assert result.status_code == 200
+    output = Image.open(io.BytesIO(base64.b64decode(result.json()['parts'][0]['png'])))
+    assert output.size == (4, 3)
+    pixels = np.array(output)
+    visible = mask & (original[:, :, 3] > 0)
+    np.testing.assert_array_equal(pixels[visible], original[visible])
+    np.testing.assert_array_equal(pixels[~visible], np.zeros((int((~visible).sum()), 4), dtype=np.uint8))
+    np.testing.assert_array_equal(source, original)

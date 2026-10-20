@@ -29,7 +29,7 @@ export function createModelBuildServer({binary=process.env.PSD2LIVE_BIN,validato
       });
       const result=await buildModel(new Uint8Array(Buffer.concat(chunks)),{binary,validator,signal:control.signal});
       if(control.signal.aborted)return;
-      res.writeHead(200,{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="ai-live2d-experimental-model.zip"'});res.end(result.zip);
+      res.writeHead(200,{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="ai-live2d-experimental-model.zip"','X-AI-Live2D-Overlap-Candidates':String(result.report.preparation.sourceOverlapCandidates.length),'X-AI-Live2D-Unconfirmed-Motions':String(result.report.motionCoverage.filter(m=>['no_sampled_change','missing_recommended_id'].includes(m.status)).length)});res.end(result.zip);
     }catch(e){if(!res.destroyed && !res.headersSent)json(422,{error:e.message||'モデル生成に失敗しました。'});}
     finally{busy=false;}
   });
