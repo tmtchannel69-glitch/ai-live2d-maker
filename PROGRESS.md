@@ -432,3 +432,11 @@ README の AI 試作手順で準備し、サーバーと画面を別々に起動
 - AGENTS/README/ROADMAP/MOBILE_UXとdocs/EXPRESSION_OVERLAP_CHECK.mdへ操作と制限を記録。次は確認した問題を素材準備/位置/表示の修正へつなげる導線を改善する。自動重複判定/肌の生成/自然な品質保証/実機/moc3生成/VTube Studio読込は未完了。サーバー未変更で実SAM試験の再実行なし。契約/費用/公開/main統合は今回行わない。
 - 次回はfeature/expression-overlap-checkとAGENTS.md / ROADMAP.md / PROGRESS.md / README.mdを読み再開する。コードをGitHubへ保存し、利用者の画像や作業は端末の作業ZIPへ保存する。
 - 最終検証：既存122件と新規2件、全124件成功（2 workers、2.2分）。npm run build成功（49モジュール）、git diff --check成功。既存テストを変更せず維持。未解決の失敗なし。
+
+## 確認画面から素材の修正先へ移動（2026-10-20「続けて」）
+- 新しい環境のチェックアウトはREADMEだけの初期状態だったため、GitHub上の前回ece52f9を確認して取得し、feature/inspection-repair-actionsを作成。元の変更なしを確認し、既存チェックアウトを使用。cloud-environment-onboarding:setupに沿ってnpm ciを実行し、Node24.19と既存ChromiumでUI開発環境を復元。AIサーバー/SAMの再セットアップは今回のUI変更に不要で未実施。
+- 確認画面へPNG準備/配置/下地の肌の準備の3操作を追加。既存の表示/形/範囲編集と組み合わせ、問題の種類に合う修正先へ移動できる。開閉値/向きを合成へ引き継ぎ、選択素材を読込/配置側と同期。移動だけで画像/設定/メモを変更せず、ファイル選択/PNG置換を自動実行しない。未反映の確認メモが閉鎖で破棄される説明を表示。
+- 新規2件と重なり確認2件が成功。コピー元の全ZIPエントリが移動後も一致、素材の役割/移動先フォーカス/開閉と向き/通常表示で再確認、PNG置換後の再確認を検証。320×640と844×390で48pxボタン/横方向の収まりを確認。自作サンプルの/tmp/live2d-repair-actions-320.pngを目視確認し、画像はGitへ保存しない。スマホ実機検証ではない。
+- 既存環境のstart_skillが古いfeature/psd-exportを指していたため、現在のブランチとUIのみの復元/テスト手順を追記して環境設定の下書きへ保存。既存のAI用install_script/ネットワーク/秘密情報/リポジトリ登録は変更しない。保存成功、requires_publish=true。次回環境へ適用するには利用者が環境設定で保存/公開する必要があり、今回は公開していない。アプリ公開とは別。
+- README/AGENTS/ROADMAPと操作資料を更新。次は修正後に同じ確認箇所へ戻る流れを改善する。自然な表情品質・実機・肌の自動生成・moc3出力/VTube Studio読込は未完了。費用/契約/main統合/外部画像送信/公開は行わない。次回はfeature/inspection-repair-actionsとAGENTS.md / ROADMAP.md / PROGRESS.md / README.mdを読む。利用者の作業素材は端末の作業ZIPで別途保存する。
+- 最終検証：npm run build成功（49モジュール）、git diff --check成功。初回全体試験は125件成功/既存PSD出力1件がダウンロード待ち30秒で時間切れ。失敗時の画面と保存/出力処理を調査したが原因は未特定。対象ファイル5件を単独実行して全成功し、続いて記録付き（--trace=retain-on-failure）で全体を再実行、全126件成功（2 workers、3.4分）。テスト/期待値は変更していない。初回の一時的な時間切れは再現しておらず、再発時には操作記録を使って追加調査する。

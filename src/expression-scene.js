@@ -10,7 +10,7 @@ import {GRID,TRIANGLES,defaultDeform,validateDeforms,interpolateShape,drawDeform
 import {EXPRESSION_ROLES} from './expression-assets.js';
 import {EXPRESSION_CONDITIONS,defaultExpressionLayer,expressionLayerVisible} from './expression-layer-state.js';
 
-export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys,onClipKeys,onNote}) {
+export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys,onClipKeys,onNote,onPrepareAsset}) {
   const section=document.createElement('section');section.className='panel expression-scene';section.hidden=true;
   section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。Live2Dモデルの出力は未対応です。</p>
   <button id="scene-inspect" class="secondary">表情を拡大して確認</button><p id="scene-status" role="status" aria-live="polite"></p><div class="motion-workspace"><div class="motion-stage"><canvas id="scene-canvas" width="1" height="1" aria-label="表情素材の合成と開閉プレビュー"></canvas></div><div class="motion-controls">
@@ -56,7 +56,7 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     if(getState().locked || loading)return false;
     try{validateGroups(setting,getState().assets,getState().clips);stop();onGroups(setting);controls();draw();return true;}catch(e){$('#scene-group-status').textContent=e.message;return false;}
   }});
-  const inspector=createExpressionInspector({getNotes:()=>getState().notes||{},onNote,isLocked:()=>getState().locked || loading,render:(target,values,view)=>render(target,values,undefined,undefined,true,view),onEdit:(action,values)=>{for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).value=values[id];navigate(action);}});
+  const inspector=createExpressionInspector({getNotes:()=>getState().notes||{},onNote,isLocked:()=>getState().locked || loading,render:(target,values,view)=>render(target,values,undefined,undefined,true,view),onEdit:(action,values)=>{for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).value=values[id];if(action.kind==='asset' || action.kind==='placement'){if(getState().assets.some(a=>a.role===action.role)){current=action.role;$('#scene-role').value=current;fields();}controls();draw();onPrepareAsset?.(action);}else navigate(action);}});
   const manual=()=>Object.fromEntries(['left','right','mouth','turn'].map(id=>[id,Number($(`#scene-${id}`).value)]));
   function render(ctx,values,override,groups=getState().groups,withKeys=true,view={}) {
     if(withKeys)groups=evaluateGroupKeys(groups,getState().groupKeys,values.turn||0);
