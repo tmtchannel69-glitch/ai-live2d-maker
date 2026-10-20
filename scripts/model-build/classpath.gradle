@@ -1,0 +1,8 @@
+// Writes the separately built compiler's runtime classpath. No SDK is loaded.
+gradle.projectsEvaluated {
+  rootProject.tasks.register('writeModelClasspath') {
+    doLast {
+      new File(rootProject.property('classpathOutput').toString()).text = rootProject.sourceSets.main.runtimeClasspath.asPath
+    }
+  }
+}
