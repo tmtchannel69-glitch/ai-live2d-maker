@@ -1,4 +1,5 @@
 import {summarizeMotionCoverage} from './motion-coverage.mjs';
+import {summarizeMouthVisibility} from './mouth-visibility.mjs';
 import {createHash} from 'node:crypto';
 import {mkdtemp,writeFile,readFile,rm,readdir,lstat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -57,7 +58,7 @@ export async function buildModel(bytes,{binary,validator=[],signal}={}){
     const entries=await outputFiles(out),checked=checkModelFiles(entries);let runtime=null;
     if(validator.length){const log=await runTool(validator[0],[...validator.slice(1),resolve(out,checked.moc)],{signal});try{runtime=JSON.parse(log);}catch{throw new Error('独立ランタイムの検証結果を読み込めませんでした。');}if(runtime.model_sha256!==createHash('sha256').update(entries[checked.moc]).digest('hex'))throw new Error('独立ランタイムの検証結果とモデル本体が一致しません。');if(!Array.isArray(runtime.texture_indices) || !runtime.texture_indices.length)throw new Error('独立ランタイムのテクスチャ番号がありません。');if(runtime.texture_indices.some(i=>!Number.isInteger(i) || i<0 || i>=checked.textures))throw new Error('モデルのテクスチャ番号が範囲外です。');if(runtime.consistency!==true || runtime.finite_default_and_all_parameter_extrema!==true || !Number.isInteger(runtime.drawable_count) || runtime.drawable_count<=0)throw new Error('独立ランタイムの検証に失敗しました。');}
     if(runtime?.file)runtime.file=checked.moc;
-    const report={format:'ai-live2d-maker-model-build-report',version:1,compiler:'psd2live external experimental CLI',...checked,independentRuntime:runtime,motionCoverage:summarizeMotionCoverage(runtime),preparation:prepared.report};
+    const report={format:'ai-live2d-maker-model-build-report',version:1,compiler:'psd2live external experimental CLI',...checked,independentRuntime:runtime,motionCoverage:summarizeMotionCoverage(runtime),mouthVisibility:summarizeMouthVisibility(runtime),preparation:prepared.report};
     entries['AI_LIVE2D_BUILD_REPORT.json']=strToU8(JSON.stringify(report,null,2));entries['AI_LIVE2D_README.txt']=strToU8('実験的な自動モデル生成の出力です。モデル本体と設定・テクスチャを生成しました。公式Cubism Core/VTube Studioでの読込と表情品質は未確認です。詳細はAI_LIVE2D_BUILD_REPORT.jsonを参照してください。元の作業へ戻るには別途保存した作業ZIPを使います。アプリのメッシュ/範囲/親子キーを転写したモデルではありません。');
     return {zip:zipSync(entries,{level:0}),report};
   }finally{await rm(work,{recursive:true,force:true});}

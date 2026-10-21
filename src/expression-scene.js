@@ -1,3 +1,4 @@
+import {createSceneHairOverlay} from './scene-hair-overlay.js';
 import {createExpressionInspector} from './expression-inspector.js';
 import {CLIP_DRIVERS,defaultClipKeys,validateClipKeys,interpolateClip} from './expression-clip-keys.js';
 import {GROUP_KEY_LABELS,defaultGroupKeys,evaluateGroupKeys,validateGroupKeys} from './group-motion-keys.js';
@@ -12,9 +13,9 @@ import {EXPRESSION_CONDITIONS,defaultExpressionLayer,expressionLayerVisible} fro
 
 export function createExpressionScene({getState,onChange,onDeform,onClip,onGroups,onGroupKeys,onClipKeys,onNote,onPrepareAsset}) {
   const section=document.createElement('section');section.className='panel expression-scene';section.hidden=true;
-  section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。Live2Dモデルの出力は未対応です。</p>
+  section.innerHTML=`<h2>表情素材の重なり・開閉の試作</h2><p class="muted">追加素材だけを重ね、左右の目と口の開閉に応じて画像を切り替えます。表示条件は0.5を境に切り替えます。変形を設定した素材は開閉の間を滑らかに動かせます。このプレビューの動きは、実験的なモデル生成には引き継がれません。</p>
   <button id="scene-inspect" class="secondary">表情を拡大して確認</button><p id="scene-status" role="status" aria-live="polite"></p><div class="motion-workspace"><div class="motion-stage"><canvas id="scene-canvas" width="1" height="1" aria-label="表情素材の合成と開閉プレビュー"></canvas></div><div class="motion-controls">
-  <label>背景<select id="scene-background"><option value="transparent">透明背景・追加素材だけ</option><option value="source">元画像・位置確認用</option></select></label>
+  <label>背景<select id="scene-background"><option value="transparent">透明背景・追加素材だけ</option><option value="source">元画像・位置確認用</option><option value="source-hair">元画像＋分離した髪（位置確認）</option></select></label><p id="scene-hair-status" class="muted" role="status" hidden></p>
   <label>左目の開き（0＝閉じる、1＝開く）<input id="scene-left" type="range" min="0" max="1" step="0.1" value="1"></label><label>右目の開き（0＝閉じる、1＝開く）<input id="scene-right" type="range" min="0" max="1" step="0.1" value="1"></label><label>口の開き（0＝閉じる、1＝開く）<input id="scene-mouth" type="range" min="0" max="1" step="0.1" value="0"></label><label>顔の向きの試作（左 −1・中央 0・右 1）<input id="scene-turn" type="range" min="-1" max="1" step="0.05" value="0"></label><p id="scene-values" class="muted"></p><label>すぐ試す動き<select id="scene-quick-driver"><option value="left">左目</option><option value="right">右目</option><option value="mouth">口</option><option value="turn">顔の向きの試作</option></select></label><div id="scene-quick-poses"><button type="button" id="scene-pose-low" class="secondary">閉じた状態</button><button type="button" id="scene-pose-middle" class="secondary">半分</button><button type="button" id="scene-pose-high" class="secondary">開いた状態</button></div><button id="scene-play" class="secondary">瞬き・口の切替を再生</button>
   <button id="scene-groups" class="secondary">素材をまとめて動かす</button><p id="scene-group-status" class="muted"></p>
   <details id="group-key-panel"><summary>スライダーで動く位置を設定</summary><p class="muted">グループごとに左・中央・右の位置を作ります。設定ありのグループは通常の配置をこの3位置で置き換えて動きます。実際の立体的な顔の向きやLive2D出力ではありません。</p>
@@ -45,6 +46,10 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
   const pointLabels=['左上','上中央','右上','左中央','中央','右中央','左下','下中央','右下'];
   pointLabels.forEach((text,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}：${text}`;$('#deform-point').append(o);});
   let source=null,assets=[],bitmaps=[],background=null,current='',generation=0,loading=false,error='',playing=false,raf=0,start=0,lastFrame='',lastTime=0;
+  let sourceSize=null;
+  const hairOverlay=createSceneHairOverlay({onChange:()=>{hairStatus();if(!playing)draw();}});
+  function hairStatus(){const active=$('#scene-background').value==='source-hair';$('#scene-hair-status').hidden=!active;$('#scene-hair-status').textContent=active?`${hairOverlay.status} この合成画面だけの表示です。詳細確認・比較・編集下書きには髪を重ねません。画像/設定/確認メモは変更しません。`:'';}
+  function syncHair(){const state=getState();hairOverlay.update({enabled:$('#scene-background').value==='source-hair' && !loading && !state.locked,file:state.file,results:state.results||[],width:sourceSize?.width,height:sourceSize?.height});hairStatus();}
   const layer=role=>getState().layers[role]||defaultExpressionLayer(role);
   const touchEditor=createExpressionTouchEditor({getState,renderDraft:(target,draft)=>{
     const width=Math.min(320,canvas.width,480*canvas.width/canvas.height),height=width*canvas.height/canvas.width;
@@ -78,7 +83,9 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     }
   }
   function draw(values=manual()) {
-    render(ctx,values);
+    const hair=$('#scene-background').value==='source-hair';
+    render(ctx,values,undefined,undefined,true,hair?{sourceOpacity:1}:{});
+    if(hair)hairOverlay.draw(ctx);
     if($('#deform-grid').checked) {
       const p=getState().assets.find(a=>a.role===current)?.placement,setting=getState().deforms[current];
       if(p && setting && expressionLayerVisible(layer(current),values)){const points=interpolateShape(setting,values[setting.driver]).map(([x,y])=>[(p.x+x*p.width)*canvas.width,(p.y+y*p.height)*canvas.height]);ctx.save();ctx.transform(...groupMatrix(evaluateGroupKeys(getState().groups,getState().groupKeys,values.turn||0),getState().groups.assignments[current],canvas.width,canvas.height));ctx.strokeStyle='#00ffff';ctx.fillStyle='#00ffff';ctx.lineWidth=1;for(const ids of TRIANGLES){ctx.beginPath();ids.forEach((i,j)=>j?ctx.lineTo(...points[i]):ctx.moveTo(...points[i]));ctx.closePath();ctx.stroke();}points.forEach((point,i)=>{ctx.beginPath();ctx.arc(...point,i===Number($('#deform-point').value)?5:3,0,Math.PI*2);ctx.fill();});ctx.restore();}
@@ -143,12 +150,12 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
     $('#scene-group-status').textContent=hasGroups(state.groups)?'まとめて動かす設定あり。個別の配置・点の編集はグループを適用する前の値です。':'素材をまとめて移動・回転できます。設定は確定するまで適用しません。';
     $('#scene-status').textContent=loading?'表情の合成を準備しています…':error || (assets.length?`${assets.length}素材。切替時の隙間や重なりを確認してください。読み込み済みでも品質・動作は未確認です。`:'上の「表情素材の読み込み・位置合わせ」でPNGを用意してください。');
   }
-  function release(){inspector.close();groupEditor.close();clipEditor.close();background?.close();background=null;bitmaps.forEach(a=>a.bitmap.close());bitmaps=[];ctx.clearRect(0,0,canvas.width,canvas.height);}
+  function release(){hairOverlay.clear();inspector.close();groupEditor.close();clipEditor.close();background?.close();background=null;bitmaps.forEach(a=>a.bitmap.close());bitmaps=[];ctx.clearRect(0,0,canvas.width,canvas.height);}
   async function load(ticket,file,chosen) {
     const next=[];let full,bg;
     try {
       full=await createImageBitmap(file);if(ticket!==generation)return;
-      const ratio=Math.min(1,640/full.width,960/full.height),width=Math.max(1,Math.round(full.width*ratio)),height=Math.max(1,Math.round(full.height*ratio));
+      sourceSize={width:full.width,height:full.height};const ratio=Math.min(1,640/full.width,960/full.height),width=Math.max(1,Math.round(full.width*ratio)),height=Math.max(1,Math.round(full.height*ratio));
       bg=await createImageBitmap(full,{resizeWidth:width,resizeHeight:height});full.close();full=null;
       for(const a of chosen) {
         if(ticket!==generation)return;full=await createImageBitmap(a.blob);if(ticket!==generation)return;
@@ -156,13 +163,13 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
       }
       if(ticket!==generation)return;canvas.width=width;canvas.height=height;background=bg;bg=null;bitmaps=next.splice(0);draw();
     } catch(e){if(ticket===generation)error=`合成を読み込めませんでした。素材と設定は保持しています。${e.message}`;}
-    finally {full?.close();bg?.close();next.forEach(a=>a.bitmap.close());if(ticket===generation){loading=false;controls();}}
+    finally {full?.close();bg?.close();next.forEach(a=>a.bitmap.close());if(ticket===generation){loading=false;syncHair();controls();}}
   }
   function update() {
     const state=getState(),changed=source!==state.file || assets.length!==state.assets.length || state.assets.some((a,i)=>a.role!==assets[i].role || a.blob!==assets[i].blob);
     if(changed || state.locked){inspector.close();touchEditor.close();clipEditor.close();groupEditor.close();}
     if(!changed && state.assets.some((a,i)=>['x','y','width','height'].some(k=>a.placement[k]!==assets[i].placement[k]))){clipEditor.close();groupEditor.close();stop();assets=[...state.assets];if(current)clipFields();}
-    if(source!==state.file){$('#clip-key').value='base';$('#scene-turn').value='0';$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
+    if(source!==state.file){hairOverlay.clear();sourceSize=null;if($('#scene-background').value==='source-hair')$('#scene-background').value='transparent';$('#clip-key').value='base';$('#scene-turn').value='0';$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
     if(changed) {
       stop();generation++;release();source=state.file;assets=[...state.assets];loading=Boolean(source && assets.length);error='';
       if(!assets.some(a=>a.role===current)){current=assets[0]?.role||'';$('#clip-key').value='base';}
@@ -170,12 +177,12 @@ export function createExpressionScene({getState,onChange,onDeform,onClip,onGroup
       if(current)fields();if(loading)void load(generation,source,[...assets]);
       if(!source){$('#scene-left').value='1';$('#scene-right').value='1';$('#scene-mouth').value='0';}
     }
-    controls();if(!playing)draw();
+    syncHair();controls();if(!playing)draw();
   }
   $('#scene-inspect').addEventListener('click',()=>{if(getState().locked || loading || !bitmaps.length)return;stop();controls();inspector.open({width:canvas.width,height:canvas.height,assets:getState().assets,file:source,role:current,pose:manual()});});
   $('#scene-role').addEventListener('change',()=>{groupEditor.close();clipEditor.close();touchEditor.close();stop();$('#clip-key').value='base';current=$('#scene-role').value;fields();draw();controls();});
   for(const id of ['left','right','mouth','turn'])$(`#scene-${id}`).addEventListener('input',()=>draw());
-  $('#scene-background').addEventListener('change',()=>{stop();controls();});
+  $('#scene-background').addEventListener('change',()=>{syncHair();stop();controls();});
   $('#scene-layer').addEventListener('submit',event=>{
     event.preventDefault();if(getState().locked || loading || !current || !$('#scene-layer').reportValidity())return;
     stop();onChange(current,{order:Number($('#scene-order').value),condition:$('#scene-condition').value,enabled:$('#scene-enabled').checked});draw();controls();

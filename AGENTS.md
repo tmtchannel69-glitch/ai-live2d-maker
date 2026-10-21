@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 生成素材の検証承認（2026-10-21）
+- オーナーは、今回のキャラクター画像をOpenAIの画像生成AIへ送って肌・目・口等の不足素材を試作する提案に「はい！」と明示承認した。この画像と同じ検証目的の生成・再試作・モデル組込みを進める。以前の「隠れ部分生成/外部送信未承認」はこの範囲で更新。その他の外部サービス/有料API契約/課金/公開/main統合まで承認したものとはしない。
+- 作業ブランチは feature/generated-expression-trial。元画像・生成画像・切り出し素材・モデルは引き続きGitへ保存しない。元絵との一致、位置合わせ、瞬き/口の動き、公式VTSの確認を分けて記録し、生成できたことを品質合格にしない。
+- 生成3回と実モデル検証の最新記録は docs/GENERATED_EXPRESSION_TRIAL.md。v3は左右瞬き/開口、閉眼iris寄与0、対象首領域の穴0まで確認。低開度の薄い二重線/髪細部/元絵一致/顔向き/公式VTS/スマホ実機は未完了。生成準備は開発試験で、アプリ内の自動画像生成APIではない。
+- 外部psd2liveのローカル検証コピーへ口検出と閉眼差分の相補opacityを修正。最終RigBuilder.kt SHAはd19c1b1be6c830ae4ff22e25ed868eece9794f651a14acdefab2937fe830ff66、元SHA/変更目的/回帰は上記docsと私用provenance参照。外部ソース/パッチ/バイナリをrepoへ同梱していないため、新環境で未修正版を使った結果と混同しない。
+- prepareはalpha>0 bboxをPSD offset付きでcropし、alpha1/元の配置/元PNGを保持。完全透明は明示拒否。口opacity診断は最大64認識IDに限り、カスタム/未検証は合否に使わない。
+- 新しい髪前景modeはメイン合成の静止位置確認だけ。詳細/比較/編集下書きのrendererや保存形式に混ぜない。既定透明、髪cache640×960以内、late decodeを世代で拒否しclose。モデルと同じ表示とは呼ばない。
+- create-preview-page.mjsは独立描画を単一HTMLへまとめる。画像を埋め込むため実体パスもGit外・新規のみ、容量を読込前に制限し外部通信なし。cloudのfile://制限は解除せず同HTMLをloopbackで検査、Windowsの直接openは未検証。端末に保存する作業ZIPとコードのGit保存を区別する。
+
 ## 最新の検証状況（2026-10-20）
 - 再開ブランチは feature/character-model-evaluation。提供画像をローカルで分離→PSD→実MOC3生成→独立CPU描画まで検証。詳細は docs/CHARACTER_MODEL_EVALUATION.md。以下の過去の未実装記述は各時点の履歴として読む。
 - 白い髪/服の背景除去はBiRefNet評価で改善したが、画面のAI分離は引き続きSAM。自然な瞬き/開口/顔向きの品質は未達、公式Core/VTube Studioとスマホ実機は未検証。実画像/派生画像/モデルは /tmp のみ、Gitにはコードと画像なしの検証記録を保存する。

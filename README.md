@@ -22,7 +22,7 @@ npm run dev
 5. 各パーツの「PNG」で個別保存、「まとめて ZIP 保存」で表示中の全パーツを保存できます。
 6. リセット、または画像の再選択で結果を消去します。
 
-デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、隠れた部分の補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能として追加しました。提供キャラクター画像でも実MOC3の生成・独立描画まで確認しましたが、瞬きが動かず、顔の向きで隙間が出るため、自然に使える完成品質には達していません。公式Core/VTube Studio実読込は未確認です。[実画像の評価と次の改善](docs/CHARACTER_MODEL_EVALUATION.md)。
+デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、アプリ内での隠れた部分の自動補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能です。提供キャラクター画像へ生成した肌・目・口を加え、実MOC3の瞬き・開口を検証しています。完成品質と公式Core/VTube Studio実読込は未確認です。[元画像の評価](docs/CHARACTER_MODEL_EVALUATION.md)、[生成素材と現在の検証](docs/GENERATED_EXPRESSION_TRIAL.md)。
 
 ## AI 分離処理の接続
 
@@ -52,7 +52,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/character-model-evaluation` です。
+最新の開発ブランチは `feature/generated-expression-trial` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +72,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/character-model-evaluation https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/generated-expression-trial https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +84,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/character-model-evaluation` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/generated-expression-trial` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
@@ -356,3 +356,9 @@ AIパーツを準備すると「04 動きの試作」で、選択した結果を
 ## 素材から実モデルを生成する実験
 
 「保存」→「Live2Dモデルを生成する（実験）」で開発用サーバーを確認し、現在の素材からMOC3/model3/テクスチャ入りZIPを作成します。外部CLIのpsd2liveをローカルで別途構築する必要があります。自作サンプルと提供キャラクター画像で実生成・独立ランタイムの読み込み/描画を確認済みです。顔と目・口の画素の重なり候補や、指定値を変えても形が変わらない項目をレポートと画面へ通知します。これらは確認の手がかりで、自然な品質を自動保証しません。公式Core/VTube Studio本体の実読込は未確認です。アプリのメッシュ/範囲/親子キーは移植せず、新しい初期リグを作ります。[検証結果・起動・利用条件](docs/MODEL_BUILD_TRIAL.md)。
+
+モデル用PSDの透明余白を省いて元位置を保持し、口を閉じた値で開口が残る候補も検査します。独立描画の`--poses expressions`で閉/途中/開の10状態を比較できます。表情合成の背景には「元画像＋分離した髪（位置確認）」を追加しました。肌の下地の手前へ前髪/横髪を戻す静止した配置確認で、詳細/比較/下書きや保存内容は変えません。[追加機能と制限](docs/GENERATED_EXPRESSION_TRIAL.md)。
+
+OpenAIの画像生成による不足素材の準備は、今回の画像について承認を得た開発時の検証です。アプリから画像生成サービスを自動で呼び出す機能や、新しい有料API契約は追加していません。
+
+描画済みの表情を選択/自動切替する単一HTMLも作成できます。`scripts/model-build/create-preview-page.mjs`で画像と任意の作業/モデルZIPを埋め込みます。画像を含むためGit外へ保存してください。[作成と検証方法](docs/GENERATED_EXPRESSION_TRIAL.md)、[生成モデルをWindowsのVTube Studioで試す手順](docs/VTUBE_STUDIO_TRIAL.md)。

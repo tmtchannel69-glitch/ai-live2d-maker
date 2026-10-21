@@ -66,3 +66,4 @@ button,a,select,input,summary{touch-action:manipulation}
 .assignment-stage{margin:12px 0;min-height:80px}.assignment-stage canvas{max-height:40dvh}#asset-result-preview-status,#asset-copy-target{font-size:14px;line-height:1.7}#asset-role-advice{padding:12px;border-left:3px solid #c7a0ff;line-height:1.8}
 .inspector-repair{display:grid;gap:10px;margin:16px 0;padding:12px;border:1px solid #66517c;border-radius:10px;overflow-wrap:anywhere}.inspector-repair h3,.inspector-repair p{margin:0}.inspector-repair button{width:100%;min-height:48px}
 .model-build-panel{display:grid;gap:12px;margin:20px 0;padding:16px;border:1px solid #66517c;border-radius:12px;overflow-wrap:anywhere}.model-build-panel h3,.model-build-panel p{margin:0}.model-build-panel button{min-height:48px;width:100%;white-space:normal}
+#scene-background{min-height:48px;font-size:16px}

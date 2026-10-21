@@ -9,6 +9,15 @@ const PARTS={hair:'front hair',face:'face',body:'topwear',eyes:'eyes combined',h
 const ROLES={face_base:'face',eye_white_l:'eyewhite left',eye_white_r:'eyewhite right',eye_iris_l:'irides left',eye_iris_r:'irides right',eye_lash_l:'eyelash left',eye_lash_r:'eyelash right',eye_closed_l:'eye close left',eye_closed_r:'eye close right',mouth_upper:'mouth open upper',mouth_lower:'mouth open lower',mouth_inside:'mouth open',mouth_teeth:'tooth-t',mouth_tongue:'tongue',mouth_closed:'mouth close'};
 const DIFFERENCE_ROLES=new Set(['eye_closed_l','eye_closed_r','mouth_closed']);
 const fail=message=>{throw new Error(message);};
+function trimLayer(layer){
+  const {width,height,data}=layer.imageData;let left=width,top=height,right=0,bottom=0;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(data[(y*width+x)*4+3]>0){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);}
+  if(right<=left || bottom<=top)fail(`${layer.name}: 透明な画素だけの素材はモデル化できません。`);
+  if(left===0 && top===0 && right===width && bottom===height)return;
+  const w=right-left,h=bottom-top,cropped=new Uint8ClampedArray(w*h*4);
+  for(let y=0;y<h;y++)cropped.set(data.subarray(((top+y)*width+left)*4,((top+y)*width+right)*4),y*w*4);
+  layer.left+=left;layer.top+=top;layer.imageData={width:w,height:h,data:cropped};
+}
 export function prepareModelPsd(bytes){
   if(!bytes.length || bytes.length>100*MIB)fail('入力ZIPは100 MiB以下にしてください。');
   const seen=new Set();let total=0;
@@ -63,6 +72,11 @@ export function prepareModelPsd(bytes){
   const overlaps=findFaceFeatureOverlap(children);
   if(overlaps.length)warnings.push('顔の下地と目・口などの素材に同じ色の画素が重なる候補があります。元の顔に絵が残っていないか、開閉時の二重表示を確認してください。同色になる別の絵もあるため自動の不良判定ではありません。');
   warnings.push('アプリの変形・表示範囲・親子・確認メモは転写しません。変換ツールが新しい初期リグを作ります。','隠れた肌・口内部の生成と表情品質の自動保証は行いません。');
+  // Composite/overlap checks use source-canvas coordinates above. Pack only the
+  // alpha>0 rectangle, keeping its original PSD offset and every visible RGBA
+  // value (including alpha 1). This avoids full-canvas transparent atlas tiles
+  // without adding Canvas dependencies or changing the source PNGs.
+  for(const layer of children)trimLayer(layer);
   const psd=new Uint8Array(writePsd({width,height,children,imageData:{width,height,data:composite}},{trimImageData:false,noBackground:true,generateThumbnail:false}));
   if(psd.length>100*MIB)fail('PSDが100 MiBを超えました。');return {psd,report:{source:{width,height},layers:children.map(c=>c.name),differenceRolesIncluded:layerSpecs.filter(s=>s.difference).map(s=>s.role),warnings,sourceOverlapCandidates:overlaps}};
 }

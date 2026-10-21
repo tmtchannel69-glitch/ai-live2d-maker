@@ -25,6 +25,27 @@ MAX_PIXELS = 16 * 1024 * 1024  # uint8 RGBA: 64 MiB, including four 2048px atlas
 MAX_TRIANGLES = 100_000
 MAX_DRAWABLES = 256
 MAX_RASTER_WORK = 120_000_000
+POSE_SETS = {
+    'default': (
+        ('default', {}), ('left-closed', {'ParamEyeLOpen': 0}),
+        ('right-closed', {'ParamEyeROpen': 0}),
+        ('both-closed', {'ParamEyeLOpen': 0, 'ParamEyeROpen': 0}),
+        ('mouth-open', {'ParamMouthOpenY': 1}),
+        ('head-left', {'ParamAngleX': -10}), ('head-right', {'ParamAngleX': 10}),
+    ),
+    'expressions': (
+        ('default', {}), ('left-closed', {'ParamEyeLOpen': 0}),
+        ('left-half', {'ParamEyeLOpen': .5}),
+        ('right-closed', {'ParamEyeROpen': 0}),
+        ('right-half', {'ParamEyeROpen': .5}),
+        ('both-closed', {'ParamEyeLOpen': 0, 'ParamEyeROpen': 0}),
+        ('both-half', {'ParamEyeLOpen': .5, 'ParamEyeROpen': .5}),
+        ('mouth-half', {'ParamMouthOpenY': .5}),
+        ('mouth-open', {'ParamMouthOpenY': 1}),
+        ('both-closed-mouth-open', {'ParamEyeLOpen': 0, 'ParamEyeROpen': 0,
+                                    'ParamMouthOpenY': 1}),
+    ),
+}
 
 
 class PreviewError(Exception):
@@ -300,11 +321,8 @@ def render(arguments):
     require(not output.is_relative_to(repo), 'derived images must be outside the application Git checkout')
     moc, textures = load_inputs(arguments.model)
     runtime = Runtime(arguments.library, moc)
-    specs = [('default', {}), ('left-closed', {'ParamEyeLOpen': 0}),
-             ('right-closed', {'ParamEyeROpen': 0}),
-             ('both-closed', {'ParamEyeLOpen': 0, 'ParamEyeROpen': 0}),
-             ('mouth-open', {'ParamMouthOpenY': 1}),
-             ('head-left', {'ParamAngleX': -10}), ('head-right', {'ParamAngleX': 10})]
+    pose_set = arguments.poses
+    specs = POSE_SETS[pose_set]
     poses, missing = {}, {}
     for label, override in specs:
         poses[label], absent = runtime.pose(override)
@@ -339,6 +357,7 @@ def render(arguments):
                        for key, value in override.items() if key in ranges}
                for label, override in specs}
     report = {'format': 'ai-live2d-independent-cpu-preview', 'version': 1,
+              'pose_set': pose_set,
               'model_sha256': runtime.validation['model_sha256'],
               'runtime': runtime.validation['runtime'], 'runtime_commit': runtime.validation['reference_runtime_commit'],
               'official_core_tested': False, 'vtube_studio_tested': False,
@@ -361,6 +380,8 @@ def main():
     parser.add_argument('--model', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--height', type=int, default=384)
+    parser.add_argument('--poses', choices=tuple(POSE_SETS), default='default',
+                        help='bounded diagnostic pose preset (default: %(default)s)')
     parser.add_argument('--face-box', type=float, nargs=4, metavar=('LEFT', 'TOP', 'RIGHT', 'BOTTOM'))
     arguments = parser.parse_args()
     sys.stdout.flush()
