@@ -1,0 +1,9 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Inox2D 固定版の動作検証</title>
+<style>body{background:#22212b;color:#eee;font:16px system-ui;margin:16px auto;max-width:520px;padding:0 12px}canvas{width:100%;height:auto;background:#d7d7dc;border-radius:12px}label{display:flex;align-items:center;gap:12px;min-height:48px}input{flex:1;min-height:48px}button{font:inherit;min-height:48px;padding:8px 16px}p{line-height:1.6}output{min-width:36px}</style>
+<h1>Inox2Dの動作検証</h1><p>固定版を変更せず、生成モデルを直接描画します。閉眼や表示切替に未対応の動きがあり、品質合格用の画面ではありません。</p>
+<canvas id="canvas" width="384" height="480"></canvas>
+<label>左目<input id="left" aria-label="左目の開き" type="range" min="0" max="1" step="0.01" value="1"><output id="left-value">1</output></label>
+<label>右目<input id="right" aria-label="右目の開き" type="range" min="0" max="1" step="0.01" value="1"><output id="right-value">1</output></label>
+<label>顔<input id="head" aria-label="顔の動き" type="range" min="-1" max="1" step="0.01" value="0"><output id="head-value">0</output></label>
+<button id="play" disabled>自動再生</button><p id="status" role="status">読み込み中</p>
+<script type="module" src="./main.mjs"></script></html>

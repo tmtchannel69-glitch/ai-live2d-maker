@@ -1,0 +1,42 @@
+{
+  "format": "ai-live2d-maker-inochi2d-research-summary",
+  "version": 1,
+  "model_sha256": "18fbffbfa3816f268585fd68e9cffac5954e109a6cb5e423149d847dc43bc5dc",
+  "fixture": "original synthetic face/eyes/eyelids, five PNG parts; not AI single-image segmentation",
+  "creator": {
+    "version": "0.8.6",
+    "official_binary_unmodified": true,
+    "inp_and_inx_load": true,
+    "independent_blinks": true,
+    "closed_eye_blue_pixels": 0,
+    "planar_head_motion": true,
+    "poses": 12,
+    "half_gui_value": 0.48,
+    "save_fresh_reload_all_12_poses_pixel_identical": true,
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc"
+  },
+  "inox2d": {
+    "commit": "d4dd9dd7f16b775042cbda44370570abf9a8cf81",
+    "runtime_modified": false,
+    "same_model_bytes": true,
+    "wasm_webgl2_load": true,
+    "half_changed_pixels": 1979,
+    "exact_zero_closed_changed_pixels": 0,
+    "closed_blink_passed": false,
+    "opacity_implemented": false,
+    "page_and_console_errors": []
+  },
+  "full_automatic_natural_character_generation": false,
+  "live2d_compatible": false,
+  "vtube_studio_tested": false,
+  "inp2_tested": false,
+  "real_mobile_device_tested": false,
+  "date_utc": "2026-10-21",
+  "code_source_sha256": {
+    "scripts/inochi2d/model.mjs": "56d0a806d64bacfe402af1282e45676beee0fbc301ce419459618ec46edce07d",
+    "scripts/inochi2d/generate.mjs": "d4995abcb4f4d98385ce317309721d77efd759c28d458c6162153d4db324ac9a",
+    "scripts/inochi2d/create-fixture.mjs": "2912ba111724b814bf27d05f7cbb827d87b9a57b2976ccc715593ebe2569ae77",
+    "scripts/inochi2d/browser-trial/src/lib.rs": "409d24a74b6a75db9432fd1c8f744eb7c61a0397922a8ff653e5bf6415214c14",
+    "scripts/inochi2d/browser-trial/Cargo.lock": "8081c141ce1caa738770fa6c8d1317fe68014c80eaa904c0ca3c8bc4e3742bfa"
+  }
+}

@@ -3,7 +3,7 @@
 最終更新: 2026-10-21（UTC）
 
 ## 承認とブランチ
-- 最新ブランチ: feature/blink-transition-refinement。最新目標はVTube Studio等で使えるモデルの制作。以下は各段階の履歴で、最新の生成素材評価は末尾と docs/GENERATED_EXPRESSION_TRIAL.md を参照。
+- 最新ブランチ: research/inochi2d-feasibility。最新依頼はInochi2D技術調査と独立した最小モデルの生成/実読込。Live2D/VTube Studioという最終用途の変更は未決定。最新記録は末尾とdocs/INOCHI2D_FEASIBILITY.md、過去の生成素材評価はdocs/GENERATED_EXPRESSION_TRIAL.mdを参照。
 - 初版目標、段階 1、段階 2 の資料調査に続き、オーナーの「進めて」で点・枠の試作、モデル導入、無課金の自前評価が承認された。
 - 最初の技術試作は自作のテスト画像だけを使用。その後の当初評価はユーザー提供画像一枚をローカルだけで処理した。2026-10-21には明示承認済みのOpenAI画像生成AIへ送り不足素材を試作。新しい有料API契約・有料機器・公開・main マージは行っていない。
 
@@ -503,3 +503,17 @@ README の AI 試作手順で準備し、サーバーと画面を別々に起動
 - 顔向きは衣装扱いのbodyへ頭頂付近の髪が残って静止することと、前髪/左右髪/顔の移動差による割れを確認。次工程の保守マスク2,526画素を/tmp/ai-live2d-generated-trial/hair-ownership-candidateへ準備。顔/首/首輪を保護、RGBA和集合差/重複/欠け0、元ファイル維持。まだmodel/work化せず、頭頂/耳下以外の曖昧な残りは未解決。
 - 次は残る瞬きの曲率/濃度、髪の所有と追従、角度±10との組合せを検証し、Windows VTube Studioでの実読込とスマホ実機へ進む。docs/BLINK_TRANSITION_TRIAL.mdに仕組み・再現手順・限界を保存。再開ブランチはfeature/blink-transition-refinement。
 - v4の作業ZIPを端末へ保存すれば元画像/素材/配置を再開できる。コードはこの作業ブランチへ保存し、/tmpの画像・モデル・外部ツールや起動プロセスは新環境に残る前提にしない。生成サーバーは新prepareを読むよう今回再起動、Vite:5173/モデル:8001はこのクラウド内で稼働。cloudのlocalhostをWindows/スマホ用URLとして案内しない。
+
+## Inochi2D技術調査と最小動作モデル（2026-10-21）
+- オーナーの8項目調査/最小生成/実読込依頼を受け、変更なしの63d2db5（前リモートと一致）からresearch/inochi2d-feasibilityを作成。既存src/画面/NPM設定/保存版/Live2D出力を変更せず、scripts/inochi2dに独立試作。研究と最小構成が今回の範囲、正式出力先の追加・最終用途変更・費用/契約/公開/main統合は行っていない。
+- SDK0.8.6 dda3a8f005f808104caa43183ab8753fb989e30f、Creator0.8.6 371e5f4e21117102dbecc82371bfd9a6e2f5df02固定。SDK0.8.7のcontainer/主要deserializeは同じだが描画同一とはしない。開発SDK0.9 snapshot4975d247…のINP2(TRNSRTS2/little-endian/taggeddata)と公式WASM/TS経路は別調査、今回のlegacy INP1/TRNSRTS\0/big-endian生成に混ぜない。PixiJSファイル空、完成viewerとは扱わない。
+- 自作顔肌/左右開眼/左右閉眼の5PNG/manifestをコードで作成、45頂点/40三角形/5textures/左右EyeOpenL/R+親HeadXを自動構成してINP/INX/JSON/reportを新規出力。旧INP/INX共通containerの最小部分、INP2/任意Editor project/全マスク/物理は未対応。raw PNG不変、RGBA合計16MiB/各PNG8MiB・2048px/output32MiB等の制限。生成だけでofficialCreatorTestedをtrueにせず別のSHA付き実検証を保存。
+- 公式Creator v0.8.6未改変LinuxZIP799b989d…/binary2ae3b449…を/tmpへ展開し、ローカルXvfb/Mesa llvmpipe GL4.5/dbus-sessionで実UI。最終モデルminimal-complete-meta.inp/.inx SHA18fbffbfa3816f268585fd68e9cffac5954e109a6cb5e423149d847dc43bc5dc（9,592bytes）を読込、5parts/3params/8bindingsを認識。12状態の左右瞬き/両閉/HeadX平面移動・傾き/組合せ/復帰を操作し、閉瞳blue0、反対目ROI差0、復帰差0。GUI半開値は0.48でexact0.5を主張しない。
+- INXコピーをCreatorで保存→新しいプロセスで再読込→12状態を再操作し、保存前後のviewport差は全状態0。保存済みcreator-roundtrip.inxは20,346bytes/SHA b4cf024d98abff57579f41440c76bd69f4a762bc3edac9735d9fe8e8004fcf10。元INP/INX/5PNGは保持。実記録/tmp/inochi2d-trial/creator-validation.json、creator-verification-complete-meta/とcreator-verification-roundtrip/。
+- Inox2D固定d4dd9dd7f16b775042cbda44370570abf9a8cf81からRust1.90/wasm-bindgen0.2.100でWASM+WebGL2を実build。元runtimeソースとraw0/.5/1を変えず同じ最終モデルを実ブラウザ読込。半開.5は1,979px/deform6.5475、Head±1は15,138/15,137px変化、全sample有限/画面consoleerror0。一方閉0は開と差0、opacityも未実装で開眼へ閉線が重なり、瞬き不合格。zero-skipとopacityTODOをソースで確認、.0001診断を合格代替にしない。
+- SDKではoptionalなmetaキーをInoxが必須として元minimalを拒否。画像/rig不変でoptional空文字/falseを明示した別版を生成して両runtimeの入力を一致させた。baseline失敗も保持。再現Rust/HTML/JS/固定GitrevCargo.toml+lock/検査/通知/56依存宣言をbrowser-trialへ保存、wasm/JSbindings/binaryはGit外。rootが保存後のverify.mjsでも同じ失敗/画素値を再現（/tmp/inochi2d-trial/browser-verified-root）。信頼fixture専用で、任意upload用loaderとはしない。
+- SDK/Creator/Inox本体のBSD2条件、主要D依存のtag/SHA/本文と確認不足、フォント/branding/素材の別条件を記録。numemはstable0.8.6の0.11.1で照合、psd-dは宣言のみ本文未確認、i18n-d/全推移依存/配布物網羅監査は未完。公式Aka/Midoriはseagetch/CC BY4.0だがLFS等取得制限で実体未読、Zenn本文も403。既存モデルを実解析済みとはせず公式reader/serializerを基準に検証した。
+- user画像の追加送信/画像生成なし。今回の自作検証図形だけCC0として識別し、既存ユーザー素材の許諾に転用しない。INP/INXはMOC3/model3と別形式で、変換経路/Live2D/VTS互換を対応済み表示しない。既存素材/配置/mesh/親子/動き設定を共通データから別target adapterへ渡す構成を提案。
+- 検証: 新Node7+既存モデルNode30=全37成功、本番build51modules成功、JS構文/diffcheck成功。公式Creator実GUI/保存再読込とInoxの実ブラウザ比較は別証拠。既存UIコード不変のためUI全件は今回は再実行せず。完全な1画像無操作生成/自然さ/Windows/スマホ/INP2/Live2D/VTSは未検証。
+- docs/INOCHI2D_FEASIBILITY.md（8項目/実装計画）、LICENSE_AUDIT/CREATOR_CHECK/画像なしVALIDATION.json、AGENTS/ROADMAP/READMEを更新。モデル/入力素材/実画面/実reportを/tmp/inochi2d-trial/inochi2d-minimal-trial.zip（175,826bytes）へまとめた。Creator/WASM本体は同梱なし。Gitには画像/モデル/compiled outputsを含めず、source/lock/通知/記録だけ保存する。
+- 次は承認された範囲でhandoff→共通データ→Inochi adapterの設計、実キャラクターの素材/表情品質、Inox修正候補と公式開発SDK/WASM+rendererの比較へ。今回の調査/最小成功を、最終利用先の変更や完全自動モデルの完成扱いにしない。再開はresearch/inochi2d-feasibilityとAGENTS/ROADMAP/PROGRESS/README/新docsから。/tmpやツール/起動processの次環境保持は前提にせず、コードからfixture/モデルを再生成可能。

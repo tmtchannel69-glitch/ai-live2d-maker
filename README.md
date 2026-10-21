@@ -26,6 +26,10 @@ npm run dev
 
 モデル用の縮小で細い線が抜ける処理を改善し、瞬き途中の10段階を保存したHTMLで比較できます。指で使う前後移動・自動切替・作業/モデルZIPの保存に対応。実モデルからの描画済み画像の比較で、追跡やVTube Studioの実動作ではありません。[縮小と途中確認の手順](docs/BLINK_TRANSITION_TRIAL.md)。
 
+## Inochi2Dの独立した技術試作
+
+既存アプリを維持し、自作の顔・目・まぶた5パーツから旧INP/INXを生成するCLIを追加しました。公式Inochi Creator0.8.6で左右の瞬き・顔の平面移動、保存/再読込を確認。画像1枚からの自然な全自動生成、Live2D/VTube Studio互換、INP2対応とは区別します。Inox2Dの実ブラウザ比較では0値と透明度に問題があり、瞬きは不合格です。[調査/実装計画/再現手順](docs/INOCHI2D_FEASIBILITY.md)を参照してください。アプリ画面への新出力先の追加はまだ行っていません。
+
 ## AI 分離処理の接続
 
 `src/separator.js` の `separateParts` を API 実装へ置き換えられます。画面はこのモジュールを通じて処理を呼び出します。
@@ -54,7 +58,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/blink-transition-refinement` です。
+最新の開発ブランチは `research/inochi2d-feasibility` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -74,7 +78,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/blink-transition-refinement https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch research/inochi2d-feasibility https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -86,7 +90,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/blink-transition-refinement` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `research/inochi2d-feasibility` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 

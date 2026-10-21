@@ -1,8 +1,16 @@
 # AI Live2D Maker 開発ルール
 
+## Inochi2D技術調査（2026-10-21）
+- 現在の作業ブランチはresearch/inochi2d-feasibility。オーナーは公開ソース解析・INP/INX/INP2区別・ブラウザ比較/ライセンス調査・顔/目/まぶたの最小自動生成と実読込を依頼した。既存アプリの全面書換えは禁止、今回は研究と独立試作。最終用途のLive2D/VTSをInochiへ切り替える判断はしていない。
+- scripts/inochi2dへ自作5役割PNG→9点mesh/左右EyeOpen/親HeadX→旧INP/INXの生成器と試験を分離。安定SDK v0.8.6 dda3a8f005f808104caa43183ab8753fb989e30f、Creator v0.8.6 371e5f4e21117102dbecc82371bfd9a6e2f5df02固定。開発SDK0.9/INP2/WASMは別のsnapshotで調査し、今回の生成対応とはしない。
+- 未改変の公式Creator Linux版で最小モデル読込/左右の瞬き/平面顔移動の12状態、INX保存/別プロセス再読込の全状態画素一致を確認。クラウドXvfb/Mesa検証でありWindows/スマホ/自然なキャラクター品質の合格ではない。GUIの途中値は0.48、正確な0.5と報告しない。
+- Inox2D d4dd9dd7f16b775042cbda44370570abf9a8cf81を元のままWASM/WebGL2で実行。同じ最終モデルは読込/半開/顔移動できたが、raw0のskipとopacity未実装で瞬き不合格。epsilonへ置換して合格にしない。ブラウザharnessは信頼できる自作fixture専用、製品の任意upload loaderに流用しない。
+- docs/INOCHI2D_FEASIBILITY.md、INOCHI2D_LICENSE_AUDIT.md、INOCHI2D_CREATOR_CHECK.mdが最新記録。指定Zenn本文/公式sample実体は403等で未取得。既存モデルを実解析したと書かず、公式serializer/readerを基準に自作素材を検証したと明示する。BSDは依存/フォント/モデル素材へ自動適用しない。
+- 画像/モデル/compiledWASM/Creator binaryはGit外。私用成果物は/tmp/inochi2d-trialと/tmp/inochi-browser-portable-web。自作図形だけCC0として識別、ユーザー画像の許諾に転用しない。Live2D/VTS互換表示はfalseを維持。新環境ではGit内の生成コード/固定revから再準備する。
+
 ## 生成素材の検証承認（2026-10-21）
 - オーナーは、今回のキャラクター画像をOpenAIの画像生成AIへ送って肌・目・口等の不足素材を試作する提案に「はい！」と明示承認した。この画像と同じ検証目的の生成・再試作・モデル組込みを進める。以前の「隠れ部分生成/外部送信未承認」はこの範囲で更新。その他の外部サービス/有料API契約/課金/公開/main統合まで承認したものとはしない。
-- 作業ブランチは feature/blink-transition-refinement。元画像・生成画像・切り出し素材・モデルは引き続きGitへ保存しない。元絵との一致、位置合わせ、瞬き/口の動き、公式VTSの確認を分けて記録し、生成できたことを品質合格にしない。
+- この段階の作業ブランチは feature/blink-transition-refinement（現在のブランチは先頭参照）。元画像・生成画像・切り出し素材・モデルは引き続きGitへ保存しない。元絵との一致、位置合わせ、瞬き/口の動き、公式VTSの確認を分けて記録し、生成できたことを品質合格にしない。
 - 生成3回は docs/GENERATED_EXPRESSION_TRIAL.md、続く縮小処理と瞬き途中の確認は docs/BLINK_TRANSITION_TRIAL.md。v3は左右瞬き/開口、閉眼iris寄与0、対象首領域の穴0まで確認。低開度の薄い二重線/髪細部/元絵一致/顔向き/公式VTS/スマホ実機は未完了。生成準備は開発試験で、アプリ内の自動画像生成APIではない。
 - 最新の私用改善候補は/tmp/ai-live2d-generated-trial/trial-v4。元JPEG/16PNGを保持して新縮小と閉眼配置y-3pxを適用。18部品/2,434頂点、実画面生成/保存・閉眼iris0・片側独立・首ROI9状態を確認。曲率/濃度差と髪追従は未完。次の髪所有mask候補はhair-ownership-candidateで、まだwork/model化していない。実機品質は未確認、詳細/再開手順は上記新docs/PROGRESS参照。
 - 外部psd2liveのローカル検証コピーへ口検出と閉眼差分の相補opacityを修正。最終RigBuilder.kt SHAはd19c1b1be6c830ae4ff22e25ed868eece9794f651a14acdefab2937fe830ff66、元SHA/変更目的/回帰は上記docsと私用provenance参照。外部ソース/パッチ/バイナリをrepoへ同梱していないため、新環境で未修正版を使った結果と混同しない。
