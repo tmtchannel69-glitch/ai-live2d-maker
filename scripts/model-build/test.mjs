@@ -102,3 +102,74 @@ test('overlap hints remain in source coordinates after cropping and fully transp
   assert.equal(r.report.sourceOverlapCandidates[0].ratio,1);assert.equal(r.report.sourceOverlapCandidates[0].visiblePixels,16);
   assert.throws(()=>prepareModelPsd(bundle(meta(),{'parts/face_skin.png':png(32,48,[90,80,70,0])})),/透明な画素だけ/);
 });
+
+// Exercise preview packaging and its actual inline script without a browser or
+// external runtime. Tiny generated PNGs never contain user images.
+const blinkPoses={default:{ParamEyeLOpen:1,ParamEyeROpen:1},'both-closed':{ParamEyeLOpen:0,ParamEyeROpen:0},'both-025':{ParamEyeLOpen:.025,ParamEyeROpen:.025},'both-05':{ParamEyeLOpen:.05,ParamEyeROpen:.05},'both-075':{ParamEyeLOpen:.075,ParamEyeROpen:.075},'both-10':{ParamEyeLOpen:.1,ParamEyeROpen:.1},'both-15':{ParamEyeLOpen:.15,ParamEyeROpen:.15},'both-25':{ParamEyeLOpen:.25,ParamEyeROpen:.25},'both-half':{ParamEyeLOpen:.5,ParamEyeROpen:.5},'both-75':{ParamEyeLOpen:.75,ParamEyeROpen:.75}};
+async function previewFixture(poses,poseSet){
+  const fs=await import('node:fs/promises'),{tmpdir}=await import('node:os'),{join}=await import('node:path');
+  const dir=await fs.mkdtemp(join(tmpdir(),'preview-contract-')),renders=join(dir,'frames'),output=join(dir,'review.html');await fs.mkdir(renders);
+  const report={format:'ai-live2d-independent-cpu-preview',version:1,model_sha256:'a'.repeat(64),poses};if(poseSet)report.pose_set=poseSet;
+  await fs.writeFile(join(renders,'preview-report.json'),JSON.stringify(report));
+  for(const [index,pose] of Object.keys(poses).entries())for(const area of ['face','full'])await fs.writeFile(join(renders,`${area}-${pose}.png`),png(2,2,[index*10,40,80,255]));
+  return {dir,renders,output,fs,join,report,async clean(){await fs.rm(dir,{recursive:true,force:true});}};
+}
+function previewPayload(html){return JSON.parse(html.match(/<script[^>]*id="data"[^>]*>([\s\S]*?)<\/script>/)[1]);}
+
+test('renderer transition preset covers low blink openings while preserving legacy default and expression poses',async()=>{
+  const {execFile}=await import('node:child_process'),{promisify}=await import('node:util'),{fileURLToPath}=await import('node:url');
+  // Evaluate only this trusted renderer's pure pose configuration with Python's
+  // stdlib, avoiding a dependency on optional NumPy/Pillow or a native runtime.
+  const script="import ast,json,pathlib,sys; tree=ast.parse(pathlib.Path(sys.argv[1]).read_text()); node=next(n for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='POSE_SETS' for t in n.targets)); scope={}; exec(compile(ast.Module(body=[node],type_ignores=[]),sys.argv[1],'exec'),scope); print(json.dumps(scope['POSE_SETS']))";
+  const {stdout}=await promisify(execFile)('python3',['-c',script,fileURLToPath(new URL('./render-preview.py',import.meta.url))],{timeout:10000,maxBuffer:128*1024}),sets=JSON.parse(stdout);
+  assert.deepEqual(Object.fromEntries(sets['blink-transitions']),blinkPoses);
+  assert.deepEqual(sets.default,[['default',{}],['left-closed',{ParamEyeLOpen:0}],['right-closed',{ParamEyeROpen:0}],['both-closed',{ParamEyeLOpen:0,ParamEyeROpen:0}],['mouth-open',{ParamMouthOpenY:1}],['head-left',{ParamAngleX:-10}],['head-right',{ParamAngleX:10}]]);
+  assert.equal(sets.expressions.length,10);assert.deepEqual(Object.fromEntries(sets.expressions)['left-half'],{ParamEyeLOpen:.5});assert.deepEqual(Object.fromEntries(sets.expressions)['both-closed-mouth-open'],{ParamEyeLOpen:0,ParamEyeROpen:0,ParamMouthOpenY:1});
+});
+
+test('ten transition frames retain exact PNGs and explicit opening labels in an offline review page',async()=>{
+  const {createPreviewPage}=await import('./create-preview-page.mjs'),fixture=await previewFixture(blinkPoses,'blink-transitions');
+  try{
+    const result=await createPreviewPage(fixture),html=await fixture.fs.readFile(fixture.output,'utf8'),data=previewPayload(html);assert.equal(result.poses,10);assert.equal(result.externalRequests,false);assert.equal(data.poseSet,'blink-transitions');assert.deepEqual(Object.keys(data.frames),Object.keys(blinkPoses));
+    for(const pose of Object.keys(blinkPoses))for(const area of ['face','full'])assert.deepEqual(Buffer.from(data.frames[pose][area].split(',')[1],'base64'),await fixture.fs.readFile(fixture.join(fixture.renders,`${area}-${pose}.png`)));
+    for(const [pose,opening] of [['both-025','2.5%'],['both-05','5%'],['both-075','7.5%'],['both-10','10%'],['both-15','15%'],['both-25','25%'],['both-75','75%']])assert.equal(data.labels[pose],`両目の開き ${opening}`,`${pose} must state its opening`);
+    assert.match(html,/id="previous"/);assert.match(html,/id="next"/);assert.match(html,/min-height:48px/);assert.match(html,/default-src 'none'/);
+  }finally{await fixture.clean();}
+});
+
+test('legacy expression review pages keep their frames and labels without requiring a pose-set field',async()=>{
+  const {createPreviewPage}=await import('./create-preview-page.mjs'),poses={default:{},'left-closed':{ParamEyeLOpen:0},'left-half':{ParamEyeLOpen:.5},'right-closed':{ParamEyeROpen:0},'right-half':{ParamEyeROpen:.5},'both-closed':{ParamEyeLOpen:0,ParamEyeROpen:0},'both-half':{ParamEyeLOpen:.5,ParamEyeROpen:.5},'mouth-half':{ParamMouthOpenY:.5},'mouth-open':{ParamMouthOpenY:1},'both-closed-mouth-open':{ParamEyeLOpen:0,ParamEyeROpen:0,ParamMouthOpenY:1}},fixture=await previewFixture(poses);
+  try{assert.equal((await createPreviewPage(fixture)).poses,10);const data=previewPayload(await fixture.fs.readFile(fixture.output,'utf8'));assert.deepEqual(Object.keys(data.frames),Object.keys(poses));assert.equal(data.labels.default,'通常');assert.equal(data.labels['both-closed'],'両目を閉じる');assert.equal(data.labels['both-half'],'両目を半分');assert.equal(data.labels['mouth-open'],'口を開く');}finally{await fixture.clean();}
+});
+
+test('subset transition playback and previous/next never select missing frames',async()=>{
+  const {createPreviewPage}=await import('./create-preview-page.mjs'),{runInNewContext}=await import('node:vm');
+  for(const poses of [{default:blinkPoses.default},{default:blinkPoses.default,'both-075':blinkPoses['both-075']},blinkPoses]){
+    const fixture=await previewFixture(poses,'blink-transitions');
+    try{
+      await createPreviewPage(fixture);const html=await fixture.fs.readFile(fixture.output,'utf8'),payload=previewPayload(html),code=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].at(-1)[1];
+      const element=()=>({children:[],dataset:{},value:'',textContent:'',hidden:false,setAttribute(name,value){this[name]=value;},append(child){this.children.push(child);}}),nodes=new Map(),timers=new Map();let clock=0;
+      const query=s=>{if(!nodes.has(s))nodes.set(s,element());return nodes.get(s);};query('#data').textContent=JSON.stringify(payload);query('#area').value='face';query('#background').value='white';
+      const document={querySelector:query,createElement:element,addEventListener(){},hidden:false};
+      runInNewContext(code,{document,setTimeout(fn,delay){assert.ok(delay>0 && delay<=10000);timers.set(++clock,fn);return clock;},clearTimeout(id){timers.delete(id);}},{timeout:1000});
+      const validImages=new Set(Object.values(payload.frames).map(f=>f.face));assert.ok(validImages.has(query('#preview').src));
+      const order=Object.keys(poses).sort((a,b)=>poses[a].ParamEyeLOpen-poses[b].ParamEyeLOpen);let selected=order.indexOf('default');
+      for(const id of ['#next','#previous','#next']){query(id).onclick();selected=(selected+(id==='#next'?1:-1)+order.length)%order.length;assert.equal(query('#pose').value,order[selected]);assert.ok(validImages.has(query('#preview').src));}
+      query('#play').onclick();for(let step=0;step<24;step++){const [id,fn]=timers.entries().next().value;timers.delete(id);fn();assert.ok(validImages.has(query('#preview').src));assert.ok(Object.hasOwn(payload.frames,query('#pose').value));}
+      query('#play').onclick();assert.equal(timers.size,0);
+    }finally{await fixture.clean();}
+  }
+});
+
+test('review packaging still rejects unknown poses, eleven frames, oversized downloads and overwrites',async()=>{
+  const {createPreviewPage}=await import('./create-preview-page.mjs');
+  for(const poses of [{default:{},unknown:{}},{...blinkPoses,'mouth-open':{ParamMouthOpenY:1}}]){
+    const fixture=await previewFixture(poses,'blink-transitions');try{await assert.rejects(createPreviewPage(fixture),/構成/);await assert.rejects(fixture.fs.access(fixture.output));}finally{await fixture.clean();}
+  }
+  const fixture=await previewFixture({default:blinkPoses.default},'blink-transitions');
+  try{
+    const zip=fixture.join(fixture.dir,'large.zip'),file=await fixture.fs.open(zip,'w');try{await file.write(Buffer.from([80,75,3,4]));await file.truncate(48*1024*1024);}finally{await file.close();}
+    await assert.rejects(createPreviewPage({...fixture,work:zip}),/サイズ|大きすぎ|上限/);await assert.rejects(fixture.fs.access(fixture.output));
+    await fixture.fs.writeFile(fixture.output,'keep existing page');await assert.rejects(createPreviewPage(fixture),/EEXIST/);assert.equal(await fixture.fs.readFile(fixture.output,'utf8'),'keep existing page');
+  }finally{await fixture.clean();}
+});

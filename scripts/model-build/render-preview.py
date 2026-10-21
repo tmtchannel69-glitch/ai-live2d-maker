@@ -45,6 +45,18 @@ POSE_SETS = {
         ('both-closed-mouth-open', {'ParamEyeLOpen': 0, 'ParamEyeROpen': 0,
                                     'ParamMouthOpenY': 1}),
     ),
+    # Dense low-opening samples expose double outlines that endpoint/halfway
+    # images can miss. Keep the bounded ten-frame budget; baseline explicitly
+    # requests fully open eyes rather than assuming the model's defaults are 1.
+    'blink-transitions': tuple(
+        (label, {'ParamEyeLOpen': value, 'ParamEyeROpen': value})
+        for label, value in (
+            ('default', 1), ('both-closed', 0), ('both-025', .025),
+            ('both-05', .05), ('both-075', .075), ('both-10', .1),
+            ('both-15', .15), ('both-25', .25), ('both-half', .5),
+            ('both-75', .75),
+        )
+    ),
 }
 
 

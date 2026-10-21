@@ -3,9 +3,9 @@
 最終更新: 2026-10-21（UTC）
 
 ## 承認とブランチ
-- 最新ブランチ: feature/generated-expression-trial。最新目標はVTube Studio等で使えるモデルの制作。以下は各段階の履歴で、最新の生成素材評価は末尾と docs/GENERATED_EXPRESSION_TRIAL.md を参照。
+- 最新ブランチ: feature/blink-transition-refinement。最新目標はVTube Studio等で使えるモデルの制作。以下は各段階の履歴で、最新の生成素材評価は末尾と docs/GENERATED_EXPRESSION_TRIAL.md を参照。
 - 初版目標、段階 1、段階 2 の資料調査に続き、オーナーの「進めて」で点・枠の試作、モデル導入、無課金の自前評価が承認された。
-- 最初の技術試作は自作のテスト画像だけを使用。その後、ユーザー提供画像一枚をローカル評価。ユーザー画像の外部送信・外部 API・有料機器・公開・main マージは行っていない。
+- 最初の技術試作は自作のテスト画像だけを使用。その後の当初評価はユーザー提供画像一枚をローカルだけで処理した。2026-10-21には明示承認済みのOpenAI画像生成AIへ送り不足素材を試作。新しい有料API契約・有料機器・公開・main マージは行っていない。
 
 ## 完成したこと
 - タップによる点指定、ドラッグによる枠指定、数値入力、パーツごとの指定消去。
@@ -489,3 +489,17 @@ README の AI 試作手順で準備し、サーバーと画面を別々に起動
 - docs/GENERATED_EXPRESSION_TRIAL.mdとWindows用docs/VTUBE_STUDIO_TRIAL.md、README/AGENTS/ROADMAPを更新。VTS公式Wiki3ページをTLSで2026-10-21に確認し、導入/SDK契約/実機済みとせずモデルの配置/Auto-Setup/追跡/ログ手順を用意。
 - 残り：開度.025〜.1の薄い二重線、細い髪の穴、元絵一致、顔向き、自然さ、VTube Studio/スマホ実機。次は閉眼線と既存変形まつげの位置/形を合わせ、実モデルの連続遷移と顔向きを改善する。画像生成は開発試験のみで、アプリ内の自動生成API接続は未実装。今回承認範囲に追加確認不要、正式配布/契約/費用/公開/main統合は引き続き別判断。
 - 次回はfeature/generated-expression-trialとAGENTS/ROADMAP/PROGRESS/README、上記新docsから再開。原出力はGit外/workspace/generated_images、評価/素材/モデル/作業/確認HTMLは/tmp/ai-live2d-generated-trial/trial-v3にあり、新環境では残る前提にしない。端末再開には利用者が保存した作業ZIPが必要。外部コンパイラーの修正版も私用環境のみなので再準備/診断が必要。
+
+## 瞬き途中の確認と細線の縮小修正（2026-10-21「続けてください」）
+- 変更なしの827a88cからfeature/blink-transition-refinementを作成し、通常開発の承認内で継続。今回の追加画像生成・新しい外部送信・契約/課金/公開/main統合はない。元画像/生成素材/モデルをGitへ含めない。
+- prepareの最近傍縮小で、元378×83px等の細い閉眼線が約40×7pxの配置時に抜ける原因を確認。縮小だけpremultiplied alphaの面積平均へ変更し、1:1/拡大の旧RGBA/座標/alpha1、元PNG/ZIPを保持。小数位置/部分被覆/縦横で異なる倍率を扱い、縮む軸優先の処理で入力+出力画素数に比例。再利用する2本の行/列（最大256KiB）も既存128MiB予算へ加算。resampling/downsampledRolesを生成レポートへ追加。
+- 8bit丸めでは極端に低いalphaが消える場合があり、任意の線の完全保存や品質保証とはしない。自作1px線では最近傍で落ちる線の縮小後alpha51を確認。独立2D面積計算651例（混在倍率242例）は各channel±1以内一致。再現用script/JSONは/tmp/review-place-model-pixels.mjsと同-result.json、Git外。
+- render-preview.pyへblink-transitionsを追加。両目0/.025/.05/.075/.1/.15/.25/.5/.75/1の10状態で閉じ際を細かく確認。基準だけ両目1を明示し他はモデルdefault、適用clamp/欠落IDを記録。従来7/10状態と描画/容量制限は維持。
+- 確認HTMLは%表示、開度順の前へ/次へ、低開度も含む往復自動切替、手動時の停止を追加。48px操作/16px文字、外部通信なし、同梱ZIPのバイト、Git外新規出力の制限を維持。Live2Dのリアルタイム描画や追跡とは区別する。
+- Node全30件（既存とpreview23+縮小7）、関連ブラウザ6件（新preview2+model-build4）、本番ビルド51モジュール、Python構文/差分確認成功。今回のブラウザ自動テストは自作PNG/代替モデル通信で、実画像の実生成とは別に扱う。前回全133件後のmain UI変更はなく、今回は関連範囲を検証。
+- v3を保持して、新prepareだけのarea-onlyと閉眼線を原座標3px上へ調整したplacementを別々に実モデル生成。線の欠けと二重線の位置差は改善したが、曲率/切替中の濃度差は残り、自然な瞬きの合格は保留。外部RigBuilderはd19c1b1be6c830ae4ff22e25ed868eece9794f651a14acdefab2937fe830ff66のままで、今回外部コード修正なし。
+- placementをGit外/tmp/ai-live2d-generated-trial/trial-v4へ固定。実MOC18部品/2,434頂点/8,832インデックス、atlas2048px1枚16MiB。v3とJPEG+16PNG計17ファイルのバイト一致。area-only対比で開度.15以上の全身512px描画一致、両閉眼無効のPSD/MOC一致、片側だけ差分がある反対側6開度の画素/頂点差0、閉眼iris寄与0、首ROI266pxの9状態でalpha250未満0/最小254を確認。モデル・評価・外部sourceのSHA一致と全回帰assertionをrootが照合し、trial-provenance.jsonへ保存。
+- クラウドChromium390pxでv4作業読込→髪3枚前景→実HTTP生成→モデルDL→作業再保存成功。MOC SHA直接生成一致、元JPEG/全PNG不変、6推奨motion全sampled_change、口no_overlap_at_minimum。実試験記録はtrial-v4/browser-refinement-check.json。blink-preview.html（10,068,854bytes）へ両ZIPを同梱、同一HTMLをloopback検査し10状態/前後/再生停止/ZIP byte一致/320縦844横/48px/外部通信0/pageerror0を確認。Windows直接fileとVTS/スマホ実機は未検証。
+- 顔向きは衣装扱いのbodyへ頭頂付近の髪が残って静止することと、前髪/左右髪/顔の移動差による割れを確認。次工程の保守マスク2,526画素を/tmp/ai-live2d-generated-trial/hair-ownership-candidateへ準備。顔/首/首輪を保護、RGBA和集合差/重複/欠け0、元ファイル維持。まだmodel/work化せず、頭頂/耳下以外の曖昧な残りは未解決。
+- 次は残る瞬きの曲率/濃度、髪の所有と追従、角度±10との組合せを検証し、Windows VTube Studioでの実読込とスマホ実機へ進む。docs/BLINK_TRANSITION_TRIAL.mdに仕組み・再現手順・限界を保存。再開ブランチはfeature/blink-transition-refinement。
+- v4の作業ZIPを端末へ保存すれば元画像/素材/配置を再開できる。コードはこの作業ブランチへ保存し、/tmpの画像・モデル・外部ツールや起動プロセスは新環境に残る前提にしない。生成サーバーは新prepareを読むよう今回再起動、Vite:5173/モデル:8001はこのクラウド内で稼働。cloudのlocalhostをWindows/スマホ用URLとして案内しない。

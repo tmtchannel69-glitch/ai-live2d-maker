@@ -1,4 +1,5 @@
 import {findFaceFeatureOverlap} from './source-overlap.mjs';
+import {placeModelPixels,placementScratchBytes} from './place-model-pixels.mjs';
 import {unzipSync,strFromU8} from 'fflate';
 import {writePsd} from 'ag-psd';
 import {pixels,over} from '../../src/psd-pixels.js';
@@ -54,15 +55,16 @@ export function prepareModelPsd(bytes){
     layerSpecs.push({...a,name:ROLES[a.role],order:20+layer.order,initiallyVisible,difference});
   }
   if(!layerSpecs.length)fail('モデル化できるAI結果または追加素材がありません。');
-  const largest=Math.max(...layerSpecs.map(s=>s.width*s.height));if((width*height*(layerSpecs.length+3)+largest*2)*4>128*MIB)fail('素材を配置するための画像量が上限を超えています。');
+  const largest=Math.max(...layerSpecs.map(s=>s.width*s.height)),scratchByLayer=layerSpecs.map(s=>placementScratchBytes(s.width,s.height,width,height,s.placement)),scratch=Math.max(...scratchByLayer);
+  const downsampledRoles=layerSpecs.filter((_,i)=>scratchByLayer[i]>0).map(s=>s.role||s.path.slice(6,-4));
+  if((width*height*(layerSpecs.length+3)+largest*2)*4+scratch>128*MIB)fail('素材を配置するための画像量が上限を超えています。');
   const composite=new Uint8ClampedArray(width*height*4),children=[];
   for(const s of layerSpecs.sort((a,b)=>a.order-b.order)){
     if(!entries[s.path])fail(`素材がありません: ${s.path}`);
     const input=pixels(entries[s.path],s.width,s.height),data=new Uint8ClampedArray(width*height*4),p=s.placement;
-    // Place raw PNGs only. The app's mesh/clip/group keys are not compiler inputs.
-    for(let y=Math.max(0,Math.floor(p.y*height));y<Math.min(height,Math.ceil((p.y+p.height)*height));y++)for(let x=Math.max(0,Math.floor(p.x*width));x<Math.min(width,Math.ceil((p.x+p.width)*width));x++){
-      const sx=Math.min(s.width-1,Math.max(0,Math.floor((x-p.x*width)/(p.width*width)*s.width))),sy=Math.min(s.height-1,Math.max(0,Math.floor((y-p.y*height)/(p.height*height)*s.height)));const sourceIndex=(sy*s.width+sx)*4;if(input[sourceIndex+3]>0)data.set(input.subarray(sourceIndex,sourceIndex+4),(y*width+x)*4);
-    }
+    // Raw source PNGs remain unchanged. Area averaging only prevents thin lines
+    // from vanishing when placed smaller; app mesh/clip/group keys stay separate.
+    placeModelPixels({input,sourceWidth:s.width,sourceHeight:s.height,width,height,placement:p,data});
     // PsdReader retains source visibility, and RigBuilder seeds isVisible from it.
     // Closed variants must remain visible *compiler inputs*; EYE_CLOSE/MOUTH_CLOSE
     // get inverse parameter opacity in psd2live, not a permanently hidden flag.
@@ -78,6 +80,6 @@ export function prepareModelPsd(bytes){
   // without adding Canvas dependencies or changing the source PNGs.
   for(const layer of children)trimLayer(layer);
   const psd=new Uint8Array(writePsd({width,height,children,imageData:{width,height,data:composite}},{trimImageData:false,noBackground:true,generateThumbnail:false}));
-  if(psd.length>100*MIB)fail('PSDが100 MiBを超えました。');return {psd,report:{source:{width,height},layers:children.map(c=>c.name),differenceRolesIncluded:layerSpecs.filter(s=>s.difference).map(s=>s.role),warnings,sourceOverlapCandidates:overlaps}};
+  if(psd.length>100*MIB)fail('PSDが100 MiBを超えました。');return {psd,report:{source:{width,height},layers:children.map(c=>c.name),differenceRolesIncluded:layerSpecs.filter(s=>s.difference).map(s=>s.role),resampling:'area-premultiplied-downscale-v1',downsampledRoles,warnings,sourceOverlapCandidates:overlaps}};
 }
 function baseOrder(id){if(id==='hair_back')return 0;if(['body','top','jacket','sleeve_l','sleeve_r'].includes(id))return 1;if(id==='neck')return 2;if(['face','face_skin'].includes(id))return 3;if(id.startsWith('hair'))return 90;return 40;}

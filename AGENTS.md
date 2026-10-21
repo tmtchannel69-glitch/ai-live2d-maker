@@ -2,15 +2,17 @@
 
 ## 生成素材の検証承認（2026-10-21）
 - オーナーは、今回のキャラクター画像をOpenAIの画像生成AIへ送って肌・目・口等の不足素材を試作する提案に「はい！」と明示承認した。この画像と同じ検証目的の生成・再試作・モデル組込みを進める。以前の「隠れ部分生成/外部送信未承認」はこの範囲で更新。その他の外部サービス/有料API契約/課金/公開/main統合まで承認したものとはしない。
-- 作業ブランチは feature/generated-expression-trial。元画像・生成画像・切り出し素材・モデルは引き続きGitへ保存しない。元絵との一致、位置合わせ、瞬き/口の動き、公式VTSの確認を分けて記録し、生成できたことを品質合格にしない。
-- 生成3回と実モデル検証の最新記録は docs/GENERATED_EXPRESSION_TRIAL.md。v3は左右瞬き/開口、閉眼iris寄与0、対象首領域の穴0まで確認。低開度の薄い二重線/髪細部/元絵一致/顔向き/公式VTS/スマホ実機は未完了。生成準備は開発試験で、アプリ内の自動画像生成APIではない。
+- 作業ブランチは feature/blink-transition-refinement。元画像・生成画像・切り出し素材・モデルは引き続きGitへ保存しない。元絵との一致、位置合わせ、瞬き/口の動き、公式VTSの確認を分けて記録し、生成できたことを品質合格にしない。
+- 生成3回は docs/GENERATED_EXPRESSION_TRIAL.md、続く縮小処理と瞬き途中の確認は docs/BLINK_TRANSITION_TRIAL.md。v3は左右瞬き/開口、閉眼iris寄与0、対象首領域の穴0まで確認。低開度の薄い二重線/髪細部/元絵一致/顔向き/公式VTS/スマホ実機は未完了。生成準備は開発試験で、アプリ内の自動画像生成APIではない。
+- 最新の私用改善候補は/tmp/ai-live2d-generated-trial/trial-v4。元JPEG/16PNGを保持して新縮小と閉眼配置y-3pxを適用。18部品/2,434頂点、実画面生成/保存・閉眼iris0・片側独立・首ROI9状態を確認。曲率/濃度差と髪追従は未完。次の髪所有mask候補はhair-ownership-candidateで、まだwork/model化していない。実機品質は未確認、詳細/再開手順は上記新docs/PROGRESS参照。
 - 外部psd2liveのローカル検証コピーへ口検出と閉眼差分の相補opacityを修正。最終RigBuilder.kt SHAはd19c1b1be6c830ae4ff22e25ed868eece9794f651a14acdefab2937fe830ff66、元SHA/変更目的/回帰は上記docsと私用provenance参照。外部ソース/パッチ/バイナリをrepoへ同梱していないため、新環境で未修正版を使った結果と混同しない。
-- prepareはalpha>0 bboxをPSD offset付きでcropし、alpha1/元の配置/元PNGを保持。完全透明は明示拒否。口opacity診断は最大64認識IDに限り、カスタム/未検証は合否に使わない。
+- prepareは縮小時だけpremultiplied alphaの面積平均を使う。縮む軸を先に処理し2本の行/列（最大256KiB）を既存128MiB予算へ加算。1:1/拡大は既存sample/alpha1/配置を保持。元PNGは不変、縮小は8bit丸めで非常に薄い画素が消えうる。resampling/downsampledRolesで方式を記録し、続くalpha>0 bboxのcropはRGBAとPSD offsetを保持。完全透明は明示拒否。口opacity診断は最大64認識IDに限り、カスタム/未検証は合否に使わない。
 - 新しい髪前景modeはメイン合成の静止位置確認だけ。詳細/比較/編集下書きのrendererや保存形式に混ぜない。既定透明、髪cache640×960以内、late decodeを世代で拒否しclose。モデルと同じ表示とは呼ばない。
 - create-preview-page.mjsは独立描画を単一HTMLへまとめる。画像を埋め込むため実体パスもGit外・新規のみ、容量を読込前に制限し外部通信なし。cloudのfile://制限は解除せず同HTMLをloopbackで検査、Windowsの直接openは未検証。端末に保存する作業ZIPとコードのGit保存を区別する。
+- render-preview.pyのblink-transitionsは両目0/.025/.05/.075/.1/.15/.25/.5/.75/1の10状態、defaultだけ両目1を明示。HTMLの%表示は指定値で、適用clamp/欠落IDはreport参照。前後と往復再生は描画済みフレーム比較。従来7/10状態、容量/描画量制限を維持し、開度や画素変化の有無を自然さの判定にしない。
 
-## 最新の検証状況（2026-10-20）
-- 再開ブランチは feature/character-model-evaluation。提供画像をローカルで分離→PSD→実MOC3生成→独立CPU描画まで検証。詳細は docs/CHARACTER_MODEL_EVALUATION.md。以下の過去の未実装記述は各時点の履歴として読む。
+## 前段の検証状況（2026-10-20）
+- この時点のブランチは feature/character-model-evaluation。提供画像をローカルで分離→PSD→実MOC3生成→独立CPU描画まで検証。詳細は docs/CHARACTER_MODEL_EVALUATION.md。以下の過去の未実装記述は各時点の履歴として読む。現在の再開ブランチは先頭の記載を参照。
 - 白い髪/服の背景除去はBiRefNet評価で改善したが、画面のAI分離は引き続きSAM。自然な瞬き/開口/顔向きの品質は未達、公式Core/VTube Studioとスマホ実機は未検証。実画像/派生画像/モデルは /tmp のみ、Gitにはコードと画像なしの検証記録を保存する。
 - モデル生成レポートは目・口と顔の同色画素の重複候補、推奨パラメーターの実変化を記録。候補がないこと、パラメーター名や非0変化があることを品質保証にしない。カスタムIDはVTube Studioで手動対応できるため推奨ID不在を形式不正としない。
 - enabledな閉眼/閉口の3役割は通常表示で非表示でも生成へ渡す。PSD hiddenをfalseとして外部生成器の開閉opacityで制御し、通常のmerged previewには非表示差分を重ねない。disabledやその他の条件非表示は除外を維持。自作モデルで左右独立の透明度反転を確認済み。

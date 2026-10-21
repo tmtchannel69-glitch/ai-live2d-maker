@@ -24,6 +24,8 @@ npm run dev
 
 デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、アプリ内での隠れた部分の自動補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能です。提供キャラクター画像へ生成した肌・目・口を加え、実MOC3の瞬き・開口を検証しています。完成品質と公式Core/VTube Studio実読込は未確認です。[元画像の評価](docs/CHARACTER_MODEL_EVALUATION.md)、[生成素材と現在の検証](docs/GENERATED_EXPRESSION_TRIAL.md)。
 
+モデル用の縮小で細い線が抜ける処理を改善し、瞬き途中の10段階を保存したHTMLで比較できます。指で使う前後移動・自動切替・作業/モデルZIPの保存に対応。実モデルからの描画済み画像の比較で、追跡やVTube Studioの実動作ではありません。[縮小と途中確認の手順](docs/BLINK_TRANSITION_TRIAL.md)。
+
 ## AI 分離処理の接続
 
 `src/separator.js` の `separateParts` を API 実装へ置き換えられます。画面はこのモジュールを通じて処理を呼び出します。
@@ -52,7 +54,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `feature/generated-expression-trial` です。
+最新の開発ブランチは `feature/blink-transition-refinement` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -72,7 +74,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch feature/generated-expression-trial https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/blink-transition-refinement https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort
@@ -84,7 +86,7 @@ npm.cmd run dev -- --port 5173 --strictPort
 
 ## AI 試作（点・枠で指定する切り抜き）
 
-最新の試作ブランチは `feature/generated-expression-trial` です。デモモードの処理は引き続きブラウザ内です。
+最新の試作ブランチは `feature/blink-transition-refinement` です。デモモードの処理は引き続きブラウザ内です。
 AI モードでは画像と点・枠をこのアプリの試作サーバーへ送り、CPU 上の SAM 2.1 で処理します。第三者 AI サービスへ送信しません。
 認証や公開運用の対策は未実装なので、ローカル開発で使ってください。
 
