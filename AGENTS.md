@@ -1,7 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 実画像の自動5役割準備（2026-10-22）
+- 現在の作業ブランチはfeature/automatic-inochi-character。HEADの基点はresearch/inochi2d-feasibilityの560c6c8。ほかのローカル開発ブランチはこの基点の祖先で、未保存の開発途中ファイルも保持して継続する。
+- 最新依頼は正面アニメ画像1枚からface_base、eye_white_l/r、eye_closed_l/rを手動の点・枠なしで自動準備し、既存manifestと最小INP/INX生成器へ接続すること。左右はキャラクター本人基準。前の多役割adapter/UI作業を失わず、合格判定はまず5役割へ限定する。
+- scripts/inochi2d/model.mjsとgenerate.mjsの正常な最小経路を維持。画像処理と接続は独立モジュールへ追加する。閉眼は実画像由来の輪郭等から自動補完し、失敗時は明示拒否。固定のダミー素材や手動準備を全自動成功としない。
+- 元座標・抽出元RGB/alpha・生成領域の由来を記録する。「ファイル生成」「公式Creatorでの動作」「見た目の品質」は別々の判定とする。Inox2Dの0値/opacity不具合は別課題であり、生成器へ回避策を混ぜない。
+- 入力画像、派生PNG、モデル、画面写真はGit外。新たな有料API/外部画像送信/公開/main統合は行わない。Inochi2DとCubism/VTube Studio対応を混同しない。
+
 ## Inochi2D技術調査（2026-10-21）
-- 現在の作業ブランチはresearch/inochi2d-feasibility。オーナーは公開ソース解析・INP/INX/INP2区別・ブラウザ比較/ライセンス調査・顔/目/まぶたの最小自動生成と実読込を依頼した。既存アプリの全面書換えは禁止、今回は研究と独立試作。最終用途のLive2D/VTSをInochiへ切り替える判断はしていない。
+- この段階の作業ブランチはresearch/inochi2d-feasibility。オーナーは公開ソース解析・INP/INX/INP2区別・ブラウザ比較/ライセンス調査・顔/目/まぶたの最小自動生成と実読込を依頼した。既存アプリの全面書換えは禁止、この時点では研究と独立試作。最終用途のLive2D/VTSをInochiへ切り替える判断はしていない。
 - scripts/inochi2dへ自作5役割PNG→9点mesh/左右EyeOpen/親HeadX→旧INP/INXの生成器と試験を分離。安定SDK v0.8.6 dda3a8f005f808104caa43183ab8753fb989e30f、Creator v0.8.6 371e5f4e21117102dbecc82371bfd9a6e2f5df02固定。開発SDK0.9/INP2/WASMは別のsnapshotで調査し、今回の生成対応とはしない。
 - 未改変の公式Creator Linux版で最小モデル読込/左右の瞬き/平面顔移動の12状態、INX保存/別プロセス再読込の全状態画素一致を確認。クラウドXvfb/Mesa検証でありWindows/スマホ/自然なキャラクター品質の合格ではない。GUIの途中値は0.48、正確な0.5と報告しない。
 - Inox2D d4dd9dd7f16b775042cbda44370570abf9a8cf81を元のままWASM/WebGL2で実行。同じ最終モデルは読込/半開/顔移動できたが、raw0のskipとopacity未実装で瞬き不合格。epsilonへ置換して合格にしない。ブラウザharnessは信頼できる自作fixture専用、製品の任意upload loaderに流用しない。

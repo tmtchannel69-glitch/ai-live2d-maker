@@ -1,4 +1,5 @@
 import {createModelBuildPanel} from './model-build-panel.js';
+import {createInochiModelPanel} from './inochi-model-panel.js';
 import {validateExpressionNotes,invalidateExpressionNotes} from './expression-notes.js';
 import {createAuthoringHandoff} from './authoring-handoff.js';
 import {createMotionChecklist} from './motion-checklist.js';
@@ -50,7 +51,7 @@ const $ = selector => document.querySelector(selector);
 let editor;
 const isAi = () => $('#processing-mode').value === 'ai';
 const selected = () => [...document.querySelectorAll('.part-options input:checked')].map(input => input.value);
-let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow,motionChecklist,modelBuildPanel;
+let brushEditor,reviewPanel,motionPanel,expressionPanel,assetPanel,expressionScene,workflow,motionChecklist,modelBuildPanel,inochiModelPanel;
 let motion={},expressionAssets=[],expressionLayers={},expressionDeforms={},expressionClips={},expressionGroups=emptyGroups(),groupMotionKeys={},expressionClipKeys={},expressionNotes={};
 let reviews={},materialBusy=false,assetBusy=false,psdController=null;
 function invalidateReviews(ids){for(const id of ids)if(reviews[id])reviews[id]=invalidateReview(reviews[id]);}
@@ -128,6 +129,7 @@ motionChecklist=createMotionChecklist({getState:()=>({file,assets:expressionAsse
 }});
 workflow=createWorkflowNavigation({getState:()=>({file,resultCount:results.length,assetCount:expressionAssets.length})});
 modelBuildPanel=createModelBuildPanel({getState:()=>({file,hasMaterials:results.some(p=>p.ai) || expressionAssets.length>0,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),getSnapshot:()=>({file,results:[...results],assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),...structuredClone({prompts:editor.prompts,reviews:{},motion,layers:expressionLayers,deforms:expressionDeforms,clips:expressionClips,groups:expressionGroups,groupKeys:groupMotionKeys,clipKeys:expressionClipKeys,notes:{}})}),onBusy:value=>{materialBusy=value;archiveBusy=value;updateButton();}});
+inochiModelPanel=createInochiModelPanel({getState:()=>({file,locked:busy || projectBusy || archiveBusy || materialBusy || assetBusy}),onBusy:value=>{materialBusy=value;archiveBusy=value;updateButton();}});
 
 function rememberTemplate() {templates[template]={mode:$('#processing-mode').value,selected:selected()};}
 function renderPartChoices() {
@@ -215,6 +217,7 @@ function renderResults() {
 }
 function updateButton() {
   modelBuildPanel?.update();
+  inochiModelPanel?.update();
   expressionScene?.update();motionChecklist?.update();
   assetPanel?.update();
   motionPanel?.update();
@@ -244,7 +247,7 @@ function updateButton() {
   $('.settings').setAttribute('aria-busy', String(busy)); editor?.setBusy(locked); editor?.setRunEnabled(isAi());
 }
 let uploadVersion = 0;
-function cancelProjectOperation() {modelBuildPanel?.cancel();assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#expression-psd-status').textContent='';$('#material-status').textContent='';$('#handoff-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
+function cancelProjectOperation() {modelBuildPanel?.cancel();inochiModelPanel?.cancel();assetPanel?.cancelPending();psdController?.abort();$('#psd-status').textContent='';$('#expression-psd-status').textContent='';$('#material-status').textContent='';$('#handoff-status').textContent='';projectVersion++;projectBusy=false;$('#project-status').textContent='';updateButton();}
 async function loadFile(next) {
   cancelProjectOperation();
   const version = ++uploadVersion;

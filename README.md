@@ -22,13 +22,27 @@ npm run dev
 5. 各パーツの「PNG」で個別保存、「まとめて ZIP 保存」で表示中の全パーツを保存できます。
 6. リセット、または画像の再選択で結果を消去します。
 
-デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。パーツ名の自動判定、アプリ内での隠れた部分の自動補完は未実装です。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能です。提供キャラクター画像へ生成した肌・目・口を加え、実MOC3の瞬き・開口を検証しています。完成品質と公式Core/VTube Studio実読込は未確認です。[元画像の評価](docs/CHARACTER_MODEL_EVALUATION.md)、[生成素材と現在の検証](docs/GENERATED_EXPRESSION_TRIAL.md)。
+デモモードの分離は、元画像の決められた矩形領域を切り出します。画像はブラウザ内で処理され、サーバーへ送信しません。点・枠で指定する AI 試作については下記の手順を参照してください。通常の分離画面は手動指定を使い、Inochi2D用の独立した自動5役割準備は次の実験欄に分けています。分離素材からのLive2Dモデル生成は、別の開発用サーバーを使う実験機能です。提供キャラクター画像へ生成した肌・目・口を加え、実MOC3の瞬き・開口を検証しています。完成品質と公式Core/VTube Studio実読込は未確認です。[元画像の評価](docs/CHARACTER_MODEL_EVALUATION.md)、[生成素材と現在の検証](docs/GENERATED_EXPRESSION_TRIAL.md)。
 
 モデル用の縮小で細い線が抜ける処理を改善し、瞬き途中の10段階を保存したHTMLで比較できます。指で使う前後移動・自動切替・作業/モデルZIPの保存に対応。実モデルからの描画済み画像の比較で、追跡やVTube Studioの実動作ではありません。[縮小と途中確認の手順](docs/BLINK_TRANSITION_TRIAL.md)。
 
 ## Inochi2Dの独立した技術試作
 
-既存アプリを維持し、自作の顔・目・まぶた5パーツから旧INP/INXを生成するCLIを追加しました。公式Inochi Creator0.8.6で左右の瞬き・顔の平面移動、保存/再読込を確認。画像1枚からの自然な全自動生成、Live2D/VTube Studio互換、INP2対応とは区別します。Inox2Dの実ブラウザ比較では0値と透明度に問題があり、瞬きは不合格です。[調査/実装計画/再現手順](docs/INOCHI2D_FEASIBILITY.md)を参照してください。アプリ画面への新出力先の追加はまだ行っていません。
+自作の顔・目・まぶた5パーツから旧INP/INXを生成するCLIは、公式Inochi Creator0.8.6で左右の瞬き・顔の平面移動、保存/再読込を確認済みです。この最小生成器は変更していません。現在のブランチ`feature/automatic-inochi-character`では、正面画像から5役割を自動準備する独立処理と実験パネルを追加しました。顔/目の検出、入力由来のまつ毛から閉眼を推定し、周辺の肌を局所補完します。手動の点・枠は不要ですが、対応画像の範囲と見た目は評価中です。元の提供画像は環境更新で失われたため、今回の実画像成功・公式Creator再検証・品質合格はまだ判定していません。
+
+Python3.12の既存AI環境を下記の「AI試作」手順で準備後、追加依存とモデルを準備します。Linuxの例です（Windowsは`.venv\\Scripts\\python.exe`を使用）。
+
+```sh
+.venv/bin/python -m pip install -r server/requirements-inochi.txt
+.venv/bin/python scripts/download_inochi_models.py
+.venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
+```
+
+別のターミナルで`npm run dev`を起動し、画像を選んで「画像からInochi2Dモデルを生成」を押します。生成開始時だけ元画像を開発サーバーへ送信します。処理はローカルCPU、終了/失敗/中止後に一時ファイルを削除し、第三者の画像APIは呼びません。ZIPを明示保存すると5PNG・配置manifest・INP/INX・診断が入ります。元画像ファイルや既存の編集設定を含む作業再開ZIPとは異なります。クラウドのlocalhostはWindows/スマホのlocalhostとは別です。
+
+5役割の`face_base`は目以外の前景も含むため、HeadXはその全体の平行移動と平面の傾きを同時に変えます。頭だけの動き、独立した傾き、口、物理は未対応。画像は10MiB・4096pxまで受けますが、切り出し後の各素材は2048px・合計RGBA16MiB以内で、それを超える場合は縮小せず拒否します。半透明の目や検出/補完失敗も成功扱いにしません。[実装範囲・結果・再実行](docs/INOCHI2D_AUTOMATIC_IMAGE.md)。
+
+Inochi2DはLive2D Cubism/VTube Studio用の形式ではありません。自然な全自動生成やINP2対応も未達です。Inox2Dは0値と透明度の別課題があるため、この出力に回避策を混ぜていません。[既知の問題](docs/INOX2D_KNOWN_ISSUES.md)、[元の技術調査](docs/INOCHI2D_FEASIBILITY.md)を参照してください。多役割の研究用`character-model.mjs`も独立保存していますが、今回のUI/APIは旧5役割生成器を使い、研究adapterの公式Creator動作を確認済みとはしません。
 
 ## AI 分離処理の接続
 

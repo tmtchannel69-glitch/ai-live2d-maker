@@ -10,8 +10,10 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 from typing import Literal
 from server.engine import SamEngine, CHECKPOINT, ModelUnavailable
+from server.inochi_api import router as inochi_router
 
 app = FastAPI(title='AI Live2D Maker local prototype')
+app.include_router(inochi_router)
 engine = SamEngine()
 lock = threading.Lock()
 CATALOG = json.loads((Path(__file__).resolve().parents[1] / 'shared' / 'parts.json').read_text(encoding='utf-8'))

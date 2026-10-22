@@ -1,0 +1,3 @@
+# Add-on only. Existing server dependencies and NumPy stay at their pinned versions.
+-r requirements.txt
+opencv-python-headless==4.13.0.92

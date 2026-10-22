@@ -43,3 +43,10 @@ Versions below were read with fontTools from the actual pinned Creator binaries 
 OpenDyslexic実物SHA256: `c1a0cbf814a75a61abdf0f18143d347222b85e51209f47f8b685a1e0ca594b88`。
 
 この表はSDL2/FreeType/cimgui/FFmpeg/codec等の推移的・同梱ネイティブ依存のライセンスを確定しない。i2d-imguiのBoost表示はそれらの許諾を代替しない。
+
+## 自動画像準備の追加物（2026-10-22）
+
+- animeface cascadeは`nagadomi/lbpcascade_animeface`の`4433ab1ae1166ea75acfe99eb0f18709dac329a0`、SHA256 `9376d30ac38db6bda2a68b88b3b76bbd7e6aa33af47f7f5c76bc88ca75f1ce30`を固定。[XML冒頭](https://github.com/nagadomi/lbpcascade_animeface/blob/4433ab1ae1166ea75acfe99eb0f18709dac329a0/lbpcascade_animeface.xml)にnagadomiのMIT全文があり、取得ファイル内に保持する。重み自体はGitに同梱しない。
+- `opencv-python-headless==4.13.0.92`を追加。Python wheel packagingのMITと、OpenCV本体のApache-2.0は別。インストール済みwheelの`LICENSE.txt`と`LICENSE-3RD-PARTY.txt`に依存物の条件がある。製品バイナリ配布を行う際はこの通知も保持する。
+- BiRefNet-general-liteは既存評価のONNXを再利用。取得元はrembgの公開release、ファイル224,005,088bytes、SHA256 `5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333`で固定し、実行時にも検証する。[BiRefNet公式LICENSE](https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE)はMIT、copyright2024ZhengPeng。ただしコードのMITが学習素材・ユーザー画像・生成したキャラクターの権利まで許諾するわけではない。ONNX変換物の個別配布条件の最終監査やアプリ配布は今回行っていない。
+- 別の参考入力`waifu2x/images/miku_small.png`は[上流README](https://github.com/nagadomi/waifu2x#references)にpiaproのCC BY-NCと記載。私用の研究入力に限り、画像/派生物をGitや製品へ同梱しない。この入力は目検出に失敗してモデルも生成していない。ソフトのMIT/BSDを素材の利用条件へ流用しない。
