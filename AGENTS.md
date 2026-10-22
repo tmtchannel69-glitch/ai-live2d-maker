@@ -1,5 +1,12 @@
 # AI Live2D Maker 開発ルール
 
+## 再添付画像の実証（2026-10-22、最新）
+- 指定のfeature/automatic-inochi-character/2cc9a95から継続し、再添付の960×1280メイド服画像で無操作の5役割準備→INP/INXを実証。元の853×1280画像とは別。実ブラウザ390×844→API→ZIP保存も成功し、直接workerのモデルSHAと一致した。見える860,562画素の元RGB差0。
+- 修正は画像準備側の濃い目領域/非矩形の所有mask/元まつ毛からの連続曲線/瞳中心への配置。画像固有の手入力座標や外部画像APIは使っていない。旧model.mjs/generate.mjsは不変。
+- 未改変公式Creator0.8.6で12状態、保存/新プロセス再読込12状態の全viewport差0、5テクスチャRGBAも一致。対象モデルSHA dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9。別の画像へこの合格を流用しない。
+- 自然な品質は未合格。局所肌補完のぼけ/まつ毛/閉じ際/髪の縁、別の目の色・画風での成功率が未完了。HeadXは前景全体の移動＋平面回転で頭だけの独立動作ではない。VTS/Cubism/スマホ実機は未確認。
+- docs/INOCHI2D_REAL_IMAGE_VALIDATION.md/jsonが最新の証拠、私用成果物は/tmp/inochi2d-maid-trial。GUI再現コードverify-creator.pyは固定1280×960/英語/既定配置専用で、OCRの表示値照合と保存前後比較を省かない。画像/モデル/画面写真はGit外、/tmp保持は保証しない。
+
 ## 実画像の自動5役割準備（2026-10-22）
 - 現在の作業ブランチはfeature/automatic-inochi-character。HEADの基点はresearch/inochi2d-feasibilityの560c6c8。ほかのローカル開発ブランチはこの基点の祖先で、未保存の開発途中ファイルも保持して継続する。
 - 最新依頼は正面アニメ画像1枚からface_base、eye_white_l/r、eye_closed_l/rを手動の点・枠なしで自動準備し、既存manifestと最小INP/INX生成器へ接続すること。左右はキャラクター本人基準。前の多役割adapter/UI作業を失わず、合格判定はまず5役割へ限定する。

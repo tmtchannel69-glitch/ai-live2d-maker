@@ -2,6 +2,8 @@
 
 更新日: 2026-10-22。作業ブランチ: `feature/automatic-inochi-character`。
 
+後続の実画像検証では、再添付画像からの無操作の5役割/モデル生成、公式Creatorの読込・保存・新プロセス再読込に成功した。最新の結果は[INOCHI2D_REAL_IMAGE_VALIDATION.md](INOCHI2D_REAL_IMAGE_VALIDATION.md)。下の「元画像がない」記述は2cc9a95時点の初期記録として残す。見た目の完成品質は引き続き未合格。
+
 ## 着手時の確認
 
 HEADは`560c6c8b866ae6bd8cd2b13c70f69e995643058a`。GitHubの`research/inochi2d-feasibility`も同じ値で、その他のローカル開発ブランチはすべてこの履歴に含まれる。mainはREADMEだけの段階で未統合。新ブランチ上の開発途中のadapter/UIファイルは保持して進める。元の最小生成器に差分はない。

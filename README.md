@@ -28,9 +28,9 @@ npm run dev
 
 ## Inochi2Dの独立した技術試作
 
-自作の顔・目・まぶた5パーツから旧INP/INXを生成するCLIは、公式Inochi Creator0.8.6で左右の瞬き・顔の平面移動、保存/再読込を確認済みです。この最小生成器は変更していません。現在のブランチ`feature/automatic-inochi-character`では、正面画像から5役割を自動準備する独立処理と実験パネルを追加しました。顔/目の検出、入力由来のまつ毛から閉眼を推定し、周辺の肌を局所補完します。手動の点・枠は不要ですが、対応画像の範囲と見た目は評価中です。元の提供画像は環境更新で失われたため、今回の実画像成功・公式Creator再検証・品質合格はまだ判定していません。
+現在のブランチ`feature/automatic-inochi-character`には、正面画像から顔・左右の目・閉眼の5役割を自動準備する独立処理と実験パネルがあります。顔/目を検出し、入力のまつ毛から閉眼を推定、周辺の肌を局所補完します。再添付された実画像960×1280では、手動の点・枠・素材配置なしで約13秒のモデル生成に成功。公式Inochi Creator0.8.6で左右の瞬きと平面移動、保存/新プロセス再読込の全12状態一致も確認しました。**自然な完成品質は未合格**で、肌補完・まつ毛・閉じ際・髪の縁と、他の画風での検証を続けます。旧最小生成器は変更していません。[実画像の結果・制限・再現](docs/INOCHI2D_REAL_IMAGE_VALIDATION.md)。
 
-Python3.12の既存AI環境を下記の「AI試作」手順で準備後、追加依存とモデルを準備します。Linuxの例です（Windowsは`.venv\\Scripts\\python.exe`を使用）。
+Python3.12の既存AI環境を下記の「AI試作」手順で準備後、追加依存とモデルを準備します。Linuxの例です（Windowsは`.venv\Scripts\python.exe`を使用）。
 
 ```sh
 .venv/bin/python -m pip install -r server/requirements-inochi.txt

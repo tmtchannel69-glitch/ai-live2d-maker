@@ -56,7 +56,18 @@ def test_five_roles_source_coordinates_laterality_and_original_input(monkeypatch
         if part['role'].startswith('eye_white'):
             x0 = round(part['placement']['x'] * 220)
             y0 = round(part['placement']['y'] * 260)
-            np.testing.assert_array_equal(pixels, original[y0:y0+part['height'], x0:x0+part['width']])
+            visible = pixels[:, :, 3] > 0
+            source_crop = original[y0:y0+part['height'], x0:x0+part['width']]
+            np.testing.assert_array_equal(pixels[visible], source_crop[visible])
+            assert not visible[0, 0]  # Skin/hair corners belong to the base.
+    # Rebuild from encoded PNGs and saved placements independently of the
+    # preparer's in-memory diagnostic, including its non-rectangular masks.
+    reconstructed = Image.new('RGBA', image.size)
+    for role in ('face_base', 'eye_white_l', 'eye_white_r'):
+        part = by_role[role]
+        position = (round(part['placement']['x'] * 220), round(part['placement']['y'] * 260))
+        reconstructed.alpha_composite(Image.open(io.BytesIO(result['pngs'][part['path']])), position)
+    np.testing.assert_array_equal(np.array(reconstructed), original)
 
 
 def test_partial_alpha_eyes_rejected_instead_of_source_over_alpha_change(monkeypatch):
@@ -110,6 +121,29 @@ def test_closed_lash_failure_is_rejected_without_dummy_texture():
     info = {'box': [10, 10, 50, 40], 'dark_box': [15, 15, 25, 12], 'threshold': 140}
     with pytest.raises(ValueError, match='閉じた目'):
         preparation._closed_lash(rgb, info)
+
+
+def test_lighter_brow_and_hair_connection_do_not_enter_open_eye_parts():
+    image = drawn_face()
+    draw = ImageDraw.Draw(image)
+    for x in (72, 122):
+        draw.line((x, 52, x + 25, 52), fill=(135, 130, 138, 255), width=2)
+        draw.line((x, 52, x, 67), fill=(135, 130, 138, 255), width=2)
+    eyes = preparation._eye_regions(np.array(image.convert('RGB')), [50, 20, 120, 120])
+    assert all(info['box'][1] > 54 for info in eyes.values())
+
+
+def test_estimated_closed_lid_is_continuous_and_aligned_to_flattening_center(monkeypatch):
+    import cv2
+    _, result = run_drawn(monkeypatch)
+    for side in ('l', 'r'):
+        pixels = np.array(Image.open(io.BytesIO(result['pngs'][f'parts/eye_closed_{side}.png'])))
+        mask = (pixels[:, :, 3] > 100).astype(np.uint8)
+        count, _ = cv2.connectedComponents(mask)
+        assert count == 2  # Background plus one coherent source-derived eyelid.
+        ys, xs = np.nonzero(mask)
+        assert mask[:, xs.min():xs.max() + 1].any(axis=0).all()
+        assert abs(float(ys.mean()) - (pixels.shape[0] - 1) / 2) < 1.5
 
 
 def test_missing_eye_is_rejected_without_anatomical_dummy():

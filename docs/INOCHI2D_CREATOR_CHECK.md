@@ -1,5 +1,7 @@
 # Official Creator verification reproduction
 
+2026-10-22: The later real-image check is documented in [INOCHI2D_REAL_IMAGE_VALIDATION.md](INOCHI2D_REAL_IMAGE_VALIDATION.md). Its saved GUI diagnostic is `scripts/inochi2d/verify-creator.py`. The earlier minimal-figure records below remain separate. On the current 1280x960 layout with no top80px window margin, controller rows are173/265/356 instead of254/345/436; the script checks displayed values with OCR. It does not assess natural artwork quality.
+
 The unmodified official Linux v0.8.6 release binary was downloaded from:
 https://github.com/Inochi2D/inochi-creator/releases/download/v0.8.6/inochi-creator-linux.zip
 

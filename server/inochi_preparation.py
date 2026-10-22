@@ -15,7 +15,7 @@ from pathlib import Path
 import time
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw
 
 from server.engine import ModelUnavailable
 
@@ -123,7 +123,10 @@ def _eye_regions(rgb, face):
         gray = cv2.cvtColor(rgb[y0:y1, x0:x1], cv2.COLOR_RGB2GRAY)
         if not gray.size:
             raise ValueError('目の探索範囲が画像外です。正面の顔全体が入った画像を選んでください。')
-        threshold = float(np.clip(np.percentile(gray, 20), 105, 155))
+        # Bright brows and hair outlines can connect to lashes at 130--155,
+        # merging the brow into an apparent eye. Use the dark lash/iris core;
+        # source-size margins below recover its lighter outer pixels.
+        threshold = float(np.clip(np.percentile(gray, 20), 65, 110))
         mask = (gray < threshold).astype(np.uint8)
         kernel = max(1, round(w * .016)) | 1
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((kernel, kernel), np.uint8))
@@ -142,7 +145,7 @@ def _eye_regions(rgb, face):
         bx, by, bw, bh, area = (int(v) for v in stats[selected])
         # Lower pale iris/white is outside the dark component. Include it with
         # a measured, face-scale margin; do not ask the user to mark anything.
-        pad_x, pad_top, pad_bottom = max(2, round(w * .028)), max(2, round(h * .018)), max(3, round(h * .073))
+        pad_x, pad_top, pad_bottom = max(2, round(w * .018)), max(2, round(h * .012)), max(3, round(h * .040))
         box = [max(0, x0 + bx - pad_x), max(0, y0 + by - pad_top),
                min(width, x0 + bx + bw + pad_x), min(height, y0 + by + bh + pad_bottom)]
         found[side] = {'box': box, 'dark_box': [x0 + bx, y0 + by, bw, bh],
@@ -153,47 +156,117 @@ def _eye_regions(rgb, face):
     return found
 
 
+def _eye_ownership(rgb, info):
+    """Own the eye opening/lash instead of a rectangle of surrounding hair."""
+    import cv2
+    x0, y0, x1, y1 = info['box']
+    bx, by, bw, bh = info['dark_box']
+    crop = rgb[y0:y1, x0:x1]
+    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+    yy, xx = np.indices(gray.shape)
+    cx, cy = bx - x0 + (bw - 1) / 2, by - y0 + (bh - 1) / 2
+    signed = crop.astype(np.int16)
+    colored = ((signed[:, :, 2] - signed[:, :, 0] > 5)
+               & (signed[:, :, 2] - signed[:, :, 1] > 7) & (gray > 60)).astype(np.uint8)
+    count, labels, stats, centers = cv2.connectedComponentsWithStats(colored)
+    candidates = []
+    for i in range(1, count):
+        icx, icy = centers[i]
+        if (stats[i, 4] >= max(5, bw * bh * .025) and abs(icx - cx) < bw * .38
+                and by - y0 + bh * .25 < icy < by - y0 + bh + 8):
+            distance = ((icx - cx) / bw) ** 2 + ((icy - (by - y0 + bh * .65)) / bh) ** 2
+            candidates.append((int(stats[i, 4]) / (1 + 30 * distance), i))
+    iris_hull = np.zeros(gray.shape, np.uint8)
+    iris_center = None
+    if candidates:
+        _, selected = max(candidates)
+        iris_center = [float(centers[selected][0] + x0), float(centers[selected][1] + y0)]
+        cx, cy = (cx + centers[selected][0]) / 2, (cy + centers[selected][1]) / 2
+        contour = cv2.convexHull(cv2.findNonZero((labels == selected).astype(np.uint8)))
+        cv2.fillConvexPoly(iris_hull, contour, 1)
+    # Iris evidence locates the opening inside the wider eyelash fan. Union
+    # with source ink preserves lashes; surrounding skin/hair corners stay put.
+    rx, ry = max(2, bw * .46), max(2, bh * .58)
+    lens = (((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2 <= 1).astype(np.uint8)
+    core = ((xx >= bx - x0) & (xx < bx - x0 + bw)
+            & (yy >= by - y0) & (yy < by - y0 + bh))
+    lower_lash = ((np.abs(xx - cx) < bw * .45) & (yy >= by - y0 + bh * .5)
+                  & (yy < by - y0 + bh + 8))
+    ink = (core | lower_lash) & (gray < min(140, info['threshold'] + 20))
+    mask = np.maximum(np.maximum(lens, iris_hull), ink.astype(np.uint8))
+    radius = max(1, round(bw * .018))
+    mask = cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius * 2 + 1,) * 2))
+    closed_clip = cv2.dilate(lens, np.ones((3, 3), np.uint8))
+    info['ownership'] = {'method': 'iris-guided-lens-and-source-lash', 'pixels': int(mask.sum()),
+                         'rectangle_pixels': int(mask.size), 'opening_center_x': x0 + cx,
+                         'iris_center': iris_center}
+    return mask.astype(bool), closed_clip
+
+
 def _closed_lash(rgb, info):
-    """Warp only the input upper-lash ink onto an estimated closed-lid arc."""
+    """Fit source upper-lash ink, then estimate one continuous closed contour.
+
+    Geometry, color and thickness are measured from the input. This estimates
+    unseen artwork; it is not a pasted stock eyelid or a recovered closed eye.
+    """
     import cv2
     x0, y0, x1, y1 = info['box']
     bx, by, bw, bh = info['dark_box']
     crop = rgb[y0:y1, x0:x1]
     gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
     height, width = gray.shape
-    out = np.zeros((height, width, 4), np.uint8)
     lash_top = by - y0
-    # Keep upper-lash edge, excluding iris by a strict local thickness band.
-    thickness = max(1, round(bw * .07))
-    target_base = min(height - thickness - 1, lash_top + max(3, round(bh * .80)))
-    used_columns = 0
+    samples, colors, thicknesses = [], [], []
     for xx in range(max(0, bx - x0), min(width, bx - x0 + bw)):
-        column = gray[max(0, lash_top - 1):min(height, lash_top + max(3, round(bh * .5))), xx]
-        ink = np.where(column < min(125, info['threshold']))[0]
+        start, end = max(0, lash_top - 1), min(height, lash_top + max(3, round(bh * .5)))
+        column = gray[start:end, xx]
+        pixels = crop[start:end, xx]
+        neutral_ink = pixels.max(axis=1).astype(int) - pixels.min(axis=1).astype(int) <= 45
+        ink = np.where((column < min(110, info['threshold'])) & neutral_ink)[0]
         if not ink.size:
             continue
-        original_y = max(0, lash_top - 1) + int(ink[0])
-        t = ((xx - (bx - x0)) / max(1, bw - 1)) * 2 - 1
-        target_y = int(round(target_base + bw * .065 * (1 - t * t)))
-        for dy in range(thickness + 1):
-            sy, ty = original_y + dy, target_y + dy
-            if sy >= height or ty >= height:
-                continue
-            # Saturated iris color must never become a "closed eyelash".
-            if int(crop[sy, xx].max()) - int(crop[sy, xx].min()) > 45:
-                continue
-            darkness = max(0.0, min(1.0, (185 - float(gray[sy, xx])) / 90))
-            if darkness <= 0:
-                continue
-            out[ty, xx, :3] = crop[sy, xx]
-            out[ty, xx, 3] = round(255 * darkness)
-        used_columns += 1
-    # A failed extraction is an error, never a transparent/dummy closed eye.
-    if used_columns < bw * .55 or np.count_nonzero(out[:, :, 3] > 100) < bw:
+        first = int(ink[0])
+        run = 1
+        while (first + run < len(column) and run < max(2, round(bw * .10))
+               and column[first + run] < min(110, info['threshold']) and neutral_ink[first + run]):
+            run += 1
+        samples.append((xx, start + first))
+        thicknesses.append(run)
+        colors.extend(pixels[first:first + run].tolist())
+    # Reject missing/broken source evidence instead of substituting a dummy.
+    gaps = np.diff([point[0] for point in samples]) - 1
+    if (len(samples) < max(4, bw * .55) or not colors
+            or samples[-1][0] - samples[0][0] < bw * .65
+            or (gaps.size and gaps.max() > max(3, bw * .18))):
         raise ValueError('元画像のまつ毛から閉じた目を作れませんでした。自動まばたきは未対応の画像です。')
+    xs, ys = np.array(samples, dtype=float).T
+    center_x, half_width = (xs[0] + xs[-1]) / 2, max(1, (xs[-1] - xs[0]) / 2)
+    t = (xs - center_x) / half_width
+    fit = np.polyfit(t, ys, 2)
+    depth = float(np.clip(abs(fit[0]) * .6, bw * .025, bw * .075))
+    thickness = float(np.clip(np.median(thicknesses), 1.3, max(1.3, bw * .055)))
+    # Match the old writer's flattening centre, avoiding a vertical jump when
+    # it exchanges the flattened open texture for this closed contour.
+    center_y = (height - 1) / 2
+    curve_x = np.linspace(xs[0], xs[-1], max(16, int(xs[-1] - xs[0]) * 4 + 1))
+    curve_t = (curve_x - center_x) / half_width
+    curve_y = center_y + depth * (1 / 3 - curve_t * curve_t)
+    widths = thickness * (.85 + .25 * np.abs(curve_t))
+    upper = list(zip(curve_x, curve_y - widths / 2))
+    lower = list(zip(curve_x[::-1], (curve_y + widths / 2)[::-1]))
+    scale = 4
+    mask = Image.new('L', (width * scale, height * scale))
+    ImageDraw.Draw(mask).polygon([(round(x * scale), round(y * scale)) for x, y in upper + lower], fill=255)
+    alpha = np.array(mask.resize((width, height), Image.Resampling.LANCZOS))
+    out = np.zeros((height, width, 4), np.uint8)
+    ink_rgb = np.rint(np.median(np.array(colors), axis=0)).astype(np.uint8)
+    out[:, :, :3] = ink_rgb
+    out[:, :, 3] = alpha
     out[out[:, :, 3] == 0] = 0
-    return out, {'method': 'input-upper-lash-warp-to-estimated-closed-arc',
-                 'ink_columns': used_columns, 'arc_base_y': y0 + target_base,
+    return out, {'method': 'input-upper-lash-fit-to-antialiased-closed-arc',
+                 'ink_columns': len(samples), 'largest_missing_columns': int(gaps.max()) if gaps.size else 0,
+                 'curve_depth_pixels': depth, 'stroke_width_pixels': thickness,
+                 'ink_rgb': ink_rgb.tolist(), 'arc_center_y': y0 + center_y,
                  'hidden_artwork_recovered': False, 'naturalness_verified': False}
 
 
@@ -243,24 +316,38 @@ def prepare_inochi_image(image: Image.Image):
     rgb = np.rint(source[:, :, :3] * a + 255 * (1 - a)).astype(np.uint8)
     face = _detect_face(rgb)
     eyes = _eye_regions(rgb, face)
+    # A dark upper lash can shift the dark-box centre upwards. Centre the
+    # texture on measured iris evidence so the unchanged writer flattens it
+    # towards the eye, rather than towards a source-specific rectangle centre.
+    for info in eyes.values():
+        _eye_ownership(source[:, :, :3], info)
+        iris_center = info['ownership']['iris_center']
+        if iris_center is not None:
+            x0, y0, x1, y1 = info['box']
+            cy = iris_center[1]
+            radius = max(cy - y0, y1 - cy)
+            info['box'] = [x0, max(0, int(np.floor(cy - radius))), x1,
+                           min(height, int(np.ceil(cy + radius)))]
     foreground, foreground_method = _foreground(source)
     fill_mask = np.zeros((height, width), np.uint8)
     restored_eye_alpha_pixels = 0
-    for info in eyes.values():
+    ownership = {side: _eye_ownership(source[:, :, :3], info) for side, info in eyes.items()}
+    for side, info in eyes.items():
         x0, y0, x1, y1 = info['box']
-        fill_mask[y0:y1, x0:x1] = 255
+        mask, _ = ownership[side]
+        fill_mask[y0:y1, x0:x1][mask] = 255
         # An original semi-transparent patch cannot be source-over layered on a
         # filled base without changing its alpha. Preserve user input by
         # rejecting that case rather than silently making the eye opaque.
-        if np.any(source[y0:y1, x0:x1, 3] != 255):
+        if np.any(source[y0:y1, x0:x1, 3][mask] != 255):
             raise ValueError('目の領域に半透明な画素があります。元の透明度を保つため自動補完を中止しました。不透明な目を含む画像を選んでください。')
-        if np.mean(foreground[y0:y1, x0:x1, 3] >= 240) < .85:
+        if np.mean(foreground[y0:y1, x0:x1, 3][mask] >= 240) < .85:
             raise ValueError('目の周りの不透明な領域が足りず、肌の下地を自動補完できませんでした。')
         # BiRefNet commonly predicts 254 even for solid eye/skin interiors.
         # In detected eyes only, restore the known source alpha (255) before
         # both extraction and base creation. Input RGBA is never modified.
-        restored_eye_alpha_pixels += int(np.count_nonzero(foreground[y0:y1, x0:x1, 3] != 255))
-        foreground[y0:y1, x0:x1] = source[y0:y1, x0:x1]
+        restored_eye_alpha_pixels += int(np.count_nonzero(foreground[y0:y1, x0:x1, 3][mask] != 255))
+        foreground[y0:y1, x0:x1][mask] = source[y0:y1, x0:x1][mask]
     base = foreground.copy()
     # Telea uses surrounding visible colors; it neither calls an image service
     # nor claims to reconstruct hidden skin/anatomy. Open-eye source textures
@@ -268,14 +355,20 @@ def prepare_inochi_image(image: Image.Image):
     filled = cv2.inpaint(source[:, :, :3], fill_mask, max(2, round(face[2] * .035)), cv2.INPAINT_TELEA)
     changed = fill_mask > 0
     base[changed, :3] = filled[changed]
-    parts, pngs, closed_diagnostics = [], {}, {}
+    parts, pngs, closed_diagnostics, open_textures = [], {}, {}, {}
     part, png = _png_part(base, 'face_base', (width, height), kind='source-with-local-inpaint')
     parts.append(part); pngs[part['path']] = png
     for side in ('l', 'r'):
         info = eyes[side]
         x0, y0, x1, y1 = info['box']
-        opened = foreground[y0:y1, x0:x1]
+        mask, closed_clip = ownership[side]
+        opened = foreground[y0:y1, x0:x1].copy()
+        opened[~mask] = 0
+        open_textures[side] = Image.fromarray(opened)
         closed, diagnostics = _closed_lash(source[:, :, :3], info)
+        closed[closed_clip == 0] = 0
+        if np.count_nonzero(closed[:, :, 3] > 100) < info['dark_box'][2]:
+            raise ValueError('閉眼線を目の位置へ配置できませんでした。別の正面画像で再試行してください。')
         for role, pixels, kind in [(f'eye_white_{side}', opened, 'source'),
                                    (f'eye_closed_{side}', closed, 'estimated-from-source-upper-lash')]:
             part, png = _png_part(pixels, role, (width, height), info['box'], kind)
@@ -288,7 +381,7 @@ def prepare_inochi_image(image: Image.Image):
     neutral = Image.fromarray(base)
     for side in ('l', 'r'):
         x0, y0, x1, y1 = eyes[side]['box']
-        neutral.alpha_composite(Image.fromarray(foreground[y0:y1, x0:x1]), (x0, y0))
+        neutral.alpha_composite(open_textures[side], (x0, y0))
     # Composite over opaque white to compare the actual displayed appearance.
     def white_composite(pixels):
         a = pixels[:, :, 3:4].astype(np.float32) / 255
