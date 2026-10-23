@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 品質改善の独立試験（2026-10-23、最新）
+- 作業ブランチは`feature/inochi-quality-head-motion`、基準は`feature/automatic-inochi-character`の50390a8。オーナーは閉眼/途中の改善、頭部中心の動作、レベル1〜3の再現性検証を承認。今回はCubism/VTube Studioを合格条件に含めない。
+- 安定5役割の`server/inochi_preparation.py`、worker/API/UIと`model.mjs`/`generate.mjs`は維持。改善は`server/inochi_quality.py`→`quality-trial.py`→`quality-model.mjs`の明示的CLIに分離し、通常画面の出力を自動切替しない。
+- 改善5PNGは旧生成器でも出せる。拡張は上まつ毛を元の目から排他的に分ける7素材＋透明なaperture用2ノード/共通1px alphaテクスチャ。透明maskは描画用の幾何で、欠けたキャラクター素材のダミーではない。
+- Creator0.8.6/SDK v0.8.6のINP loaderは格納RGBを再premultiplyしない。拡張生成器だけ、格納テクスチャRGBを公式importと同じfloor(RGB*alpha/255)へ変換する。部品PNGのstraight RGBA/配置/alphaは維持。旧生成器へ修正を混ぜない。保存後のtexture比較対象はruntime内のpremultiplied値で、部品PNGのrawRGBと混同しない。
+- 頭の動きは連続した前景meshの首付近を変形し、胴体を固定する平面試作。独立した前髪/後ろ髪/隠れた首のレイヤー生成ではない。SAMの顔/髪/胴体は自動promptで候補抽出まで、モデル採用と品質合格は別。
+- 難易度3種は同一提供画像の頭部crop/元の胸上/1/4縮小という条件試験。隠した片目の負例と小さな別参考画像も記録する。一般の新キャラクターへの成功率と呼ばない。入力/派生PNG/モデル/画面写真は引き続きGit外。
+- 最新の詳細と未解決点は`docs/INOCHI2D_QUALITY_IMPROVEMENT.md`。公式GUIの表示値・保存後の別プロセス比較を必須とし、生成/Creator互換/見た目の合格を分ける。Inox0/opacityは別課題のまま。
+
 ## 再添付画像の実証（2026-10-22、最新）
 - 指定のfeature/automatic-inochi-character/2cc9a95から継続し、再添付の960×1280メイド服画像で無操作の5役割準備→INP/INXを実証。元の853×1280画像とは別。実ブラウザ390×844→API→ZIP保存も成功し、直接workerのモデルSHAと一致した。見える860,562画素の元RGB差0。
 - 修正は画像準備側の濃い目領域/非矩形の所有mask/元まつ毛からの連続曲線/瞳中心への配置。画像固有の手入力座標や外部画像APIは使っていない。旧model.mjs/generate.mjsは不変。

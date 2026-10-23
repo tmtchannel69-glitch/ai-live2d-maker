@@ -1,0 +1,592 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-23",
+  "branch": "feature/inochi-quality-head-motion",
+  "baseline_commit": "50390a89ae5b8f19d20a227c1e7f98ea23e155a2",
+  "profile": "aperture-head-v1",
+  "format": "legacy-INP/INX",
+  "creator_version": "0.8.6",
+  "sdk_commit": "dda3a8f005f808104caa43183ab8753fb989e30f",
+  "source_original_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+  "baseline_model_sha256": "dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9",
+  "stable_five_part_generator_unchanged": true,
+  "stable_five_part_regeneration_sha256": "dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9",
+  "normal_app_api_unchanged": true,
+  "quality_entrypoint": "scripts/inochi2d/quality-trial.py",
+  "manual_prompts_or_rigging": false,
+  "external_image_requests": false,
+  "license_note": "Owner source and its private derivatives retain source rights. Independent Miku reference README identifies CC BY-NC (piapro); reference artwork omitted from Git/review ZIP.",
+  "separation_assessment": {
+    "automatic_prompts": true,
+    "manual_points": false,
+    "elapsed_seconds": 24.552,
+    "candidates": [
+      {
+        "role": "face",
+        "pixels": 61464
+      },
+      {
+        "role": "hair",
+        "pixels": 277137
+      },
+      {
+        "role": "body",
+        "pixels": 298087
+      }
+    ],
+    "adopted_in_model": false,
+    "quality_passed": false,
+    "overlap_pixels": {
+      "face_hair": 59,
+      "body_hair": 18
+    },
+    "findings": [
+      "Face/neck and long hair candidates are extractable, but semantic boundary quality requires review.",
+      "One image does not resolve front/back hair or hidden neck/body artwork.",
+      "The model instead uses a continuous neck warp, avoiding hard-cut holes."
+    ]
+  },
+  "runtime_texture_alpha_encoding": "premultiplied-floor-rgb-8bit",
+  "preparation_png_alpha_encoding": "straight-source-preserved",
+  "alpha_encoding_note": "Official INP loader consumes stored bytes directly. Opt-in writer follows Creator import premultiplication. Alpha unchanged, RGB floors; original PNG bytes preserved.",
+  "cases": [
+    {
+      "case": "level1",
+      "level": 1,
+      "input_kind": "controlled-head-and-shoulder-crop",
+      "source_group": "same-owner-image",
+      "source_sha256": "04aa2100c877e9555c889daa39e3d588c3096e49b5b9acc6505c61a91e08fc14",
+      "file_generation_passed": true,
+      "failure": null,
+      "elapsed_seconds": 22.366,
+      "official_creator_passed": true,
+      "appearance_quality_passed": false,
+      "generation": {
+        "schema": 1,
+        "source_sha256": "04aa2100c877e9555c889daa39e3d588c3096e49b5b9acc6505c61a91e08fc14",
+        "source_size": [
+          735,
+          788
+        ],
+        "profile": "aperture-head-v1",
+        "file_generation_passed": true,
+        "official_creator_passed": true,
+        "appearance_quality_passed": false,
+        "manual_points_or_rigging": false,
+        "external_image_requests": false,
+        "unchanged_five_part_export_passed": true,
+        "reconstruction": {
+          "visible_pixels": 441347,
+          "source_rgb_changed_visible_pixels": 0,
+          "maximum_visible_rgb_delta": 0,
+          "background_alpha_is_inferred": true
+        },
+        "automatic_preparation_seconds": 20.675,
+        "model_sha256": "9fdd02508931e65ff5b1b4755569dbf1b89937ebb59fe0b5655ac0f47de5c057",
+        "elapsed_seconds": 21.886,
+        "notes": [
+          "Creator and appearance verdicts require separate evidence for this model hash.",
+          "Head motion anchors the torso through a continuous neck deformation; front/back hair is not independently rigged."
+        ],
+        "total_with_assessment_seconds": 21.886
+      },
+      "creator": {
+        "runtime": "official Inochi Creator 0.8.6",
+        "scope": "seven-pose-compatibility",
+        "generated_sha256": "9fdd02508931e65ff5b1b4755569dbf1b89937ebb59fe0b5655ac0f47de5c057",
+        "saved_sha256": "dd87382ecb875d3c54882563b3f259d535018e72c33f40e761ea9f50e52b4a07",
+        "states_before_save": 7,
+        "states_after_fresh_reload": 7,
+        "all_reloaded_viewport_pixels_identical": true,
+        "native_eye_template_correlation": 0.9827272891998291,
+        "native_face_template_correlation": null,
+        "native_scale_calibration": "source-eye",
+        "all_fixed_torso_rois_unchanged": true,
+        "all_drawable_rgba_unchanged_after_save": true,
+        "drawer_nodes": 9
+      },
+      "visual_review": {
+        "production_quality_passed": false,
+        "observations": "Large-face generation/display/closed lashes usable for comparison; skin boundary and low-opening line overlap remain."
+      }
+    },
+    {
+      "case": "level2",
+      "level": 2,
+      "input_kind": "original-bust",
+      "source_group": "same-owner-image",
+      "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+      "file_generation_passed": true,
+      "failure": null,
+      "elapsed_seconds": 25.554,
+      "official_creator_passed": true,
+      "appearance_quality_passed": false,
+      "generation": {
+        "schema": 1,
+        "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+        "source_size": [
+          960,
+          1280
+        ],
+        "profile": "aperture-head-v1",
+        "file_generation_passed": true,
+        "official_creator_passed": true,
+        "appearance_quality_passed": false,
+        "manual_points_or_rigging": false,
+        "external_image_requests": false,
+        "unchanged_five_part_export_passed": true,
+        "reconstruction": {
+          "visible_pixels": 860562,
+          "source_rgb_changed_visible_pixels": 0,
+          "maximum_visible_rgb_delta": 0,
+          "background_alpha_is_inferred": true
+        },
+        "automatic_preparation_seconds": 23.353,
+        "model_sha256": "292a674f393a8de7b80e03bc87274bd359b339ec8b0c70a15c228a8a5af07353",
+        "elapsed_seconds": 24.995,
+        "notes": [
+          "Creator and appearance verdicts require separate evidence for this model hash.",
+          "Head motion anchors the torso through a continuous neck deformation; front/back hair is not independently rigged."
+        ],
+        "total_with_assessment_seconds": 24.995
+      },
+      "creator": {
+        "runtime": "official Inochi Creator 0.8.6",
+        "scope": "twelve-poses-plus-quality-motion",
+        "generated_sha256": "292a674f393a8de7b80e03bc87274bd359b339ec8b0c70a15c228a8a5af07353",
+        "saved_sha256": "f7c8002184e190246003ec2ce2bc3830b254d34c67176aaffc8121834afb7c58",
+        "states_before_save": 26,
+        "states_after_fresh_reload": 26,
+        "all_reloaded_viewport_pixels_identical": true,
+        "native_eye_template_correlation": 0.9855684041976929,
+        "native_face_template_correlation": null,
+        "native_scale_calibration": "source-eye",
+        "all_fixed_torso_rois_unchanged": true,
+        "all_drawable_rgba_unchanged_after_save": true,
+        "drawer_nodes": 9
+      },
+      "visual_review": {
+        "production_quality_passed": false,
+        "observations": "Reduced gray/purple skin smear, thinner tapered lashes, stationary iris during blink; low-opening lash overlap and skin/hair boundary remain."
+      }
+    },
+    {
+      "case": "level3",
+      "level": 3,
+      "input_kind": "controlled-quarter-size",
+      "source_group": "same-owner-image",
+      "source_sha256": "b06098483a5e4c748ab3b6d92393cd5fbfa68b51e254f183d98cb25413946f05",
+      "file_generation_passed": true,
+      "failure": null,
+      "elapsed_seconds": 18.796,
+      "official_creator_passed": true,
+      "appearance_quality_passed": false,
+      "generation": {
+        "schema": 1,
+        "source_sha256": "b06098483a5e4c748ab3b6d92393cd5fbfa68b51e254f183d98cb25413946f05",
+        "source_size": [
+          240,
+          320
+        ],
+        "profile": "aperture-head-v1",
+        "file_generation_passed": true,
+        "official_creator_passed": true,
+        "appearance_quality_passed": false,
+        "manual_points_or_rigging": false,
+        "external_image_requests": false,
+        "unchanged_five_part_export_passed": true,
+        "reconstruction": {
+          "visible_pixels": 55334,
+          "source_rgb_changed_visible_pixels": 0,
+          "maximum_visible_rgb_delta": 0,
+          "background_alpha_is_inferred": true
+        },
+        "automatic_preparation_seconds": 17.555,
+        "model_sha256": "9e2b0c98fa952f609d678a74bffc0360655d51482554a5ecccff44ce3bc073f5",
+        "elapsed_seconds": 18.182,
+        "notes": [
+          "Creator and appearance verdicts require separate evidence for this model hash.",
+          "Head motion anchors the torso through a continuous neck deformation; front/back hair is not independently rigged."
+        ],
+        "total_with_assessment_seconds": 18.182
+      },
+      "creator": {
+        "runtime": "official Inochi Creator 0.8.6",
+        "scope": "seven-pose-compatibility",
+        "generated_sha256": "9e2b0c98fa952f609d678a74bffc0360655d51482554a5ecccff44ce3bc073f5",
+        "saved_sha256": "fd70ceef10ebd1340cf3e89770aeb1db454ca17d736810da50d265522e73c53b",
+        "states_before_save": 7,
+        "states_after_fresh_reload": 7,
+        "all_reloaded_viewport_pixels_identical": true,
+        "native_eye_template_correlation": 0.947730541229248,
+        "native_face_template_correlation": 0.9623464941978455,
+        "native_scale_calibration": "central-face-with-independent-eye-location",
+        "all_fixed_torso_rois_unchanged": true,
+        "all_drawable_rgba_unchanged_after_save": true,
+        "drawer_nodes": 9
+      },
+      "visual_review": {
+        "production_quality_passed": false,
+        "observations": "Small face still detectable and controls work; native-scale raster blur/lash detail limit appearance. Not a full-resolution quality pass."
+      }
+    },
+    {
+      "case": "occluded",
+      "level": 3,
+      "input_kind": "controlled-one-eye-occlusion-negative-control",
+      "source_group": "same-owner-image",
+      "source_sha256": "aa62bb6cc39dc13cc7cf0227fd9e514173a18faea20cc5f43d9365f58306bb45",
+      "file_generation_passed": false,
+      "failure": "ValueError: 左右の開いた目を自動で特定できませんでした。髪で目が隠れていない正面画像を選んでください。",
+      "elapsed_seconds": 0.951,
+      "official_creator_passed": null,
+      "appearance_quality_passed": false,
+      "generation": null,
+      "dummy_model_output": false
+    },
+    {
+      "case": "reference-small",
+      "level": 3,
+      "input_kind": "independent-small-reference-unsupported-angle",
+      "source_group": "reference",
+      "source_sha256": "f676c4330834d9f2736903a28e8174ef3264c82d414f13e1745a1eee918767b6",
+      "file_generation_passed": false,
+      "failure": "ValueError: 左右の開いた目を自動で特定できませんでした。髪で目が隠れていない正面画像を選んでください。",
+      "elapsed_seconds": 0.759,
+      "official_creator_passed": null,
+      "appearance_quality_passed": false,
+      "generation": null,
+      "dummy_model_output": false
+    }
+  ],
+  "rates": {
+    "basic_levels_file_generation": {
+      "success": 3,
+      "attempts": 3,
+      "percent": 100,
+      "independent_source_images": 1
+    },
+    "all_cases_file_generation": {
+      "success": 3,
+      "attempts": 5,
+      "percent": 60
+    },
+    "creator_roundtrip_for_generated_models": {
+      "success": 3,
+      "attempts": 3,
+      "total_official_states": 80
+    },
+    "production_appearance_approved_models": 0,
+    "general_image_success_rate_measured": false,
+    "interpretation": "Same-image crops/resizes and chosen negative controls are not a representative success-rate sample."
+  },
+  "comparison": {
+    "schema": 1,
+    "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "baseline_model_sha256": "dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9",
+    "after_model_sha256": "292a674f393a8de7b80e03bc87274bd359b339ec8b0c70a15c228a8a5af07353",
+    "poses": [
+      {
+        "pose": "neutral",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "left_closed",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "right_closed",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "both_closed",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "left_half",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "right_half",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "both_half",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      },
+      {
+        "pose": "head_left",
+        "baseline_fixed_torso_changed_pixels": 14056,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        }
+      },
+      {
+        "pose": "head_right",
+        "baseline_fixed_torso_changed_pixels": 14168,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        }
+      },
+      {
+        "pose": "closed_head_left",
+        "baseline_fixed_torso_changed_pixels": 14056,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": -1.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        }
+      },
+      {
+        "pose": "closed_head_right",
+        "baseline_fixed_torso_changed_pixels": 14168,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 1.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        }
+      },
+      {
+        "pose": "neutral_return",
+        "baseline_fixed_torso_changed_pixels": 0,
+        "after_fixed_torso_changed_pixels": 0,
+        "before_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0
+        },
+        "after_displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        }
+      }
+    ],
+    "after_additional_openings": [
+      {
+        "EyeOpenL": 0.0,
+        "EyeOpenR": 0.0,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.03,
+        "EyeOpenR": 0.03,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.06,
+        "EyeOpenR": 0.06,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.06,
+        "EyeOpenR": 0.06,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.1,
+        "EyeOpenR": 0.1,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.16,
+        "EyeOpenR": 0.16,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.26,
+        "EyeOpenR": 0.26,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.48,
+        "EyeOpenR": 0.48,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 0.74,
+        "EyeOpenR": 0.74,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      },
+      {
+        "EyeOpenL": 1.0,
+        "EyeOpenR": 1.0,
+        "HeadX": 0.0,
+        "HeadTilt": 0.0
+      }
+    ],
+    "official_screenshots": true,
+    "appearance_quality_passed": false,
+    "notes": [
+      "The new HeadX and HeadTilt are distinct controls; both are used for the twelve common motion poses.",
+      "The baseline whole-foreground pose uses +/-14px and .06rad; the new neck warp uses bounded +/-12px and .045rad.",
+      "Thumbnails do not establish production quality; use full-size screenshots to inspect artifacts."
+    ]
+  },
+  "tests": {
+    "node": 48,
+    "python": 41,
+    "existing_browser": 140,
+    "total": 229,
+    "production_build_passed": true,
+    "quality_invariant_tests": 9,
+    "static_review_browser": {
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "states": 12,
+      "selected": "both_closed",
+      "buttonHeights": [
+        48,
+        48,
+        48
+      ],
+      "imageLoaded": true,
+      "errors": [],
+      "staticScreenshotReview": true,
+      "modelRuntimePreview": false,
+      "realMobileDeviceTested": false
+    },
+    "limitations": "Drawn fixtures replace face detection. Existing browser tests include mocked responses. Official real-image audits are separate."
+  },
+  "unresolved": [
+    "Low-opening source/inferred lash overlap and skin patch boundaries",
+    "Independent front/back hair, face, neck and body layers and hidden-area completion",
+    "Different characters/eye colors/styles with clearly licensed independent inputs",
+    "Quality UI integration; stable app uses its original five-role path",
+    "Inox raw-zero and opacity issues remain separate"
+  ],
+  "live2d_cubism_compatibility_claimed": false,
+  "vtube_studio_tested": false,
+  "main_merged": false,
+  "public_deployment": false,
+  "images_or_models_in_git": false
+}

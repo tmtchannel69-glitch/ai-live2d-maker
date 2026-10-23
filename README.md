@@ -28,7 +28,18 @@ npm run dev
 
 ## Inochi2Dの独立した技術試作
 
-現在のブランチ`feature/automatic-inochi-character`には、正面画像から顔・左右の目・閉眼の5役割を自動準備する独立処理と実験パネルがあります。顔/目を検出し、入力のまつ毛から閉眼を推定、周辺の肌を局所補完します。再添付された実画像960×1280では、手動の点・枠・素材配置なしで約13秒のモデル生成に成功。公式Inochi Creator0.8.6で左右の瞬きと平面移動、保存/新プロセス再読込の全12状態一致も確認しました。**自然な完成品質は未合格**で、肌補完・まつ毛・閉じ際・髪の縁と、他の画風での検証を続けます。旧最小生成器は変更していません。[実画像の結果・制限・再現](docs/INOCHI2D_REAL_IMAGE_VALIDATION.md)。
+品質改善の作業は`feature/inochi-quality-head-motion`に保存しています。肌の補完/先細りの閉眼線/瞳をつぶさない途中状態/首でつなぐ頭部動作を、通常の5役割出力とは別の試験として追加しました。[改善前後・公式Creator検証・制限](docs/INOCHI2D_QUALITY_IMPROVEMENT.md)。通常の画面/APIは引き続き下記の安定した5役割生成を使います。
+
+改善版のローカル試験（既存の追加依存/モデルを使用、出力先は新規のGit外フォルダー）:
+
+```sh
+.venv/bin/python scripts/inochi2d/quality-trial.py \
+  --source /path/to/character.png --output /tmp/new-quality-trial
+```
+
+`five-part/`は肌/閉眼線を改善した5PNGと旧生成器のモデル、`extended/`は元の上まつ毛を分けた7素材と新しい瞬き/頭部モデルです。`EyeOpenL/R`は本人基準で0が閉眼、1が開眼。`HeadX`は左右移動、`HeadTilt`は傾き。前髪/後ろ髪を独立した構造にしたものではなく、首の周囲を連続変形し、胴体を固定する平面試作です。見た目の完成品質は未合格。モデル内の画像は公式0.8.6が必要とする透明度の形式へ変換しますが、部品PNGの元色/透明度/配置は保持します。
+
+通常画面には、前段の`feature/automatic-inochi-character`で作成した、正面画像から顔・左右の目・閉眼の5役割を自動準備する独立処理と実験パネルがあります。顔/目を検出し、入力のまつ毛から閉眼を推定、周辺の肌を局所補完します。再添付された実画像960×1280では、手動の点・枠・素材配置なしで約13秒のモデル生成に成功。公式Inochi Creator0.8.6で左右の瞬きと平面移動、保存/新プロセス再読込の全12状態一致も確認しました。**自然な完成品質は未合格**で、肌補完・まつ毛・閉じ際・髪の縁と、他の画風での検証を続けます。旧最小生成器は変更していません。[実画像の結果・制限・再現](docs/INOCHI2D_REAL_IMAGE_VALIDATION.md)。
 
 Python3.12の既存AI環境を下記の「AI試作」手順で準備後、追加依存とモデルを準備します。Linuxの例です（Windowsは`.venv\Scripts\python.exe`を使用）。
 
@@ -42,7 +53,7 @@ Python3.12の既存AI環境を下記の「AI試作」手順で準備後、追加
 
 5役割の`face_base`は目以外の前景も含むため、HeadXはその全体の平行移動と平面の傾きを同時に変えます。頭だけの動き、独立した傾き、口、物理は未対応。画像は10MiB・4096pxまで受けますが、切り出し後の各素材は2048px・合計RGBA16MiB以内で、それを超える場合は縮小せず拒否します。半透明の目や検出/補完失敗も成功扱いにしません。[実装範囲・結果・再実行](docs/INOCHI2D_AUTOMATIC_IMAGE.md)。
 
-Inochi2DはLive2D Cubism/VTube Studio用の形式ではありません。自然な全自動生成やINP2対応も未達です。Inox2Dは0値と透明度の別課題があるため、この出力に回避策を混ぜていません。[既知の問題](docs/INOX2D_KNOWN_ISSUES.md)、[元の技術調査](docs/INOCHI2D_FEASIBILITY.md)を参照してください。多役割の研究用`character-model.mjs`も独立保存していますが、今回のUI/APIは旧5役割生成器を使い、研究adapterの公式Creator動作を確認済みとはしません。
+Inochi2DはLive2D Cubism/VTube Studio用の形式ではありません。自然な全自動生成やINP2対応も未達です。Inox2Dは0値と透明度の別課題があるため、この出力に回避策を混ぜていません。[既知の問題](docs/INOX2D_KNOWN_ISSUES.md)、[元の技術調査](docs/INOCHI2D_FEASIBILITY.md)を参照してください。多役割の研究用`character-model.mjs`も独立保存しています。UI/APIは旧5役割生成器を使います。品質改善版の公式結果は上記の別記録でモデルごとに確認し、研究adapterの任意出力を一律に検証済みとはしません。
 
 ## AI 分離処理の接続
 
