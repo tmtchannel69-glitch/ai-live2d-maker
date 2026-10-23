@@ -78,22 +78,25 @@ def run(args):
             sd.text((x+5,y+5),f"EyeOpen: {p['displayed']['EyeOpenL']:.2f}",fill='white');sheet.paste(im,(x+5,y+30))
         sheet.save(out/'10-blink-states.png')
     data=json.dumps(review,ensure_ascii=True).replace('<','\\u003c')
+    motion_note=('頭の移動・傾きは前後とも同じ首の変形方式と動作量です。' if args.same_head_template else
+                 '胴体を固定し、頭の移動と傾きを分けました。')
     html='''<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
 <title>Inochi2D 改善前後の比較</title><style>body{background:#20202a;color:#fff;font:16px system-ui;margin:0 auto;max-width:850px;padding:16px}select,button{font:inherit;min-height:48px;margin:4px}img{width:100%;height:auto}pre{white-space:pre-wrap;font:14px system-ui}nav{display:flex;flex-wrap:wrap;gap:4px}</style>
 <h1>改善前後の比較</h1><p>公式Creator 0.8.6で撮影した12状態です。左が改善前、右が改善後。画像の再生であり、モデルのリアルタイム表示ではありません。</p>
 <nav><button id="prev">前へ</button><select id="pose" aria-label="比較する状態"></select><button id="next">次へ</button></nav>
-<img id="frame" alt="改善前後の顔の比較"><pre id="values"></pre><p>閉眼の境界と細部は改善途中です。胴体を固定し、頭の移動と傾きを分けました。完成品質の合格判定ではありません。</p>
+<img id="frame" alt="改善前後の顔の比較"><pre id="values"></pre><p>閉眼の境界と細部は改善途中です。__MOTION_NOTE__完成品質の合格判定ではありません。</p>
 <script>const frames=__DATA__,select=document.getElementById('pose');frames.forEach((f,i)=>select.add(new Option(f.name,i)));
 function show(){const f=frames[select.selectedIndex];document.getElementById('frame').src=f.image;document.getElementById('values').textContent='撮影時の値\\n改善前 '+JSON.stringify(f.before)+'\\n改善後 '+JSON.stringify(f.after);}
-select.onchange=show;document.getElementById('prev').onclick=()=>{select.selectedIndex=(select.selectedIndex+frames.length-1)%frames.length;show()};document.getElementById('next').onclick=()=>{select.selectedIndex=(select.selectedIndex+1)%frames.length;show()};show();</script></html>'''.replace('__DATA__',data)
+select.onchange=show;document.getElementById('prev').onclick=()=>{select.selectedIndex=(select.selectedIndex+frames.length-1)%frames.length;show()};document.getElementById('next').onclick=()=>{select.selectedIndex=(select.selectedIndex+1)%frames.length;show()};show();</script></html>'''.replace('__DATA__',data).replace('__MOTION_NOTE__',motion_note)
     (out/'review.html').write_text(html,encoding='utf-8')
     result={'schema':1,'source_sha256':reports[0]['source_sha256'],
         'baseline_model_sha256':reports[0]['model_sha256'],'after_model_sha256':reports[1]['model_sha256'],
         'poses':comparison,'after_additional_openings':[p['displayed'] for p,_ in transition],
         'official_screenshots':True,'appearance_quality_passed':False,
-        'notes':['The new HeadX and HeadTilt are distinct controls; both are used for the twelve common motion poses.',
-                 'The baseline whole-foreground pose uses +/-14px and .06rad; the new neck warp uses bounded +/-12px and .045rad.',
+        'notes':['HeadX and HeadTilt are used together for the twelve common motion poses.',
+                 ('Both models use the same neck-weighted mesh template: +/-12px and .045rad.' if args.same_head_template else
+                  'The baseline whole-foreground pose uses +/-14px and .06rad; the new neck warp uses bounded +/-12px and .045rad.'),
                  'Thumbnails do not establish production quality; use full-size screenshots to inspect artifacts.']}
     (out/'comparison-report.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({'output':str(out),'common_poses':len(names),'transition_frames':len(transition)}))
@@ -102,4 +105,5 @@ select.onchange=show;document.getElementById('prev').onclick=()=>{select.selecte
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('before','after','output'):parser.add_argument('--'+name,required=True)
+    parser.add_argument('--same-head-template',action='store_true',help='Both models retain the quality neck-warp template; only blink/parts changed.')
     run(parser.parse_args())

@@ -28,6 +28,15 @@ npm run dev
 
 ## Inochi2Dの独立した技術試作
 
+最新の`feature/detailed-character-parts`では、左右の目の詳細分類と独立した共通パーツデータ、補完領域を分けた保存、髪の候補、自動品質検査を追加しました。既存5役割の画面/APIは維持しています。[今回の比較・公式Creator結果・制限](docs/DETAILED_PARTS_VALIDATION.md)、[公開資料と設計](docs/PARTS_RESEARCH_AND_DESIGN.md)。
+
+```sh
+.venv/bin/python scripts/parts/generate.py \
+  --source /path/to/character.png --output /tmp/new-detailed-parts
+```
+
+既存AI環境/モデルを使用する独立CLIです。`common/`に元座標とRGBA/mask/補完、`five-part/`に従来出力、`inochi2d/`にモデル、`quality/`に10状態の診断を保存します。実画像1枚で元RGB保持/共通再構成一致、公式Creator0.8.6の保存前後52状態を確認。**完成品質は未合格**で、肌の平滑化と閉じ際の線の警告が残ります。目の細部は共通データで別画像ですが、現在の瞬き出力時だけ目全体へまとめます。独立した視線や髪の揺れ、通常スマホ画面への詳細CLI接続は未実装です。
+
 品質改善の作業は`feature/inochi-quality-head-motion`に保存しています。肌の補完/先細りの閉眼線/瞳をつぶさない途中状態/首でつなぐ頭部動作を、通常の5役割出力とは別の試験として追加しました。[改善前後・公式Creator検証・制限](docs/INOCHI2D_QUALITY_IMPROVEMENT.md)。通常の画面/APIは引き続き下記の安定した5役割生成を使います。
 
 改善版のローカル試験（既存の追加依存/モデルを使用、出力先は新規のGit外フォルダー）:
@@ -83,7 +92,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
 
 ## 別の端末・Codex から開発を再開
 
-最新の開発ブランチは `research/inochi2d-feasibility` です。
+最新の開発ブランチは `feature/detailed-character-parts` です。
 スマートフォンの Codex でも、この GitHub リポジトリとブランチを選んでクラウドタスクを開始してください。
 既存のチェックアウトがある場合はそれを使用し、明示的に必要な場合以外は Git worktree を作成しません。
 
@@ -103,7 +112,7 @@ GitHub にプッシュ済みのコードは、Windows PC の電源を切って�
 Windows PC で起動する場合は、Node.js 24 LTS と Git を用意して PowerShell で次を実行します。
 
 ```powershell
-git clone --branch research/inochi2d-feasibility https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+git clone --branch feature/detailed-character-parts https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
 cd ai-live2d-maker
 npm.cmd ci
 npm.cmd run dev -- --port 5173 --strictPort

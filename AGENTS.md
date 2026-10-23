@@ -1,6 +1,14 @@
 # AI Live2D Maker 開発ルール
 
-## 品質改善の独立試験（2026-10-23、最新）
+## 詳細パーツ分割（2026-10-23、最新）
+- 現在の作業ブランチは`feature/detailed-character-parts`、基準cd4c2b7。オーナーは公開の人の制作手順を参考に、目の詳細分離、狭い隠れ領域の補完、髪の候補、共通データ、自動品質検査を承認。通常の5役割/品質版の生成器とAPI/UIは変更しない。
+- 共通データ版1は`server/character_parts.py`/`shared/character-parts.schema.json`。元観測RGBA/mask/位置/所有、補完RGBA/mask、親子/被覆/根拠を分ける。欠けた瞳孔/反射等はPNGなしのmissing/ambiguous、未校正の確信度を正解確率と呼ばない。中立は観測だけ、補完は明示した露出規則で使用する。
+- 実行は`python scripts/parts/generate.py --source IMAGE --output NEW_PRIVATE_DIR`。既存のprepare_quality_imageを再利用し、詳細分割と`parts-adapter.mjs`を独立追加。通常のボタンへは未接続。共通データ36パーツの今回出力では、虹彩/瞳孔/反射等は瞬きモデル化の際だけ目全体へまとめる。独立視線/髪の揺れは未実装。
+- 提供960×1280の1枚で共通再構成RGBA一致/元RGB差0。モデルSHA df7b55f1fb45f1b5bc598b999248102b3a7babe7dbf0a4b7d0720ee86d264532、公式Creator0.8.6の26状態＋保存/別プロセス26状態で全viewport一致、11ノード格納RGBA一致。新しいモデルはそれぞれ再検証する。
+- 肌の平滑化と.075〜.25の二重線候補警告は残り、見た目は未合格。髪9候補は奥行き未確認。髪飾りらしい1領域を保留して粗い領域へ残した。部分的な成功を詳細分割の完成/独立毛束リグ/一般画像成功率と報告しない。
+- 公開本文を確認できたのはLive2D公式2資料。Palmie2ページ/お絵かき図鑑は403で未読。有料素材/サンプル/動画は取得しない。詳細は`docs/PARTS_RESEARCH_AND_DESIGN.md`、`docs/DETAILED_PARTS_VALIDATION.md/json`。画像/モデル/HTML/画面写真はGit外、Inox問題/INP2/Cubism/VTSは別課題のまま。
+
+## 品質改善の独立試験（2026-10-23、前段）
 - 作業ブランチは`feature/inochi-quality-head-motion`、基準は`feature/automatic-inochi-character`の50390a8。オーナーは閉眼/途中の改善、頭部中心の動作、レベル1〜3の再現性検証を承認。今回はCubism/VTube Studioを合格条件に含めない。
 - 安定5役割の`server/inochi_preparation.py`、worker/API/UIと`model.mjs`/`generate.mjs`は維持。改善は`server/inochi_quality.py`→`quality-trial.py`→`quality-model.mjs`の明示的CLIに分離し、通常画面の出力を自動切替しない。
 - 改善5PNGは旧生成器でも出せる。拡張は上まつ毛を元の目から排他的に分ける7素材＋透明なaperture用2ノード/共通1px alphaテクスチャ。透明maskは描画用の幾何で、欠けたキャラクター素材のダミーではない。

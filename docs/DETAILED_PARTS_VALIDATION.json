@@ -1,0 +1,2750 @@
+{
+  "date_utc": "2026-10-23",
+  "branch": "feature/detailed-character-parts",
+  "baseline_commit": "cd4c2b70dd1387df1a4d83898d91ecc057253990",
+  "verdicts": {
+    "file_generation_passed": true,
+    "official_creator_passed": true,
+    "appearance_quality_passed": false,
+    "semantic_accuracy_ground_truth_available": false
+  },
+  "input": {
+    "sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "size": [
+      960,
+      1280
+    ],
+    "real_character_images_tested": 1,
+    "manual_prompts_or_rigging": false,
+    "external_image_requests": false,
+    "original_file_included": false
+  },
+  "common": {
+    "format": "ai-live2d-maker-character-parts",
+    "version": 1,
+    "part_count": 36,
+    "asset_count": 98,
+    "decoded_asset_bytes": 25019210,
+    "observed_pixels": 860562,
+    "source_rgb_changed_visible_pixels": 0,
+    "observed_reconstruction_rgba_exact": true,
+    "overlapping_source_owners": 0,
+    "json_schema_validated": true,
+    "eyes": {
+      "l": {
+        "upper_lid": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 1083,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "lower_lid": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 531,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "eyelash_upper": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 1480,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "eyelash_lower": {
+          "status": "recognized",
+          "confidence": 0.6464912280701754,
+          "pixels": 16,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "sclera": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 739,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "iris": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 2224,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "pupil": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 267,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "highlight": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 81,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "context": {
+          "status": "recognized",
+          "confidence": 0.35,
+          "pixels": 631,
+          "method": "color-shape-and-local-eye-evidence"
+        }
+      },
+      "r": {
+        "upper_lid": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 1062,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "lower_lid": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 766,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "eyelash_upper": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 1577,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "eyelash_lower": {
+          "status": "recognized",
+          "confidence": 0.6096491228070176,
+          "pixels": 13,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "sclera": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 899,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "iris": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 2264,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "pupil": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 286,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "highlight": {
+          "status": "recognized",
+          "confidence": 0.8,
+          "pixels": 56,
+          "method": "color-shape-and-local-eye-evidence"
+        },
+        "context": {
+          "status": "recognized",
+          "confidence": 0.35,
+          "pixels": 578,
+          "method": "color-shape-and-local-eye-evidence"
+        }
+      }
+    },
+    "hair": {
+      "status": "candidates",
+      "method": "automatic-SAM-and-source-contour-watershed",
+      "depth_verified": false,
+      "front_back_inferred": true,
+      "strand_count": 9,
+      "ambiguous_components": [
+        {
+          "source_box_xywh": [
+            240,
+            84,
+            462,
+            236
+          ],
+          "pixels": 6436,
+          "status": "ambiguous",
+          "reason": "thin-contrasting-component-may-be-headwear-or-different-hair",
+          "source_retained_in_coarse_remainder": true
+        }
+      ],
+      "boundary_pixels": 29496,
+      "assigned_source_pixels": 155355,
+      "coarse_region_pixels": 121221,
+      "original_hair_pixels": 276576,
+      "strand_source_coverage": 0.5617081742450538,
+      "depth_assignment_is_ambiguous": true
+    },
+    "completion": [
+      {
+        "id": "eye_l_sclera",
+        "role": "sclera",
+        "source_box_xywh": [
+          524,
+          395,
+          132,
+          101
+        ],
+        "completion": {
+          "rgba": "completion/eye_l_sclera.png",
+          "mask": "masks/eye_l_sclera_completion.png",
+          "pixels": 2572,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "estimated-from-visible-local-color"
+        },
+        "occluded_by": [
+          "eye_l_iris",
+          "eye_l_pupil",
+          "eye_l_highlight"
+        ]
+      },
+      {
+        "id": "eye_l_iris",
+        "role": "iris",
+        "source_box_xywh": [
+          524,
+          395,
+          132,
+          101
+        ],
+        "completion": {
+          "rgba": "completion/eye_l_iris.png",
+          "mask": "masks/eye_l_iris_completion.png",
+          "pixels": 348,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "estimated-from-visible-local-color"
+        },
+        "occluded_by": [
+          "eye_l_pupil",
+          "eye_l_highlight"
+        ]
+      },
+      {
+        "id": "eye_l_closed",
+        "role": "closed_eyelash",
+        "source_box_xywh": [
+          524,
+          395,
+          132,
+          101
+        ],
+        "completion": {
+          "rgba": "completion/eye_l_closed.png",
+          "mask": "masks/eye_l_closed_completion.png",
+          "pixels": 643,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false
+        },
+        "occluded_by": [
+          "eye_l_upper_lid",
+          "eye_l_lower_lid",
+          "eye_l_sclera",
+          "eye_l_iris",
+          "eye_l_pupil",
+          "eye_l_context"
+        ]
+      },
+      {
+        "id": "eye_r_sclera",
+        "role": "sclera",
+        "source_box_xywh": [
+          296,
+          401,
+          132,
+          100
+        ],
+        "completion": {
+          "rgba": "completion/eye_r_sclera.png",
+          "mask": "masks/eye_r_sclera_completion.png",
+          "pixels": 2606,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "estimated-from-visible-local-color"
+        },
+        "occluded_by": [
+          "eye_r_iris",
+          "eye_r_pupil",
+          "eye_r_highlight"
+        ]
+      },
+      {
+        "id": "eye_r_iris",
+        "role": "iris",
+        "source_box_xywh": [
+          296,
+          401,
+          132,
+          100
+        ],
+        "completion": {
+          "rgba": "completion/eye_r_iris.png",
+          "mask": "masks/eye_r_iris_completion.png",
+          "pixels": 342,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "estimated-from-visible-local-color"
+        },
+        "occluded_by": [
+          "eye_r_pupil",
+          "eye_r_highlight"
+        ]
+      },
+      {
+        "id": "eye_r_closed",
+        "role": "closed_eyelash",
+        "source_box_xywh": [
+          296,
+          401,
+          132,
+          100
+        ],
+        "completion": {
+          "rgba": "completion/eye_r_closed.png",
+          "mask": "masks/eye_r_closed_completion.png",
+          "pixels": 670,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false
+        },
+        "occluded_by": [
+          "eye_r_upper_lid",
+          "eye_r_lower_lid",
+          "eye_r_eyelash_upper",
+          "eye_r_sclera",
+          "eye_r_iris",
+          "eye_r_pupil",
+          "eye_r_context"
+        ]
+      },
+      {
+        "id": "eye_skin_underpaint",
+        "role": "skin_completion",
+        "source_box_xywh": [
+          0,
+          0,
+          960,
+          1280
+        ],
+        "completion": {
+          "rgba": "completion/eye_skin_underpaint.png",
+          "mask": "masks/eye_skin_underpaint_completion.png",
+          "pixels": 14553,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false
+        },
+        "occluded_by": [
+          "eye_l_upper_lid",
+          "eye_l_lower_lid",
+          "eye_l_eyelash_upper",
+          "eye_l_eyelash_lower",
+          "eye_l_sclera",
+          "eye_l_iris",
+          "eye_l_pupil",
+          "eye_l_highlight",
+          "eye_l_context",
+          "eye_r_upper_lid",
+          "eye_r_lower_lid",
+          "eye_r_eyelash_upper",
+          "eye_r_eyelash_lower",
+          "eye_r_sclera",
+          "eye_r_iris",
+          "eye_r_pupil",
+          "eye_r_highlight",
+          "eye_r_context"
+        ]
+      },
+      {
+        "id": "hair_strand_00",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          403,
+          94,
+          342,
+          617
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_00.png",
+          "mask": "masks/hair_strand_00_completion.png",
+          "pixels": 12812,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 12812,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "eye_l_upper_lid",
+          "eye_l_eyelash_upper",
+          "eye_l_context",
+          "hair_strand_01",
+          "hair_strand_03",
+          "hair_strand_04",
+          "hair_strand_06",
+          "hair_region_back",
+          "hair_region_side_l",
+          "hair_region_front",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_01",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          405,
+          133,
+          109,
+          323
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_01.png",
+          "mask": "masks/hair_strand_01_completion.png",
+          "pixels": 4040,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 4040,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "hair_strand_00",
+          "hair_strand_06",
+          "hair_region_front",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_02",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          186,
+          137,
+          187,
+          479
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_02.png",
+          "mask": "masks/hair_strand_02_completion.png",
+          "pixels": 7241,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 7241,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "eye_r_upper_lid",
+          "eye_r_lower_lid",
+          "eye_r_eyelash_lower",
+          "eye_r_context",
+          "hair_strand_04",
+          "hair_region_back",
+          "hair_region_side_r",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_03",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          482,
+          121,
+          158,
+          293
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_03.png",
+          "mask": "masks/hair_strand_03_completion.png",
+          "pixels": 3951,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 3951,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "eye_l_upper_lid",
+          "eye_l_eyelash_upper",
+          "eye_l_context",
+          "hair_strand_00",
+          "hair_region_side_l",
+          "hair_region_front",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_04",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          229,
+          103,
+          213,
+          341
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_04.png",
+          "mask": "masks/hair_strand_04_completion.png",
+          "pixels": 6915,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 6915,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "eye_r_upper_lid",
+          "eye_r_eyelash_upper",
+          "eye_r_context",
+          "hair_strand_00",
+          "hair_strand_02",
+          "hair_strand_06",
+          "hair_region_side_r",
+          "hair_region_front",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_05",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          250,
+          693,
+          111,
+          260
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_05.png",
+          "mask": "masks/hair_strand_05_completion.png",
+          "pixels": 3531,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 3531,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "hair_region_back",
+          "hair_region_side_r",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_06",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          312,
+          120,
+          162,
+          267
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_06.png",
+          "mask": "masks/hair_strand_06_completion.png",
+          "pixels": 3341,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 3341,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "hair_strand_00",
+          "hair_strand_01",
+          "hair_strand_04",
+          "hair_region_side_r",
+          "hair_region_front",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_07",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          607,
+          680,
+          85,
+          275
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_07.png",
+          "mask": "masks/hair_strand_07_completion.png",
+          "pixels": 3153,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 3153,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "hair_region_back",
+          "hair_region_side_l",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "hair_strand_08",
+        "role": "hair_strand",
+        "source_box_xywh": [
+          698,
+          494,
+          115,
+          279
+        ],
+        "completion": {
+          "rgba": "completion/hair_strand_08.png",
+          "mask": "masks/hair_strand_08_completion.png",
+          "pixels": 3464,
+          "status": "bounded-estimate",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "method": "own-visible-texture-nearest-continuation",
+          "maximum_distance_pixels": 5,
+          "generated_pixels": 3464,
+          "depth_verified": false
+        },
+        "occluded_by": [
+          "hair_region_back",
+          "foreground_base"
+        ]
+      },
+      {
+        "id": "face_skin_behind_fringe",
+        "role": "skin_completion",
+        "source_box_xywh": [
+          250,
+          263,
+          451,
+          395
+        ],
+        "completion": {
+          "rgba": "completion/face_skin_behind_fringe.png",
+          "mask": "masks/face_skin_behind_fringe_completion.png",
+          "pixels": 3543,
+          "status": "estimated",
+          "anatomy_recovered": false,
+          "enabled_in_neutral": false,
+          "maximum_distance_pixels": 3
+        },
+        "occluded_by": [
+          "hair_strand_00",
+          "hair_strand_01",
+          "hair_strand_02",
+          "hair_strand_03",
+          "hair_strand_06",
+          "hair_region_back",
+          "hair_region_side_r",
+          "hair_region_side_l",
+          "hair_region_front"
+        ]
+      }
+    ]
+  },
+  "runtime": {
+    "pinned": {
+      "container": "legacy-inp1",
+      "sdkTag": "v0.8.6",
+      "sdkCommit": "dda3a8f005f808104caa43183ab8753fb989e30f",
+      "creatorTag": "v0.8.6",
+      "creatorCommit": "371e5f4e21117102dbecc82371bfd9a6e2f5df02"
+    },
+    "parts": 9,
+    "drawableParts": 11,
+    "textures": 10,
+    "vertices": 1405,
+    "triangles": 2416,
+    "parameters": [
+      {
+        "id": 1001,
+        "name": "EyeOpenL",
+        "min": 0,
+        "max": 1,
+        "default": 1
+      },
+      {
+        "id": 1002,
+        "name": "EyeOpenR",
+        "min": 0,
+        "max": 1,
+        "default": 1
+      },
+      {
+        "id": 1003,
+        "name": "HeadX",
+        "min": -1,
+        "max": 1,
+        "default": 0
+      },
+      {
+        "id": 1004,
+        "name": "HeadTilt",
+        "min": -1,
+        "max": 1,
+        "default": 0
+      }
+    ],
+    "runtimeFlattening": "sclera/iris/pupil/highlight/lid-skin/context are combined only for this four-parameter blink output; common assets remain separate",
+    "independentGazeRigged": false,
+    "hairStrandsRigged": false,
+    "inpSha256": "df7b55f1fb45f1b5bc598b999248102b3a7babe7dbf0a4b7d0720ee86d264532"
+  },
+  "official_creator": {
+    "version": "0.8.6",
+    "platform": "Linux x86_64 / Xvfb / Mesa software",
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "generated_sha256": "df7b55f1fb45f1b5bc598b999248102b3a7babe7dbf0a4b7d0720ee86d264532",
+    "creator_saved_sha256": "cc93f037801d651354882252e5af308ced85f7ab744b3476e48adbca7a68a856",
+    "first_process_states": 26,
+    "fresh_reloaded_process_states": 26,
+    "runtime_controls_and_independence_passed": true,
+    "save_reload_viewport_pixel_identity_passed": true,
+    "max_changed_viewport_pixels_on_reload": 0,
+    "maximum_torso_changed_pixels": 0,
+    "displayed_blink_openings": [
+      0.0,
+      0.03,
+      0.06,
+      0.06,
+      0.1,
+      0.16,
+      0.26,
+      0.48,
+      0.74,
+      1.0
+    ],
+    "texture_retention": {
+      "schema": 1,
+      "generated_sha256": "df7b55f1fb45f1b5bc598b999248102b3a7babe7dbf0a4b7d0720ee86d264532",
+      "creator_saved_sha256": "cc93f037801d651354882252e5af308ced85f7ab744b3476e48adbca7a68a856",
+      "stored_alpha_encoding": "premultiplied-floor-rgb-8bit",
+      "textures_identical": true,
+      "nodes": [
+        {
+          "part": "eye_white_l",
+          "rgba_identical": true,
+          "size": [
+            132,
+            101
+          ]
+        },
+        {
+          "part": "eye_white_r",
+          "rgba_identical": true,
+          "size": [
+            132,
+            100
+          ]
+        },
+        {
+          "part": "eye_lash_l",
+          "rgba_identical": true,
+          "size": [
+            132,
+            101
+          ]
+        },
+        {
+          "part": "eye_lash_r",
+          "rgba_identical": true,
+          "size": [
+            132,
+            100
+          ]
+        },
+        {
+          "part": "eye_closed_l",
+          "rgba_identical": true,
+          "size": [
+            132,
+            101
+          ]
+        },
+        {
+          "part": "eye_closed_r",
+          "rgba_identical": true,
+          "size": [
+            132,
+            100
+          ]
+        },
+        {
+          "part": "EyeAperture:l",
+          "rgba_identical": true,
+          "size": [
+            1,
+            1
+          ]
+        },
+        {
+          "part": "EyeAperture:r",
+          "rgba_identical": true,
+          "size": [
+            1,
+            1
+          ]
+        },
+        {
+          "part": "eye_lash_lower_l",
+          "rgba_identical": true,
+          "size": [
+            132,
+            101
+          ]
+        },
+        {
+          "part": "eye_lash_lower_r",
+          "rgba_identical": true,
+          "size": [
+            132,
+            100
+          ]
+        },
+        {
+          "part": "face_base",
+          "rgba_identical": true,
+          "size": [
+            960,
+            1270
+          ]
+        }
+      ],
+      "parameters": [
+        "EyeOpenL",
+        "EyeOpenR",
+        "HeadTilt",
+        "HeadX"
+      ],
+      "generated_codecs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "saved_codecs": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "generated_editor_extension_bytes": 0,
+      "saved_editor_extension_bytes": 0,
+      "runtime_validation_performed_by_this_inspector": false,
+      "appearance_quality_passed": false
+    },
+    "first_process_poses": [
+      {
+        "pose": "neutral",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "left_closed",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 7017,
+        "viewport_max_channel_delta": 224,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "right_closed",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 7370,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "both_closed",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14387,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "left_half",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 4503,
+        "viewport_max_channel_delta": 223,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "right_half",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 4863,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "both_half",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 9366,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "head_left",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": -1,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 268599,
+        "viewport_max_channel_delta": 213,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13320,
+            "dark_blue_purple_candidates": 1577
+          },
+          "r": {
+            "changed_pixels": 13167,
+            "dark_blue_purple_candidates": 1581
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "head_right",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 1,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 268910,
+        "viewport_max_channel_delta": 213,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13241,
+            "dark_blue_purple_candidates": 1600
+          },
+          "r": {
+            "changed_pixels": 13170,
+            "dark_blue_purple_candidates": 1477
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_left",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": -1,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 268595,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13319,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 13165,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_right",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 1,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 268910,
+        "viewport_max_channel_delta": 229,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13239,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 13169,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "neutral_return",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "shift_left_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": -1,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 263978,
+        "viewport_max_channel_delta": 218,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13278,
+            "dark_blue_purple_candidates": 1597
+          },
+          "r": {
+            "changed_pixels": 13137,
+            "dark_blue_purple_candidates": 1590
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "shift_right_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 1,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 264360,
+        "viewport_max_channel_delta": 218,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13195,
+            "dark_blue_purple_candidates": 1595
+          },
+          "r": {
+            "changed_pixels": 13175,
+            "dark_blue_purple_candidates": 1596
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_left_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 251487,
+        "viewport_max_channel_delta": 221,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13277,
+            "dark_blue_purple_candidates": 1609
+          },
+          "r": {
+            "changed_pixels": 13134,
+            "dark_blue_purple_candidates": 1585
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_right_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 250890,
+        "viewport_max_channel_delta": 222,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13193,
+            "dark_blue_purple_candidates": 1599
+          },
+          "r": {
+            "changed_pixels": 13163,
+            "dark_blue_purple_candidates": 1591
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_00",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14387,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_01",
+        "requested": {
+          "EyeOpenL": 0.025,
+          "EyeOpenR": 0.025,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.03,
+          "EyeOpenR": 0.03,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7026,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7379,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_02",
+        "requested": {
+          "EyeOpenL": 0.05,
+          "EyeOpenR": 0.05,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.06,
+          "EyeOpenR": 0.06,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7029,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7376,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_03",
+        "requested": {
+          "EyeOpenL": 0.075,
+          "EyeOpenR": 0.075,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.06,
+          "EyeOpenR": 0.06,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7029,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7376,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_04",
+        "requested": {
+          "EyeOpenL": 0.1,
+          "EyeOpenR": 0.1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.1,
+          "EyeOpenR": 0.1,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14411,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7028,
+            "dark_blue_purple_candidates": 70
+          },
+          "r": {
+            "changed_pixels": 7383,
+            "dark_blue_purple_candidates": 94
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_05",
+        "requested": {
+          "EyeOpenL": 0.15,
+          "EyeOpenR": 0.15,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.16,
+          "EyeOpenR": 0.16,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14398,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7025,
+            "dark_blue_purple_candidates": 385
+          },
+          "r": {
+            "changed_pixels": 7373,
+            "dark_blue_purple_candidates": 365
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_06",
+        "requested": {
+          "EyeOpenL": 0.25,
+          "EyeOpenR": 0.25,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.26,
+          "EyeOpenR": 0.26,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 12041,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 5837,
+            "dark_blue_purple_candidates": 635
+          },
+          "r": {
+            "changed_pixels": 6204,
+            "dark_blue_purple_candidates": 597
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_07",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 9366,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_08",
+        "requested": {
+          "EyeOpenL": 0.75,
+          "EyeOpenR": 0.75,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.74,
+          "EyeOpenR": 0.74,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 6856,
+        "viewport_max_channel_delta": 217,
+        "eyes": {
+          "l": {
+            "changed_pixels": 3287,
+            "dark_blue_purple_candidates": 1355
+          },
+          "r": {
+            "changed_pixels": 3569,
+            "dark_blue_purple_candidates": 1317
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      },
+      {
+        "pose": "blink_09",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0
+      }
+    ],
+    "reloaded_process_poses": [
+      {
+        "pose": "neutral",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "left_closed",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 7017,
+        "viewport_max_channel_delta": 224,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "right_closed",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 7370,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "both_closed",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14387,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "left_half",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 4503,
+        "viewport_max_channel_delta": 223,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "right_half",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 4863,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "both_half",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 9366,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "head_left",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": -1,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 268599,
+        "viewport_max_channel_delta": 213,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13320,
+            "dark_blue_purple_candidates": 1577
+          },
+          "r": {
+            "changed_pixels": 13167,
+            "dark_blue_purple_candidates": 1581
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "head_right",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 1,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 268910,
+        "viewport_max_channel_delta": 213,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13241,
+            "dark_blue_purple_candidates": 1600
+          },
+          "r": {
+            "changed_pixels": 13170,
+            "dark_blue_purple_candidates": 1477
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_left",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": -1,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 268595,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13319,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 13165,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_right",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 1,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 268910,
+        "viewport_max_channel_delta": 229,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13239,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 13169,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "neutral_return",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "shift_left_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": -1,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 263978,
+        "viewport_max_channel_delta": 218,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13278,
+            "dark_blue_purple_candidates": 1597
+          },
+          "r": {
+            "changed_pixels": 13137,
+            "dark_blue_purple_candidates": 1590
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "shift_right_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 1,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 264360,
+        "viewport_max_channel_delta": 218,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13195,
+            "dark_blue_purple_candidates": 1595
+          },
+          "r": {
+            "changed_pixels": 13175,
+            "dark_blue_purple_candidates": 1596
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_left_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": -1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": -1.0
+        },
+        "viewport_changed_pixels": 251487,
+        "viewport_max_channel_delta": 221,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13277,
+            "dark_blue_purple_candidates": 1609
+          },
+          "r": {
+            "changed_pixels": 13134,
+            "dark_blue_purple_candidates": 1585
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_right_only",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 1
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 1.0
+        },
+        "viewport_changed_pixels": 250890,
+        "viewport_max_channel_delta": 222,
+        "eyes": {
+          "l": {
+            "changed_pixels": 13193,
+            "dark_blue_purple_candidates": 1599
+          },
+          "r": {
+            "changed_pixels": 13163,
+            "dark_blue_purple_candidates": 1591
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_00",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14387,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7017,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7370,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_01",
+        "requested": {
+          "EyeOpenL": 0.025,
+          "EyeOpenR": 0.025,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.03,
+          "EyeOpenR": 0.03,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7026,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7379,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_02",
+        "requested": {
+          "EyeOpenL": 0.05,
+          "EyeOpenR": 0.05,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.06,
+          "EyeOpenR": 0.06,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7029,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7376,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_03",
+        "requested": {
+          "EyeOpenL": 0.075,
+          "EyeOpenR": 0.075,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.06,
+          "EyeOpenR": 0.06,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14405,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7029,
+            "dark_blue_purple_candidates": 0
+          },
+          "r": {
+            "changed_pixels": 7376,
+            "dark_blue_purple_candidates": 0
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_04",
+        "requested": {
+          "EyeOpenL": 0.1,
+          "EyeOpenR": 0.1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.1,
+          "EyeOpenR": 0.1,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14411,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7028,
+            "dark_blue_purple_candidates": 70
+          },
+          "r": {
+            "changed_pixels": 7383,
+            "dark_blue_purple_candidates": 94
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_05",
+        "requested": {
+          "EyeOpenL": 0.15,
+          "EyeOpenR": 0.15,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.16,
+          "EyeOpenR": 0.16,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 14398,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 7025,
+            "dark_blue_purple_candidates": 385
+          },
+          "r": {
+            "changed_pixels": 7373,
+            "dark_blue_purple_candidates": 365
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_06",
+        "requested": {
+          "EyeOpenL": 0.25,
+          "EyeOpenR": 0.25,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.26,
+          "EyeOpenR": 0.26,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 12041,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 5837,
+            "dark_blue_purple_candidates": 635
+          },
+          "r": {
+            "changed_pixels": 6204,
+            "dark_blue_purple_candidates": 597
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_07",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.48,
+          "EyeOpenR": 0.48,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 9366,
+        "viewport_max_channel_delta": 230,
+        "eyes": {
+          "l": {
+            "changed_pixels": 4503,
+            "dark_blue_purple_candidates": 999
+          },
+          "r": {
+            "changed_pixels": 4863,
+            "dark_blue_purple_candidates": 952
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_08",
+        "requested": {
+          "EyeOpenL": 0.75,
+          "EyeOpenR": 0.75,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 0.74,
+          "EyeOpenR": 0.74,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 6856,
+        "viewport_max_channel_delta": 217,
+        "eyes": {
+          "l": {
+            "changed_pixels": 3287,
+            "dark_blue_purple_candidates": 1355
+          },
+          "r": {
+            "changed_pixels": 3569,
+            "dark_blue_purple_candidates": 1317
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_09",
+        "requested": {
+          "EyeOpenL": 1,
+          "EyeOpenR": 1,
+          "HeadX": 0,
+          "HeadTilt": 0
+        },
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "viewport_changed_pixels": 0,
+        "viewport_max_channel_delta": 0,
+        "eyes": {
+          "l": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1603
+          },
+          "r": {
+            "changed_pixels": 0,
+            "dark_blue_purple_candidates": 1595
+          }
+        },
+        "fixed_torso_changed_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      }
+    ]
+  },
+  "quality": {
+    "skin": {
+      "status": "measured",
+      "generated_laplacian_variance": 0.5993980846777662,
+      "reference_laplacian_variance": 142.3967454849631,
+      "detail_ratio": 0.004209352416281605,
+      "possible_blur": true,
+      "hidden_ground_truth_available": false,
+      "appearance_quality_passed": false
+    },
+    "before_model_sha256": "292a674f393a8de7b80e03bc87274bd359b339ec8b0c70a15c228a8a5af07353",
+    "before_independent_diagnostics": {
+      "source": "independent ROI renderer of actual serialized model",
+      "official_runtime": false,
+      "source_roi": [
+        288,
+        383,
+        664,
+        513
+      ],
+      "frames": [
+        {
+          "opening": 0.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 1,
+          "median_lash_stroke_pixels": 4.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.025,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.625,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 1,
+          "median_lash_stroke_pixels": 5.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.05,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 9,
+          "median_lash_stroke_pixels": 9.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 9
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.075,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 10,
+          "median_lash_stroke_pixels": 10.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 10
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.1,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 9,
+          "median_lash_stroke_pixels": 10.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 9
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.15,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 10,
+          "median_lash_stroke_pixels": 11.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 10
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.25,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 10,
+          "median_lash_stroke_pixels": 11.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 10
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.5,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 13.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        },
+        {
+          "opening": 0.75,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 14.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        },
+        {
+          "opening": 1.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 15.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        }
+      ],
+      "appearance_quality_passed": false,
+      "notes": [
+        "Candidate metrics do not certify appearance. The eye-white mask bounds iris contribution; it does not identify individual RGB pixels as iris."
+      ]
+    },
+    "after_independent_diagnostics": {
+      "source": "independent ROI renderer of actual serialized model",
+      "official_runtime": false,
+      "source_roi": [
+        288,
+        383,
+        664,
+        513
+      ],
+      "frames": [
+        {
+          "opening": 0.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 1,
+          "median_lash_stroke_pixels": 4.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.025,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.09765625,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 1,
+          "median_lash_stroke_pixels": 4.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.05,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.244140625,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 1,
+          "median_lash_stroke_pixels": 4.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.075,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.4638671875,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 16,
+          "median_lash_stroke_pixels": 5.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 16
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.1,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.68359375,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 21,
+          "median_lash_stroke_pixels": 5.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 21
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.15,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.88134765625,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 25,
+          "median_lash_stroke_pixels": 5.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 25
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.25,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 27,
+          "median_lash_stroke_pixels": 6.0,
+          "warnings": [
+            {
+              "kind": "possible-double-lash",
+              "columns": 27
+            }
+          ],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0
+        },
+        {
+          "opening": 0.5,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 9.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        },
+        {
+          "opening": 0.75,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 12.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        },
+        {
+          "opening": 1.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 13.0,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null
+        }
+      ],
+      "appearance_quality_passed": false,
+      "notes": [
+        "Candidate metrics do not certify appearance. The eye-white mask bounds iris contribution; it does not identify individual RGB pixels as iris."
+      ]
+    },
+    "naturalness_certified": false,
+    "warnings": [
+      "Skin completion remains smoother than nearby observed skin.",
+      "Global double-lash candidate columns increase at openings .075 through .25; some outer source eyelashes also trigger the detector.",
+      "Hair candidates are not verified depth layers. A thin contrasting headwear candidate is deferred to the coarse remainder."
+    ]
+  },
+  "timing_seconds": {
+    "preparation": 24.95,
+    "automatic_blink_diagnostics": 1.578,
+    "end_to_end": 28.379,
+    "performance_benchmark": false
+  },
+  "regression": {
+    "node_passed": 52,
+    "python_pytest_passed": 59,
+    "browser_passed": 140,
+    "total_tests_passed": 251,
+    "production_build_passed": true,
+    "python_existing_deprecation_warnings": 1,
+    "stable_5part_generator_unchanged": true,
+    "regenerated_legacy_model_sha256": "dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9",
+    "normal_api_worker_ui_unchanged": true,
+    "mobile_review": {
+      "viewport": [
+        390,
+        844
+      ],
+      "width": 390,
+      "scrollWidth": 390,
+      "controls": [
+        {
+          "height": 48,
+          "fontSize": "16px"
+        },
+        {
+          "height": 48,
+          "fontSize": "16px"
+        },
+        {
+          "height": 48,
+          "fontSize": "16px"
+        }
+      ],
+      "states": 12,
+      "pageErrors": [],
+      "externalRequests": [],
+      "frameChanged": true,
+      "realPhoneTested": false
+    }
+  },
+  "private_artifacts_root": "/tmp/inochi-parts-trial",
+  "private_artifact_retention_guaranteed": false,
+  "restrictions": {
+    "input_or_generated_images_models_in_git": false,
+    "paid_assets_downloaded": false,
+    "new_paid_service": false,
+    "main_merged": false,
+    "deployed": false,
+    "cubism_compatible": false,
+    "vtube_studio_tested": false,
+    "inp2_supported": false,
+    "inox_workaround_added": false
+  },
+  "remaining": [
+    "Closed skin and source eyelash artifacts need further finishing.",
+    "Independent gaze and hair sway are not rigged in the four-parameter runtime projection.",
+    "Front/back hair order and large hidden regions remain uncertain.",
+    "Only one real image tested for detailed parts; synthetic multi-hue tests are not a general success rate.",
+    "Detailed CLI is not connected to the normal mobile application UI."
+  ]
+}

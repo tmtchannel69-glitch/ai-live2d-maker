@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-live2d-maker:character-parts:1",
+  "title": "Engine-independent observed character parts and separate completion",
+  "type": "object",
+  "required": ["format", "version", "source", "coordinates", "parts", "groups", "neutral_policy"],
+  "properties": {
+    "format": {"const": "ai-live2d-maker-character-parts"},
+    "version": {"const": 1},
+    "source": {"type": "object", "required": ["width", "height"], "properties": {"width": {"type": "integer", "minimum": 64, "maximum": 4096}, "height": {"type": "integer", "minimum": 64, "maximum": 4096}}},
+    "coordinates": {"const": "source-pixels-top-left; placement=source-normalized"},
+    "neutral_policy": {"const": "observed-only; completions-require-explicit-exposure-policy"},
+    "groups": {"type": "array", "maxItems": 24, "items": {"type": "object", "required": ["id", "parent"], "properties": {"id": {"type": "string"}, "parent": {"type": ["string", "null"]}}}},
+    "parts": {"type": "array", "maxItems": 80, "items": {"$ref": "#/$defs/part"}},
+    "motions": {"type": "object"},
+    "appearance_quality_passed": {"const": false}
+  },
+  "$defs": {
+    "asset": {"type": ["string", "null"], "pattern": "^(observed|completion|masks)/[a-z0-9_]+\\.png$"},
+    "plane": {"type": "object", "required": ["rgba", "mask", "pixels"], "properties": {"rgba": {"$ref": "#/$defs/asset"}, "mask": {"$ref": "#/$defs/asset"}, "pixels": {"type": "integer", "minimum": 0}, "enabled_in_neutral": {"const": false}}},
+    "part": {
+      "type": "object",
+      "required": ["id", "role", "side", "parent", "order", "source_box_xywh", "placement", "observed", "completion", "occluded_by", "recognition", "motion"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,70}$"},
+        "role": {"enum": ["upper_lid", "lower_lid", "eyelash_upper", "eyelash_lower", "sclera", "iris", "pupil", "highlight", "context", "closed_eyelash", "skin_completion", "hair_strand", "hair_region", "foreground_remainder"]},
+        "side": {"enum": ["l", "r", null]},
+        "parent": {"type": "string"},
+        "order": {"type": "integer"},
+        "source_box_xywh": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "integer", "minimum": 0}},
+        "placement": {"type": "object", "required": ["x", "y", "width", "height"], "properties": {"x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}, "width": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}, "height": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}}},
+        "observed": {"$ref": "#/$defs/plane"},
+        "completion": {"$ref": "#/$defs/plane"},
+        "occluded_by": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "recognition": {"type": "object", "required": ["status", "confidence", "method"], "properties": {"status": {"enum": ["recognized", "candidate", "estimated-only", "missing", "ambiguous"]}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}, "method": {"type": "string"}}},
+        "motion": {"type": "object", "required": ["kind", "validated"], "properties": {"kind": {"type": "string"}, "validated": {"type": "boolean"}}},
+        "hair_region": {"enum": ["front", "side_l", "side_r", "back"]},
+        "depth_verified": {"const": false}
+      }
+    }
+  }
+}
