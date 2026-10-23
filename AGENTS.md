@@ -1,6 +1,14 @@
 # AI Live2D Maker 開発ルール
 
-## 詳細パーツ分割（2026-10-23、最新）
+## STEP 1：まばたきリギング（2026-10-23、最新）
+- 同じ`feature/detailed-character-parts`でe89bcf0を基準に継続。オーナーの順序はSTEP 1の修正/検証/結果確認→STEP 2の頭/首/胴体→STEP 3の髪/物理。今回はSTEP 1まで。肌の警告が残る状態を、後段追加で完成扱いしない。
+- 詳細CLIの既定は`contour-lid-v2`。従来の詳細版は`--blink-profile detailed-v1`で再生成でき、モデルSHA df7b55...一致。通常の5役割/品質版生成器、worker/API/UIは不変。スマホ画面への詳細版接続は未実装。
+- `server/blink_preparation.py`で局所輪郭による下まつ毛、色支持、限定した肌補完、連続した推定閉眼線。`blink-rig.mjs`で25×7の曲線mesh、同一輪郭、線の下地/重ね順。0.075〜0.25の二重線候補は10状態/36追加状態で0。半開の薄まりは公式で発見して修正、弱い列94→0。観測RGBAと補完は分けたまま。
+- 半透明の輪郭を不透明な肌へ変えない。追加所有は不透明な根拠のある画素だけで、対象外のalphaは元の前景へ保持する。独立診断は元画素/alpha/線/肌を確認する補助で、公式SDKや自然さの代替判定ではない。
+- 最終候補INP SHA fee8d92bb66b7bbe174355d93d7b4e2551d38a45c4a05dde6f28e8a24175c253、Creator保存INX b8dd807a20082e907d1017f24dd7656640bc719fbd46aad62dc51eacc62797ba。公式0.8.6の読込/動作/保存/別プロセス確認は`docs/BLINK_RIG_VALIDATION.md/json`を参照。GUIの幅を100px広げて実表示の異なる10状態を撮影し、正確な10開度の独立描画と区別。
+- 肌細部比.03367でぼけ警告、境界/外側の点状画素が残る。見た目は未合格。頭角度X/Yや髪物理は未実装。SDK SimplePhysicsの存在確認を採用成功と呼ばない。最新設計は`docs/AUTO_RIGGING_STAGES.md`。Palmie363は403で未読、有料素材未取得。
+
+## 詳細パーツ分割（2026-10-23、前段）
 - 現在の作業ブランチは`feature/detailed-character-parts`、基準cd4c2b7。オーナーは公開の人の制作手順を参考に、目の詳細分離、狭い隠れ領域の補完、髪の候補、共通データ、自動品質検査を承認。通常の5役割/品質版の生成器とAPI/UIは変更しない。
 - 共通データ版1は`server/character_parts.py`/`shared/character-parts.schema.json`。元観測RGBA/mask/位置/所有、補完RGBA/mask、親子/被覆/根拠を分ける。欠けた瞳孔/反射等はPNGなしのmissing/ambiguous、未校正の確信度を正解確率と呼ばない。中立は観測だけ、補完は明示した露出規則で使用する。
 - 実行は`python scripts/parts/generate.py --source IMAGE --output NEW_PRIVATE_DIR`。既存のprepare_quality_imageを再利用し、詳細分割と`parts-adapter.mjs`を独立追加。通常のボタンへは未接続。共通データ36パーツの今回出力では、虹彩/瞳孔/反射等は瞬きモデル化の際だけ目全体へまとめる。独立視線/髪の揺れは未実装。

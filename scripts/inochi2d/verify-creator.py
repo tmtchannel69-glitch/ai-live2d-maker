@@ -41,6 +41,9 @@ def digest(path):
 
 
 def run_audit(args):
+    extra=args.controller_extra_width
+    if not 0<=extra<=200:raise ValueError('Controller extra width must be between 0 and 200 pixels.')
+    viewport=(VIEWPORT[0]+extra,*VIEWPORT[1:])
     output = Path(args.output).resolve()
     if output.is_relative_to(ROOT):
         raise ValueError('Screenshots and model reports must be outside Git.')
@@ -81,7 +84,7 @@ def run_audit(args):
             xdo('keydown', 'Shift_L')
             time.sleep(.08)
         xdo('mousedown', 1)
-        time.sleep(.22)
+        time.sleep(.30)
         xdo('mouseup', 1)
         time.sleep(.08)
         if shift:
@@ -113,15 +116,18 @@ def run_audit(args):
         if args.quality:
             requested.append(('HeadTilt', tilt))
         for name, value in requested:
-            x = ((173 if value == 0 else 157 if value < 0 else 189) if name.startswith('Head')
-                 else 173 if value == .5 else round(158+31*value))
+            if extra:
+                x=round(158+(31+extra)*((value+1)/2 if name.startswith('Head') else value))
+            else:
+                x = ((173 if value == 0 else 157 if value < 0 else 189) if name.startswith('Head')
+                     else 173 if value == .5 else round(158+31*value))
             click(x, controls[name], shift=name.startswith('Head') or value in (0, 1))
         xdo('mousemove', 1200, 850)
         time.sleep(.4)
 
     # At initial fit zoom the reset-to-100% button is at this position. Once
     # already at 100%, this position contains only the position readout.
-    click(357, 923)
+    click(357+extra, 923)
     time.sleep(.7)
     pose(1, 1, 0)
     neutral = screenshot()
@@ -135,10 +141,10 @@ def run_audit(args):
     x0, y0 = (round(eye['placement'][a] * manifest['source'][b])
               for a, b in [('x', 'width'), ('y', 'height')])
     template = np.array(source.crop((x0 + 5, y0 + 5, x0 + eye['width'] - 5, y0 + eye['height'] - 5)))
-    match = cv2.matchTemplate(cv2.cvtColor(np.array(neutral.crop(VIEWPORT)), cv2.COLOR_RGB2GRAY),
+    match = cv2.matchTemplate(cv2.cvtColor(np.array(neutral.crop(viewport)), cv2.COLOR_RGB2GRAY),
                              cv2.cvtColor(template, cv2.COLOR_RGB2GRAY), cv2.TM_CCOEFF_NORMED)
     _, score, _, location = cv2.minMaxLoc(match)
-    origin = (VIEWPORT[0] + location[0] - x0 - 5, VIEWPORT[1] + location[1] - y0 - 5)
+    origin = (viewport[0] + location[0] - x0 - 5, viewport[1] + location[1] - y0 - 5)
     face_score = None
     calibration = 'source-eye'
     if eye['width'] < 40:
@@ -149,10 +155,10 @@ def run_audit(args):
         fx, fy, fw, fh = prep['face_box_xywh']
         box = (round(fx+fw*.2), round(fy+fh*.22), round(fx+fw*.8), round(fy+fh*.85))
         central = np.array(source.crop(box))
-        face_match = cv2.matchTemplate(cv2.cvtColor(np.array(neutral.crop(VIEWPORT)), cv2.COLOR_RGB2GRAY),
+        face_match = cv2.matchTemplate(cv2.cvtColor(np.array(neutral.crop(viewport)), cv2.COLOR_RGB2GRAY),
                                       cv2.cvtColor(central, cv2.COLOR_RGB2GRAY), cv2.TM_CCOEFF_NORMED)
         _, face_score, _, face_location = cv2.minMaxLoc(face_match)
-        face_origin = (VIEWPORT[0]+face_location[0]-box[0], VIEWPORT[1]+face_location[1]-box[1])
+        face_origin = (viewport[0]+face_location[0]-box[0], viewport[1]+face_location[1]-box[1])
         if face_score < .95 or max(abs(a-b) for a,b in zip(origin,face_origin)) > 1:
             raise ValueError(f'Small-input native face/eye calibration failed: {face_score:.4f}, {score:.4f}')
         origin = face_origin
@@ -166,20 +172,20 @@ def run_audit(args):
         y = round(p['placement']['y'] * source.height) + origin[1]
         eye_rois[side] = (x, y, x + p['width'], y + p['height'])
     fx, fy, fw, fh = prep['face_box_xywh']
-    face_roi = (max(VIEWPORT[0], fx + origin[0]), max(VIEWPORT[1], fy + origin[1]),
-                min(VIEWPORT[2], fx + fw + origin[0]), min(VIEWPORT[3], fy + fh + origin[1]))
+    face_roi = (max(viewport[0], fx + origin[0]), max(viewport[1], fy + origin[1]),
+                min(viewport[2], fx + fw + origin[0]), min(viewport[3], fy + fh + origin[1]))
     torso_roi = None
     if args.quality:
         fixed_y = manifest['quality']['neckBlend']['fixedY'] * source.height
-        torso_roi = (max(VIEWPORT[0], round(fx + fw*.35 + origin[0])),
+        torso_roi = (max(viewport[0], round(fx + fw*.35 + origin[0])),
                      round(fixed_y + max(5, fw*.03) + origin[1]),
-                     min(VIEWPORT[2], round(fx + fw*.65 + origin[0])),
-                     min(VIEWPORT[3], round(min(source.height-2, fixed_y + fw*.22) + origin[1])))
-        if torso_roi[3] <= torso_roi[1] or torso_roi[1] < VIEWPORT[1]:
+                     min(viewport[2], round(fx + fw*.65 + origin[0])),
+                     min(viewport[3], round(min(source.height-2, fixed_y + fw*.22) + origin[1])))
+        if torso_roi[3] <= torso_roi[1] or torso_roi[1] < viewport[1]:
             raise ValueError('Fixed torso ROI is not visible in this native-size view.')
         if np.max(np.std(np.array(neutral.crop(torso_roi)), axis=(0, 1))) < 2:
             raise ValueError('Fixed torso ROI has no identifiable foreground detail.')
-    records, faces = [], []
+    records, faces, input_retries = [], [], []
     selected = [p for p in POSES if p[0] in {'neutral','left_closed','right_closed','both_closed','head_left','head_right','neutral_return'}] if args.smoke else POSES
     poses = [(*p, p[3] if args.quality else 0) for p in selected]
     if args.quality and not args.smoke:
@@ -188,17 +194,20 @@ def run_audit(args):
     if args.transitions:
         poses += [(f'blink_{i:02d}', v, v, 0, 0) for i, v in enumerate([0,.025,.05,.075,.1,.15,.25,.5,.75,1])]
     for name, left, right, head, tilt in poses:
-        pose(left, right, head, tilt)
-        image = screenshot()
-        observed = values(image)
         expected = {'EyeOpenL': left, 'EyeOpenR': right, 'HeadX': head}
         if args.quality:
             expected['HeadTilt'] = tilt
-        if any(abs(observed[key] - value) > (.04 if value == .5 else .02 if 0 < value < 1 else .005)
-               for key, value in expected.items()):
-            raise ValueError(f'Parameter control failed at {name}: {observed}')
+        for attempt in range(3):
+            pose(left, right, head, tilt)
+            image = screenshot()
+            observed = values(image)
+            if not any(abs(observed[key] - value) > (.04 if value == .5 else .02 if 0 < value < 1 else .005)
+                       for key, value in expected.items()):break
+            input_retries.append({'pose':name,'attempt':attempt+1,'displayed':observed,'expected':expected})
+            image.save(output/f'input-retry-{name}-{attempt+1}.png')
+        else:raise ValueError(f'Parameter control failed at {name}: {observed}')
         image.save(output / f'{name}.png')
-        diff = np.abs(np.array(image.crop(VIEWPORT)).astype(int) - np.array(neutral.crop(VIEWPORT)).astype(int))
+        diff = np.abs(np.array(image.crop(viewport)).astype(int) - np.array(neutral.crop(viewport)).astype(int))
         eyes = {}
         for side, roi in eye_rois.items():
             pixels = np.array(image.crop(roi)).astype(int)
@@ -229,8 +238,8 @@ def run_audit(args):
     if args.compare:
         previous = Path(args.compare)
         for record in records:
-            before = np.array(Image.open(previous / (record['pose'] + '.png')).crop(VIEWPORT))
-            after = np.array(Image.open(output / (record['pose'] + '.png')).crop(VIEWPORT))
+            before = np.array(Image.open(previous / (record['pose'] + '.png')).crop(viewport))
+            after = np.array(Image.open(output / (record['pose'] + '.png')).crop(viewport))
             changed = int(np.any(before != after, axis=2).sum())
             record['previous_process_viewport_changed_pixels'] = changed
             assert changed == 0, f'Save/reload changed viewport at {record["pose"]}: {changed}'
@@ -246,10 +255,10 @@ def run_audit(args):
               'model_sha256': digest(args.model), 'source_sha256': digest(args.source),
               'native_eye_template_correlation': score, 'source_origin_xy': origin,
               'native_face_template_correlation': face_score, 'native_scale_calibration': calibration,
-              'viewport_roi': VIEWPORT, 'face_roi': face_roi, 'eye_rois': eye_rois, 'fixed_torso_roi': torso_roi,
+              'viewport_roi': viewport, 'controller_extra_width':extra,'face_roi': face_roi, 'eye_rois': eye_rois, 'fixed_torso_roi': torso_roi,
               'quality_profile': bool(args.quality),
               'audit_scope': 'seven-pose-compatibility' if args.smoke else 'twelve-poses-plus-quality-motion' if args.quality else 'twelve-poses',
-              'poses': records, 'runtime_controls_and_independence_passed': True,
+              'poses': records, 'input_retries':input_retries,'runtime_controls_and_independence_passed': True,
               'previous_process_pixel_identity_passed': bool(args.compare),
               'appearance_quality_passed': False,
               'notes': ['GUI controls test playback states; no manual rigging was performed.',
@@ -272,4 +281,5 @@ if __name__ == '__main__':
     parser.add_argument('--quality', action='store_true', help='Opt-in four-parameter aperture/neck model; also audit four independent head poses')
     parser.add_argument('--transitions', action='store_true', help='Also audit ten quantized opening states, recording actual displayed values')
     parser.add_argument('--smoke', action='store_true', help='Seven compatibility states for additional corpus cases; not a dense appearance audit')
+    parser.add_argument('--controller-extra-width',type=int,default=0,help='Normal GUI parameter panel was widened by this many pixels; records ten distinct opening states.')
     run_audit(parser.parse_args())

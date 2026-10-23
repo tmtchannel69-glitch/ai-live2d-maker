@@ -26,11 +26,16 @@ def inspect_frame(rgba, *, opening, expected_opaque, iris_contribution=None,
             delta=np.abs(hsv[:,:,0].astype(int)-int(hue));delta=np.minimum(delta,180-delta)
             possible |= (delta<13)&(hsv[:,:,1]>80)&(hsv[:,:,2]<225)
         colored_residue=int((possible&iris_area).sum())
-    two_line_columns=0;stroke_widths=[]
+    two_line_columns=0;stroke_widths=[];core_coverage=None
     if lash_alpha is not None:
         if lash_alpha.shape!=alpha.shape:raise ValueError('Lash alpha dimensions differ.')
         binary=lash_alpha>.18
         if lash_window is not None:binary &= lash_window
+        if lash_window is not None:
+            maxima=np.max(np.where(lash_window,lash_alpha,0),axis=0)
+            present=maxima>.18
+            core_coverage={'weak_columns':int(((maxima<.85)&present).sum()),
+                'median_column_maximum_alpha':float(np.median(maxima[present])) if present.any() else 0}
         for x in range(binary.shape[1]):
             ys=np.where(binary[:,x])[0]
             if not len(ys):continue
@@ -42,6 +47,7 @@ def inspect_frame(rgba, *, opening, expected_opaque, iris_contribution=None,
         'possible_closed_iris_color_pixels':colored_residue,
         'double_lash_columns':two_line_columns if opening<=.26 else None,
         'median_lash_stroke_pixels':float(np.median(stroke_widths)) if stroke_widths else 0,
+        'lash_core_coverage':core_coverage,
         'warnings':([{'kind':'transparent-hole','pixels':int(holes.sum())}] if holes.any() else [])+
             ([{'kind':'iris-residual','pixels':ghost_pixels}] if ghost_pixels else [])+
             ([{'kind':'possible-iris-color-residual','pixels':colored_residue}] if colored_residue else [])+

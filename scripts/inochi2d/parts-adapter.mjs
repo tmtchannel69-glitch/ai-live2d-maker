@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {buildQualityModel} from './quality-model.mjs';
 import {readCharacterContainer} from './character-model.mjs';
+import {applyContourBlink,sampleTrace} from './blink-rig.mjs';
 
 const need=(condition,message)=>{if(!condition)throw new Error(message);};
 const hash=b=>createHash('sha256').update(b).digest('hex');
@@ -44,6 +45,7 @@ export function buildPartsModel(graph,images){
     if(p.observed.rgba){const image=images[p.observed.rgba];need(image&&image.width===w&&image.height===h,'Shared texture dimensions differ.');paste(full,image,x,y,owners);}
   }
   const projection=[],lowerImages={},skin=byId.get('eye_skin_underpaint');
+  const contour=['l','r'].every(side=>graph.motions?.blink?.[side]?.profile==='contour-lid-v2');
   need(skin?.completion.rgba && images[skin.completion.rgba],'Separate eye skin underpainting is required.');
   const underpaint=images[skin.completion.rgba];need(underpaint.width===width&&underpaint.height===height,'Underpaint canvas mismatch.');
   const blink={};
@@ -53,6 +55,7 @@ export function buildPartsModel(graph,images){
     const [x,y,w,h]=box,opened=empty(w,h);
     for(const p of graph.parts.filter(p=>p.side===side&&p.observed.rgba)){
       need(JSON.stringify(p.source_box_xywh)===JSON.stringify(box),'Eye parts must share source-coordinate texture domains.');
+      if(contour&&!['sclera','iris','pupil','highlight','eyelash_upper','eyelash_lower','context'].includes(p.role))continue;
       paste(opened,images[p.observed.rgba]);
     }
     const lash=byId.get(`eye_${side}_eyelash_upper`),lower=byId.get(`eye_${side}_eyelash_lower`),closed=byId.get(`eye_${side}_closed`);
@@ -60,12 +63,15 @@ export function buildPartsModel(graph,images){
     const upperImage=images[lash.observed.rgba],lowerImage=lower?.observed.rgba?images[lower.observed.rgba]:null;
     for(let j=0;j<h;j++)for(let i=0;i<w;i++){
       const a=(j*w+i)*4,b=((y+j)*width+x+i)*4;
-      if(opened.data[a+3]){need(underpaint.data[b+3]===255,'Source eye must have an opaque, separately estimated skin bed.');full.data.set(underpaint.data.subarray(b,b+4),b);}
+      if(opened.data[a+3]){
+        if(contour)need(opened.data[a+3]===255,'Contour blink requires opaque eye observations; do not change source alpha.');
+        need(underpaint.data[b+3]===255,'Source eye must have an opaque, separately estimated skin bed.');full.data.set(underpaint.data.subarray(b,b+4),b);
+      }
       if(upperImage.data[a+3] || lowerImage?.data[a+3])opened.data.fill(0,a,a+4);
     }
     projection.push(part(`eye_white_${side}`,opened,box,source),part(`eye_lash_${side}`,upperImage,box,source),part(`eye_closed_${side}`,images[closed.completion.rgba],box,source));
     lowerImages[side]=lowerImage;
-    blink[side]={upper_y:geometry.upper_center_y,closed_y:geometry.closed_center_y};
+    blink[side]={upper_y:contour?sampleTrace(geometry.upper_center_y,13):geometry.upper_center_y,closed_y:contour?sampleTrace(geometry.closed_center_y,13):geometry.closed_center_y};
   }
   const base=crop(full);projection.push(part('face_base',base.image,base.box,source));
   const head=graph.motions.head,q={profile:'aperture-head-v1',blink,headPivot:head.pivot,neckBlend:head.neck_blend};
@@ -74,7 +80,8 @@ export function buildPartsModel(graph,images){
   const nodes=new Map();const visit=n=>{nodes.set(n.name,n);for(const c of n.children)visit(c);};visit(model.nodes);
   const headNode=nodes.get('Head');
   for(const [index,side] of ['l','r'].entries()){
-    const param=model.param.find(p=>p.name==='EyeOpen'+side.toUpperCase()),axis=param.axis_points[0],g=graph.motions.blink[side];
+    const raw=graph.motions.blink[side],g=contour?{...raw,upper_center_y:sampleTrace(raw.upper_center_y,13),closed_center_y:sampleTrace(raw.closed_center_y,13)}:raw;
+    const param=model.param.find(p=>p.name==='EyeOpen'+side.toUpperCase()),axis=param.axis_points[0];
     const upper=nodes.get('eye_lash_'+side),closed=nodes.get('eye_closed_'+side),eye=nodes.get('eye_white_'+side),mask=nodes.get('EyeAperture:'+side);
     const w=g.box_xywh[2],h=g.box_xywh[3],minimum=Math.max(.18,Math.min(.6,g.closed_lash_width/Math.max(1,g.source_lash_width)));
     const deform=(node,v,fn)=>node.mesh.uvs.reduce((out,u,i,uv)=>{if(i%2===0){const y=uv[i+1]*h,col=Math.round(u*12);out.push([0,fn(col,y,v)-y]);}return out;},[]);
@@ -102,6 +109,7 @@ export function buildPartsModel(graph,images){
       param.bindings.push(binding(lower.uuid,'deform',axis.map(v=>deform(lower,v,(i,y,v)=>y+(g.closed_center_y[i]-center)*(1-v)))));
     }
   }
+  const blinkRig=contour?applyContourBlink(model,graph):null;
   model.meta.rigger='AI Live2D Maker common-parts blink adapter';
   const json=Buffer.from(JSON.stringify(model));need(json.length<=2*1024*1024,'Detailed model JSON exceeds budget.');
   const inp=new Uint8Array(Buffer.concat([Buffer.from('TRNSRTS\0'),uint(json.length),json,Buffer.from('TEX_SECT'),uint(textures.length),...textures.flatMap(p=>[uint(p.length),Buffer.from([0]),p])]));
@@ -115,8 +123,9 @@ export function buildPartsModel(graph,images){
     decodedTextureBytes:built.report.decodedTextureBytes+Object.values(lowerImages).filter(Boolean).reduce((n,im)=>n+im.width*im.height*4,0),
     vertices:drawable.reduce((n,p)=>n+p.mesh.verts.length/2,0),
     triangles:drawable.reduce((n,p)=>n+p.mesh.indices.length/3,0),inpSha256:hash(inp),
-    blinkMethod:'source-ink-center-alignment-independent-lower-lash',
-    runtimeFlattening:'sclera/iris/pupil/highlight/lid-skin/context are combined only for this four-parameter blink output; common assets remain separate',
+    blinkMethod:contour?'shared-contour-upper-closed-stroke-and-lower-boundary':'source-ink-center-alignment-independent-lower-lash',
+    ...(blinkRig?{blinkRig}:{}),
+    runtimeFlattening:contour?'Sclera/iris/pupil/highlight and ambiguous context combine for the blink projection; observed lid skin remains in the base; common assets stay separate':'sclera/iris/pupil/highlight/lid-skin/context are combined only for this four-parameter blink output; common assets remain separate',
     independentGazeRigged:false,hairStrandsRigged:false,
     notes:[...built.report.notes,'Detailed source masks/completion and hair candidates remain in the engine-independent common parts file.',
       'The current runtime projection does not independently animate iris, pupil, highlights or hair strands.']}};

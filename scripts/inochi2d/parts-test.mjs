@@ -76,3 +76,74 @@ test('overlapping observed owners are rejected instead of hidden by completion',
   const {graph,images}=fixture(),p=structuredClone(graph.parts[0]);p.id='duplicate';graph.parts.push(p);
   assert.throws(()=>buildPartsModel(graph,images),/overlap/);
 });
+
+function contourFixture(){
+  const f=fixture();for(const g of Object.values(f.graph.motions.blink)){
+    g.profile='contour-lid-v2';g.lower_center_y=Array(25).fill(15);
+  }return f;
+}
+
+test('contour profile retains all ten exact keys and the existing head controls',()=>{
+  const original=fixture(),v2=contourFixture(),old=buildPartsModel(original.graph,original.images),current=buildPartsModel(v2.graph,v2.images);
+  assert.deepEqual(current.model.param.filter(p=>p.name.startsWith('Head')),old.model.param.filter(p=>p.name.startsWith('Head')));
+  for(const p of current.model.param.filter(p=>p.name.startsWith('EyeOpen'))){
+    assert.deepEqual(p.axis_points[0],[0,.025,.05,.075,.1,.15,.25,.5,.75,1]);
+  }
+  assert.equal(current.report.blinkRig.profile,'contour-lid-v2');
+  assert.equal(old.report.blinkRig,undefined);
+});
+
+test('low-opening contour uses one estimated stroke and raw zero hides the ocular image',()=>{
+  const {graph,images}=contourFixture(),{model}=buildPartsModel(graph,images),nodes=flat(model.nodes);
+  for(const side of ['l','r']){
+    const p=model.param.find(p=>p.name==='EyeOpen'+side.toUpperCase());
+    for(const [i,v] of p.axis_points[0].entries()){
+      if(v>.25)continue;
+      for(const name of ['eye_lash_','eye_lash_lower_','eye_closed_','eye_white_']){
+        const n=nodes.find(n=>n.name===name+side),b=p.bindings.find(b=>b.node===n.uuid&&b.param_name==='opacity');
+        const expected=name==='eye_closed_'?1:name==='eye_white_'&&v>0?1:0;
+        assert.equal(b.values[i][0],expected);
+      }
+    }
+  }
+});
+
+test('contour projection rejects translucent ocular paint instead of changing original alpha',()=>{
+  const {graph,images}=contourFixture();images['observed/eye_l_iris.png'].data[(6*12+7)*4+3]=128;
+  assert.throws(()=>buildPartsModel(graph,images),/opaque eye observations/);
+});
+
+test('a fully covered lash core never mixes skin into the half-open transition',()=>{
+  const {graph,images}=contourFixture(),{model}=buildPartsModel(graph,images),nodes=flat(model.nodes);
+  for(const side of ['l','r']){
+    const upper=nodes.find(n=>n.name==='eye_lash_'+side),closed=nodes.find(n=>n.name==='eye_closed_'+side),p=model.param.find(p=>p.name==='EyeOpen'+side.toUpperCase());
+    assert.ok(closed.zsort>upper.zsort);
+    const k=p.axis_points[0].indexOf(.5),opacity=n=>p.bindings.find(b=>b.node===n.uuid&&b.param_name==='opacity').values[k][0];
+    const a=opacity(upper),b=opacity(closed);
+    const coverage=a+b*(1-a);
+    assert.equal(coverage,1);
+    const color=40*a+45*b*(1-a)+245*(1-coverage);
+    assert.ok(color>=40&&color<=45);
+  }
+});
+
+test('contour meshes stay unfolded at keys and intermediate values; neutral UV geometry is unchanged',()=>{
+  const {graph,images}=contourFixture(),{model}=buildPartsModel(graph,images),nodes=flat(model.nodes);
+  for(const p of model.param.filter(p=>p.name.startsWith('EyeOpen'))){
+    for(const b of p.bindings.filter(b=>b.param_name==='deform')){
+      const n=nodes.find(n=>n.uuid===b.node),w=n.name.endsWith('l')?graph.motions.blink.l.box_xywh[2]:graph.motions.blink.r.box_xywh[2],h=16;
+      for(let i=0;i<n.mesh.uvs.length;i+=2){
+        assert.ok(Math.abs(n.mesh.verts[i]-(n.mesh.uvs[i]-.5)*w)<1e-8);
+        assert.ok(Math.abs(n.mesh.verts[i+1]-(n.mesh.uvs[i+1]-.5)*h)<1e-8);
+      }
+      const d=b.values.at(-1)[0];assert.ok(d.every(([x,y])=>Math.abs(x)+Math.abs(y)<1e-8)||n.name.startsWith('eye_closed_'));
+      for(let key=0;key<b.values.length-1;key++)for(const t of [0,.25,.5,.75,1]){
+        const a=b.values[key][0],c=b.values[key+1][0],verts=n.mesh.verts.map((x,i)=>x+a[Math.floor(i/2)][i%2]*(1-t)+c[Math.floor(i/2)][i%2]*t);
+        for(let i=0;i<n.mesh.indices.length;i+=3){
+          const [aa,bb,cc]=n.mesh.indices.slice(i,i+3).map(j=>[verts[j*2],verts[j*2+1]]);
+          assert.ok((bb[0]-aa[0])*(cc[1]-aa[1])-(bb[1]-aa[1])*(cc[0]-aa[0])>=-1e-7,`${n.name} folded at ${key}/${t}`);
+        }
+      }
+    }
+  }
+});

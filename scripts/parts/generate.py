@@ -59,7 +59,7 @@ def generate(args):
     if output.is_relative_to(ROOT) or output.exists():raise ValueError('Use a new output directory outside Git.')
     output.mkdir(parents=True,mode=0o700);started=time.monotonic()
     with decode_image(source) as image:
-        prepared=prepare_character_parts(image,include_hair=not args.eyes_only)
+        prepared=prepare_character_parts(image,include_hair=not args.eyes_only,blink_profile=args.blink_profile)
     common=output/'common';common.mkdir()
     for path,data in prepared['assets'].items():
         target=common/path;target.parent.mkdir(exist_ok=True);target.write_bytes(data)
@@ -104,4 +104,5 @@ if __name__=='__main__':
     parser.add_argument('--source',required=True);parser.add_argument('--output',required=True)
     parser.add_argument('--engine',choices=['inochi2d','parts-only'],default='inochi2d')
     parser.add_argument('--eyes-only',action='store_true',help='Explicitly skip SAM hair candidates; reports not-requested')
+    parser.add_argument('--blink-profile',choices=['contour-lid-v2','detailed-v1'],default='contour-lid-v2',help='Keep detailed-v1 available for exact before/after comparisons.')
     generate(parser.parse_args())

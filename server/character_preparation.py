@@ -13,18 +13,18 @@ from server.eye_parts import split_eye, complete_ocular
 from server.inochi_quality import prepare_quality_image, extend_blink_parts, _canvas, _skin_field
 
 
-def prepare_character_parts(image, include_hair=True):
+def prepare_character_parts(image, include_hair=True, blink_profile='contour-lid-v2'):
     started=time.monotonic()
     image=ImageOps.exif_transpose(image).convert('RGBA');width,height=image.size
     if width*height>4_000_000:
         raise ValueError('詳細分割の試作は400万画素以下にしてください。通常の5役割処理とは別の上限です。')
     five=prepare_quality_image(image)
-    return detail_from_prepared(image,five,include_hair,started)
+    return detail_from_prepared(image,five,include_hair,started,blink_profile)
 
 
-def detail_from_prepared(image, five, include_hair=True, started=None):
+def detail_from_prepared(image, five, include_hair=True, started=None, blink_profile='contour-lid-v2'):
     """Reusable boundary: tests/cache may supply prepared pixels, never points."""
-    import cv2
+    if blink_profile not in ('contour-lid-v2','detailed-v1'):raise ValueError('Unknown detailed blink profile.')
     started=started if started is not None else time.monotonic()
     width,height=image.size;source=np.array(image.convert('RGBA'))
     graph=new_graph(width,height);assets={};diag=copy.deepcopy(five['diagnostics'])
@@ -35,10 +35,18 @@ def detail_from_prepared(image, five, include_hair=True, started=None):
     for a in eye_sources.values():reference=Image.alpha_composite(reference,Image.fromarray(a))
     foreground=np.array(reference);remainder=foreground[:,:,3]>0;remainder &= ~mask
     face_completion=np.zeros_like(foreground);face_completion[mask]=base[mask]
-    eye_diagnostics={}
+    eye_diagnostics={};runtime_target=np.zeros((height,width),bool);skin_details={}
     for side in ('l','r'):
         info=eyes[side];x0,y0,x1,y1=info['box'];box=[x0,y0,x1-x0,y1-y0]
-        rgba=eye_sources[side][y0:y1,x0:x1].copy();split=split_eye(rgba,info,side)
+        rgba=eye_sources[side][y0:y1,x0:x1].copy()
+        if blink_profile=='contour-lid-v2':
+            from server.blink_preparation import refine_eye
+            rgba,split=refine_eye(foreground,rgba,info,side,face,mask)
+            local_owned=rgba[:,:,3]>0;mask[y0:y1,x0:x1] |= local_owned
+            remainder[y0:y1,x0:x1] &= ~local_owned
+            moving=np.logical_or.reduce([split['masks'][r] for r in ('sclera','iris','pupil','highlight','eyelash_upper','eyelash_lower','context')])
+            runtime_target[y0:y1,x0:x1] |= moving
+        else:split=split_eye(rgba,info,side)
         completed=complete_ocular(rgba,split)
         for index,role in enumerate(EYE_ROLES):
             evidence=split['recognition'][role];completion=completed.get(role)
@@ -52,6 +60,11 @@ def detail_from_prepared(image, five, include_hair=True, started=None):
         # Closed artwork has no observed pixels. Keep its provenance separate
         # instead of labelling an inferred line as an extracted source part.
         closed=_canvas(five,'eye_closed_'+side)[y0:y1,x0:x1]
+        refined_closed=None
+        if blink_profile=='contour-lid-v2':
+            from server.blink_preparation import continuous_closed_contour
+            closed,closed_trace,closed_width=continuous_closed_contour(closed)
+            refined_closed=(closed_trace,closed_width)
         add_part(graph,assets,part_id=f'eye_{side}_closed',role='closed_eyelash',side=side,
             pixels=np.zeros_like(rgba),mask=np.zeros(rgba.shape[:2],bool),box=box,parent=f'eye_{side}',order=60,
             status='estimated-only',confidence=.5,method='source-derived-tapered-closed-contour',
@@ -59,15 +72,27 @@ def detail_from_prepared(image, five, include_hair=True, started=None):
             motion={'kind':'closed-lash','validated':False})
         geometry=split['geometry'];geometry['closed_center_y']=legacy['manifest']['quality']['blink'][side]['closed_y']
         geometry['closed_lash_width']=diag['closed_eyes'][side]['maximum_width_pixels']
+        if refined_closed:
+            geometry['closed_center_y'],geometry['closed_lash_width']=refined_closed
         geometry['box_xywh']=box
         graph.setdefault('motions',{}).setdefault('blink',{})[side]=geometry
         eye_diagnostics[side]=split['recognition']
+    if blink_profile=='contour-lid-v2':
+        from server.blink_preparation import complete_skin
+        face_completion[:]=0
+        for side in ('l','r'):
+            box=eyes[side]['box'];x0,y0,x1,y1=box;target=np.zeros_like(runtime_target)
+            target[y0:y1,x0:x1]=runtime_target[y0:y1,x0:x1]
+            layer,skin_details[side]=complete_skin(foreground,target,box,runtime_target,face)
+            face_completion[target]=layer[target]
+        skin_mask=runtime_target
+    else:skin_mask=mask
     # The same source-supported local skin estimate is stored as a separate
     # layer. Inferred skin is never silently relabelled as observed face paint.
     add_part(graph,assets,part_id='eye_skin_underpaint',role='skin_completion',pixels=np.zeros_like(foreground),
         mask=np.zeros((height,width),bool),box=[0,0,width,height],parent='head',order=5,
-        status='estimated-only',confidence=.55,method='robust-visible-skin-quadratic-with-boundary-blend',
-        completion=face_completion,completion_mask=mask,
+        status='estimated-only',confidence=.55,method='boundary-constrained-visible-skin-diffusion' if skin_details else 'robust-visible-skin-quadratic-with-boundary-blend',
+        completion=face_completion,completion_mask=skin_mask,
         motion={'kind':'skin-under-eyelids','validated':False})
     hair_report={'status':'not-requested','depth_verified':False}
     if include_hair:
@@ -154,6 +179,7 @@ def detail_from_prepared(image, five, include_hair=True, started=None):
     if not np.array_equal(reconstructed,foreground):
         raise ValueError('Common source parts do not reconstruct the original extracted foreground.')
     report={'automatic':True,'manual_points_or_rigging':False,'external_image_requests':False,
+        'blink_profile':blink_profile,'skin_refinement':skin_details,
         'source_size':[width,height],'eyes':eye_diagnostics,'hair':hair_report,
         'observed_reconstruction_rgba_exact':True,'overlapping_source_owners':int((owners>1).sum()),
         'source_rgb_changed_visible_pixels':int(np.any(reconstructed[:,:,:3][owners>0]!=source[:,:,:3][owners>0],axis=1).sum()),

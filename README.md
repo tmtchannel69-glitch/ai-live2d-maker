@@ -28,6 +28,8 @@ npm run dev
 
 ## Inochi2Dの独立した技術試作
 
+最新のSTEP 1では、詳細版のまつ毛と開口maskを曲線に沿うmeshへ変え、低開度の二重線と途中で薄くなる線を改善しました。肌と下まつ毛の準備も拡張しています。[10状態の比較・検証・残課題](docs/BLINK_RIG_VALIDATION.md)、[STEP 1〜3の計画](docs/AUTO_RIGGING_STAGES.md)。下の詳細CLIは`contour-lid-v2`が既定で、`--blink-profile detailed-v1`を付けると前段の詳細版を再現できます。**肌の細部/境界の警告は残り、完成品質は未合格**。頭/首の独立化と髪物理はこの結果確認後の段階です。
+
 最新の`feature/detailed-character-parts`では、左右の目の詳細分類と独立した共通パーツデータ、補完領域を分けた保存、髪の候補、自動品質検査を追加しました。既存5役割の画面/APIは維持しています。[今回の比較・公式Creator結果・制限](docs/DETAILED_PARTS_VALIDATION.md)、[公開資料と設計](docs/PARTS_RESEARCH_AND_DESIGN.md)。
 
 ```sh

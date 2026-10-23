@@ -140,6 +140,9 @@ def audit(model_path,common_path,output):
             lash_alpha=lash,iris_hues=hues,iris_area=iris_area)
         core=inspect_frame(rgba,opening=opening,expected_opaque=expected,lash_alpha=lash,lash_window=core_window)
         record['central_iris_double_lash_columns']=core['double_lash_columns']
+        record['central_lash_core_coverage']=core['lash_core_coverage']
+        if core['lash_core_coverage']['weak_columns']>3 and .25<opening<.9:
+            record['warnings'].append({'kind':'possible-washed-lash-core','columns':core['lash_core_coverage']['weak_columns']})
         records.append(record);im=Image.fromarray(rgba);im.save(output/f'blink_{len(records)-1:02d}.png');frames.append(im)
     contact=Image.new('RGB',(5*(roi[2]-roi[0]),2*(roi[3]-roi[1]+25)),'#ddd');draw=ImageDraw.Draw(contact)
     for i,(im,r) in enumerate(zip(frames,records)):
