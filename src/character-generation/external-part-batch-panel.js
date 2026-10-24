@@ -17,7 +17,8 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
     '<button id="cg-batch-cancel" type="button" class="secondary" hidden>取り込みを中止</button>'+
     '<p id="cg-batch-status" role="status" aria-live="polite"></p>'+
     '<div id="cg-batch-output" hidden><div class="cg-preview"><img id="cg-batch-preview" alt="外部PNGを複数パーツに使った実験プレビュー"></div>'+
-    '<p id="cg-batch-summary" class="muted"></p>'+
+    '<p id="cg-batch-summary" class="muted"></p>'+ 
+    '<div id="cg-batch-warnings" role="status" aria-live="polite"></div>'+ 
     '<button id="cg-batch-download" type="button" class="secondary">モデル・33パーツ・検証記録をZIP保存</button></div>'+
     '<p class="muted">未選択のパーツはローカル描画のままです。33枚そろってもAI出典や品質を認定するものではありません。通常のキャラクターZIPは変更しません。</p>';
   section.querySelector('#cg-external-import').after(region);
@@ -27,6 +28,7 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
     result=null;
     if(previewUrl)URL.revokeObjectURL(previewUrl);
     previewUrl=null;$('#cg-batch-preview').removeAttribute('src');$('#cg-batch-output').hidden=true;
+    $('#cg-batch-warnings').replaceChildren();
   }
   function update(){
     clearResult();$('#cg-batch-files').value='';
@@ -74,6 +76,21 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
       $('#cg-batch-summary').textContent='外部PNG '+created.report.external_part_count+
         '枚・テンプレート '+created.report.local_template_part_count+
         '枚／AI出典未確認／Creator実機未検証';
+      const warningHost=$('#cg-batch-warnings');
+      const labels={'very-low-coverage':'描画範囲が極端に小さい','almost-opaque-tile':'透明部分が非常に少ない','high-edge-contact':'矩形の端に描画が集中'};
+      warningHost.replaceChildren();
+      const heading=document.createElement('p');
+      heading.textContent=created.report.quality_warning_count
+        ?'要確認：次の画像は見た目と切り口を確認してください。'
+        :'画素統計上の警告はありません。ただし絵柄・隠れた部分・人物の一致は必ず確認してください。';
+      warningHost.append(heading);
+      if(created.report.quality_warning_count){
+        const list=document.createElement('ul');
+        for(const item of created.report.quality_warnings){
+          const li=document.createElement('li');li.textContent=item.role+'：'+(labels[item.code]??item.code);list.append(li);
+        }
+        warningHost.append(list);
+      }
       $('#cg-batch-status').textContent='一括取り込みを完了しました。通常のキャラクターは変更していません。';
     }catch(error){
       clearResult();

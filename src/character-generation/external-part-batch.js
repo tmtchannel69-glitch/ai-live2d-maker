@@ -1,6 +1,7 @@
 // Experimental local batch intake. All checks precede the sole model rebuild.
 // The canonical template assets and their provenance are never mutated.
 import {matchExternalPartFiles} from '../../shared/external-part-file-list.js';
+import {inspectExternalPartPixels} from '../../shared/external-part-quality.js';
 import {validateDesignedCharacter} from '../../shared/designed-character.js';
 import {assembleValidatedCharacter,checkAbort,validateAsset,pngBlob} from './generator.js';
 import {buildDesignedInochi} from '../../shared/generated-character-inochi.js';
@@ -35,15 +36,9 @@ export async function inspectExternalPartPng(part,file,{signal}={}){
     const ctx=source.getContext('2d',{willReadFrequently:true});need(ctx,part.role+': 画像を確認できません。');
     ctx.drawImage(bitmap,0,0);
     const pixels=ctx.getImageData(0,0,width,height).data;
-    let insideOpaque=0,insideTransparent=0,outsideOpaque=0;
-    for(let py=0;py<height;py++)for(let px=0;px<width;px++){
-      const a=pixels[(py*width+px)*4+3];
-      const inside=px>=x&&px<x+q.width&&py>=y&&py<y+q.height;
-      if(inside){if(a>0)insideOpaque++;else insideTransparent++;}
-      else if(a>0)outsideOpaque++;
-    }
-    need(outsideOpaque===0,part.role+': 指定範囲外に画像があります。完成絵はパーツとして使えません。');
-    need(insideOpaque>0&&insideTransparent>0,part.role+': 空画像または不透明背景です。');
+    const metrics=inspectExternalPartPixels(pixels,width,height,{x,y,width:q.width,height:q.height});
+    need(metrics.outside_visible_pixels===0,part.role+': 指定範囲外に画像があります。完成絵はパーツとして使えません。');
+    need(metrics.visible_pixels>0&&metrics.transparent_pixels>0,part.role+': 空画像または不透明背景です。');
     tileCanvas=canvas(q.width,q.height);
     const tileCtx=tileCanvas.getContext('2d');need(tileCtx,part.role+': パーツを切り出せません。');
     tileCtx.drawImage(source,x,y,q.width,q.height,0,0,q.width,q.height);
@@ -52,8 +47,8 @@ export async function inspectExternalPartPng(part,file,{signal}={}){
     return {role:part.role,tile,record:{
       role:part.role,source_filename:file.name,source_sha256:await sha256(bytes),
       source_canvas:[width,height],canonical_rect:structuredClone(q),
-      visible_pixels_in_role:insideOpaque,visible_pixels_outside_role:outsideOpaque,
-      rgba_structure_passed:true,ai_origin_verified:false}};
+      visible_pixels_in_role:metrics.visible_pixels,visible_pixels_outside_role:metrics.outside_visible_pixels,
+      rgba_structure_passed:true,pixel_diagnostics:metrics,manual_review_required:true,ai_origin_verified:false}};
   }finally{
     bitmap?.close();
     if(source)source.width=source.height=0;
@@ -92,12 +87,15 @@ export async function importExternalPartBatch(character,files,{signal,onProgress
   onProgress({stage:'model',completed:picked.uploads.length,total:picked.uploads.length});
   const native=await buildDesignedInochi(manifest,textures,{signal});checkAbort(signal);
   const externalCount=replacements.size;
+  const qualityWarnings=records.flatMap(record=>record.pixel_diagnostics.warning_codes.map(code=>({role:record.role,code})));
   const report={
     format:'ai-live2d-external-part-batch-experiment',version:1,
     design_id:manifest.generator.design_id,blueprint_id:manifest.generator.blueprint_id,
     external_part_count:externalCount,local_template_part_count:33-externalCount,
     provided_roles:picked.provided_roles,local_template_roles:picked.missing_roles,
     parts:records,source_kind:'user-supplied-transparent-png',
+    quality_warnings:qualityWarnings,quality_warning_count:qualityWarnings.length,
+    human_visual_review_completed:false,appearance_quality_verified:false,
     model_generated:true,model_build_invocations:1,all_33_texture_slots_present:true,
     ai_origin_verified:false,fully_ai_generated:false,
     no_network_transmission:true,official_creator_tested:false,

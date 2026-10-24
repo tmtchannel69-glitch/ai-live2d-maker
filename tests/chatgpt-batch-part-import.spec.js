@@ -45,6 +45,9 @@ test('two external parts create an isolated model and full reproducible 33-textu
   const manifest=JSON.parse(strFromU8(zipped['character_manifest.json']));
   expect(report).toMatchObject({external_part_count:2,local_template_part_count:31,model_build_invocations:1,
     ai_origin_verified:false,fully_ai_generated:false,official_creator_tested:false,no_network_transmission:true});
+  expect(report.quality_warning_count).toBe(0);
+  expect(report.parts).toHaveLength(2);
+  expect(report.parts.every(p=>p.pixel_diagnostics.appearance_quality_verified===false)).toBe(true);
   expect(report.provided_roles).toEqual(['iris_r','iris_l'].sort((a,b)=>manifest.parts.findIndex(p=>p.role===a)-manifest.parts.findIndex(p=>p.role===b)));
   expect(manifest.parts).toHaveLength(33);
   expect(zipped['character.inp'].length).toBeGreaterThan(100);
@@ -76,4 +79,25 @@ test('full-size image with pixels outside its role is rejected without changing 
   await expect(page.locator('#cg-batch-status')).toContainText('指定範囲外',{timeout:30000});
   await expect(page.locator('#cg-batch-output')).toBeHidden();
   await expect(page.locator('#cg-summary')).toContainText('AI生成ではありません');
+});
+test('single visible pixel prompts quality review but never claims AI quality',async({page})=>{
+  await setup(page);
+  const b64=await page.evaluate(async()=>{
+    const {createDesignPlan}=await import('/shared/character-design.js');
+    const part=(await createDesignPlan()).blueprint.parts.find(p=>p.role==='iris_l');
+    const canvas=document.createElement('canvas');canvas.width=part.rect.width;canvas.height=part.rect.height;
+    canvas.getContext('2d').fillRect(Math.floor(part.rect.width/2),Math.floor(part.rect.height/2),1,1);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#cg-batch-files').setInputFiles([{
+    name:'iris_l.png',mimeType:'image/png',buffer:Buffer.from(b64,'base64')
+  }]);
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:90000});
+  await expect(page.locator('#cg-batch-warnings')).toContainText('描画範囲が極端に小さい');
+  const report=JSON.parse(strFromU8(unzipSync(await download(page,'#cg-batch-download'))['experimental_batch_report.json']));
+  expect(report.quality_warning_count).toBeGreaterThan(0);
+  expect(report.quality_warnings).toContainEqual({role:'iris_l',code:'very-low-coverage'});
+  expect(report.human_visual_review_completed).toBe(false);
+  expect(report.appearance_quality_passed).toBe(false);
 });
