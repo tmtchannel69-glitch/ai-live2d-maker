@@ -1,6 +1,7 @@
 import {generateRiggedCharacter} from './model-generator.js';
 import {generateDesignedCharacter} from './design-generator.js';
 import {createCharacterArchive} from './archive.js';
+import {createExternalPartPanel} from './external-part-panel.js';
 import './style.css';
 
 function save(blob,name){
@@ -37,14 +38,14 @@ export function createCharacterGenerationMode(){
     <div id="cg-design-output" hidden><h3>共通デザインの保存</h3><p>デザインと配置図をZIPへ追加しました。AI向けの依頼仕様も保存できます。これは端末にJSONを保存する操作で、AIへの送信・生成は行いません。</p><button type="button" class="secondary" id="cg-download-ai-request">AI向け依頼仕様を端末に保存</button></div>
     <p id="cg-model-note" class="muted">ZIPに完成PNG、33パーツ、配置・支点・親子のJSONを入れます。テンプレートではInochi2DのINP/INXと動作設定も追加します。配置確認用の図形は静止素材のみです。</p><p class="muted">このZIPは従来の作業ファイルとは別形式です。画面を閉じる前に保存してください。Inochi2DとCubism・VTube Studioは異なる形式です。</p></section>`;
   main.prepend(nav,legacy,section);
-  const $=s=>section.querySelector(s);let active=null,result=null,previewUrl=null,partUrl=null,packing=false;
+  const $=s=>section.querySelector(s);let active=null,result=null,previewUrl=null,partUrl=null,packing=false,externalBusy=false,externalPartPanel=null;
   for(const [id,show] of [['mode-convert',false],['mode-generate',true]])nav.querySelector('#'+id).addEventListener('click',()=>{
     legacy.hidden=show;section.hidden=!show;
     nav.querySelector('#mode-convert').setAttribute('aria-pressed',String(!show));nav.querySelector('#mode-generate').setAttribute('aria-pressed',String(show));
     const title=show?$('#cg-heading'):legacy.querySelector('h1');title.setAttribute('tabindex','-1');title.focus({preventScroll:true});
   });
   function controls(){
-    const locked=Boolean(active)||packing;
+    const locked=Boolean(active)||packing||externalBusy;
     for(const e of section.querySelectorAll('select,input,button'))e.disabled=locked;
     $('#cg-provider option[value="ai"]').disabled=true;
     $('#cg-cancel').disabled=!active;$('#cg-cancel').hidden=!active;$('#cg-progress').hidden=!active;
@@ -61,6 +62,7 @@ export function createCharacterGenerationMode(){
     const preparedUrl=URL.createObjectURL(next.preview);
     const options=next.manifest.parts.map(p=>{const o=document.createElement('option');o.value=p.role;o.textContent=p.label;return o;});
     if(previewUrl)URL.revokeObjectURL(previewUrl);result=next;previewUrl=preparedUrl;
+    externalPartPanel?.update();
     $('#cg-preview-image').src=previewUrl;$('#cg-preview-image').hidden=false;$('#cg-empty').hidden=true;$('#cg-output').hidden=false;
     $('#cg-summary').textContent=`33パーツ ／ 768×1024px ／ ${result.manifest.generator.id==='dummy'?'配置確認用の図形':result.manifest.version===2?'デザイン指定の端末内描画':'テンプレート描画'}（AI生成ではありません）`;
     $('#cg-part').replaceChildren(...options);$('#cg-part').value='face_base';selectPart();
@@ -95,5 +97,6 @@ export function createCharacterGenerationMode(){
     catch(error){$('#cg-status').textContent=`ZIPを作成できませんでした。${error.message} 完成結果は保持しています。もう一度保存できます。`;}
     finally{packing=false;controls();}
   });
+  externalPartPanel=createExternalPartPanel({section,getCharacter:()=>result,save,onBusy:v=>{externalBusy=v;controls();}});
   controls();return {element:section};
 }
