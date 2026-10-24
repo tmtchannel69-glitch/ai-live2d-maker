@@ -1,5 +1,14 @@
 # 開発ロードマップ
 
+## GPT Image 2.5を含む2回試験への縮小（2026-10-24、最新）
+
+1988679を維持し、[公式仕様の比較/未確認の料金/予算](docs/OPENAI_IMAGE_TWO_CALL_PILOT.md)、[送信全文](docs/OPENAI_IMAGE_TWO_CALL_PAYLOADS.md)へ更新。前段の6/12回案は旧再現用に残す。
+
+1. **今回完了**：1.5/Flare/Sunburstを公式OpenAPIで照合、同じモデルで参照1回＋虹彩1回の新版2、2call上限・1USD予算案のオフライン会計/事前予約/timeout停止、既存旧準備14ファイルの不変再現。
+2. **未確認で実行不可**：3モデルの現行公式料金/usage見込み/1call最大課金/利用条件。公式料金ページは接続403。予算案は見積もりや承認ではなく、現在の許可は0回/0USDのまま。
+3. **承認後の実画像**：最新単価・通常/最大費用・実画像/送信内容を提示した後、サーバー専用secret/永続台帳/自動retry0の送信器を準備し、候補Flare固定版の参照と虹彩で評価する。品質不十分なら別の承認済み試験でSunburstと比較し、自動fallbackで課金を増やさない。
+4. **品質確認後**：左右目/中間まばたき→全33AI役割→明示出典adapter→既存Inochi生成器/公式Creatorの新モデル検査へ。既存template/33部品/画像変換は維持する。
+
 ## OpenAI画像生成の実証準備（2026-10-24、最新）
 
 08c0eddを維持し、別のfeature/openai-image-pilot-preparationで[実行前計画](docs/OPENAI_IMAGE_PILOT.md)と[既定の送信予定全文](docs/OPENAI_IMAGE_PILOT_PAYLOADS.md)を保存。

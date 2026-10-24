@@ -1,5 +1,7 @@
 # OpenAI画像生成：実行前の技術検証計画
 
+この文書は1988679の旧6request準備の記録。現在の既定は[2.5を含む比較と2回試験](OPENAI_IMAGE_TWO_CALL_PILOT.md)へ更新した。旧準備は`--legacy-six-call`、旧単価statusは`pricing-status-v1.json`で保持する。以下の6/12回は現行の試験枠ではない。
+
 2026-10-24。基準は`08c0edd`、新しい作業ブランチは`feature/openai-image-pilot-preparation`。オーナーが承認したのは仕様/料金の調査、共通参照方式と少数パーツの試験準備。**有料API実行、文章/画像のAI送信、新契約は未承認。今回のコードには送信機能もキー読取もない。** main統合/公開を行わない。
 
 ## モデル・公式仕様・料金の確認状況

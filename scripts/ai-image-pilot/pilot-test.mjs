@@ -76,7 +76,7 @@ test('technical guide pixels cannot become semantic, hidden-surface or real-AI s
 test('CLI prepares real technical PNGs and exact request attachments without reading a key or executing any API',async t=>{
   const temp=await mkdtemp(join(tmpdir(),'ai-image-pilot-test-'));t.after(()=>rm(temp,{recursive:true,force:true}));const output=join(temp,'prepared');
   const env={...process.env,OPENAI_API_KEY:'test-only-secret-must-not-be-read-or-written'};
-  const result=await run(process.execPath,[prepare,'--output',output],{cwd:ROOT,env});assert.equal(JSON.parse(result.stdout).api_key_read,false);
+  const result=await run(process.execPath,[prepare,'--output',output,'--legacy-six-call'],{cwd:ROOT,env});assert.equal(JSON.parse(result.stdout).api_key_read,false);
   const prepared=await validatePilotPlan(JSON.parse(await readFile(join(output,'pilot_plan.json'),'utf8')));
   assert.equal(prepared.review.external_requests_sent,0);assert.equal((await readdir(join(output,'guides'))).length,5);
   for(const request of prepared.requests.slice(1)){
@@ -85,7 +85,7 @@ test('CLI prepares real technical PNGs and exact request attachments without rea
   for(const file of ['pilot_plan.json','pricing_status.json','REVIEW_BEFORE_API.md'])assert.ok(!(await readFile(join(output,file),'utf8')).includes(env.OPENAI_API_KEY));
   await assert.rejects(()=>run(process.execPath,[prepare,'--output',join(temp,'forbidden'),'--execute'],{cwd:ROOT}));
   assert.ok(!(await readdir(temp)).includes('forbidden'));
-  const before=await readFile(join(output,'pilot_plan.json'));await assert.rejects(()=>run(process.execPath,[prepare,'--output',output],{cwd:ROOT}));assert.deepEqual(await readFile(join(output,'pilot_plan.json')),before);
+  const before=await readFile(join(output,'pilot_plan.json'));await assert.rejects(()=>run(process.execPath,[prepare,'--output',output,'--legacy-six-call'],{cwd:ROOT}));assert.deepEqual(await readFile(join(output,'pilot_plan.json')),before);
   await assert.rejects(()=>run(process.execPath,[prepare,'--output',join(ROOT,'pilot-artifacts-must-not-exist')],{cwd:ROOT}));
   const link=join(temp,'git-link');await symlink(ROOT,link);await assert.rejects(()=>run(process.execPath,[prepare,'--output',join(link,'pilot-artifacts-must-not-exist')],{cwd:ROOT}));
 });

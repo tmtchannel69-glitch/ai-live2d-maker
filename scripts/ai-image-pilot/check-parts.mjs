@@ -1,5 +1,5 @@
 // Inspect private PNGs after a separately authorized future experiment. This
-// tool cannot authenticate AI provenance or create the missing 28 layers.
+// tool cannot authenticate AI provenance or create the remaining missing layers.
 import {parseArgs} from 'node:util';
 import {lstat,readFile,mkdir} from 'node:fs/promises';
 import {join,resolve} from 'node:path';

@@ -1,5 +1,13 @@
 # AI Live2D Maker 開発ルール
 
+## GPT Image 2.5を含む2回試験（2026-10-24、最新）
+- オーナーが1988679を維持した調査/設計/準備の更新を承認。同じfeature/openai-image-pilot-preparationで継続し、実API送信/課金/新契約/main統合/公開は未承認。旧33部品/Native/画像変換は変更しない。
+- 既定はcreateTwoCallPilotPlan/版2、参照1回＋iris_l1回、再試行込み合計最大2回。自動/手動retryやモデルfallbackを追加しない。1.5/Flare/Sunburstは同じモデルで2段を実行する計画。Flare固定版2026-09-08が暫定候補で、安さ/速さ/品質順位を未実測で主張しない。2.5へinput_fidelityは適用の明記がないため送らない。
+- 公式OpenAPI8243cc8/原文SHA一致を取得し3モデルを照合できたが、モデル/料金/guideページはCONNECT403。料金/usage見込み/課金上限/利用条件は未確認。予算案1 USDは推定費用でも支出承認でもなく、許可済み実行は0回/0USD。料金や1callの上限を検証できなければ実行不可を維持する。
+- cost-controlは整数microUSDの費用計算/最大2call/1USD事前予約のオフラインsimulation。未知料金を0にせず、timeoutは全額保留して停止、想定外費用を記録して停止。実送信transport/キー読取/SDK/routerは追加しない。将来の本実行にはサーバー専用secretと、信頼するquote/承認/原子的・直列・永続台帳が必要。simulationをプロバイダー側の実課金上限保証と報告しない。
+- 1988679の版1と旧6requestは--legacy-six-callで全14ファイル不変の再現用。現行2回試験に使う実行案ではない。旧価格statusはpricing-status-v1.jsonへ保持。v1/v2の検証/PNG構造検査を維持する。既定の新版は8ファイルで、費用比較と空のbudget_simulationを含む。
+- 実行前の比較/未確認料金/送信全文/検証はdocs/OPENAI_IMAGE_TWO_CALL_PILOT.md、PAYLOADS.md、VALIDATION.md/json。画像/モデル/ZIPをGitHubへ保存せず、キーは将来もサーバー秘密設定のみ。料金/通常と最大費用/実画像/送信内容/モデル利用条件を具体化してから承認用に提示し、値がないまま課金承認を求めない。
+
 ## OpenAI画像生成の実証準備（2026-10-24、最新）
 - オーナーは08c0eddを維持した調査/設計/実行前の準備を承認。新しいfeature/openai-image-pilot-preparationで作業し、有料API/文章・画像のAI送信/新契約/公開/main統合は未承認。
 - server/ai-image-pilotとscripts/ai-image-pilotは共通参照1枚→face_base/bangs_front/eye_white_l/iris_l/eyelashes_lの5枚を計画。生成された同じ参照のSHAを固定し、各editへ参照+自作配置ガイドを添付する設計。1024正方形へ元キャンバスをx+128で移し、拡縮しない。5枚で33パーツ成功と扱わない。

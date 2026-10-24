@@ -1,27 +1,124 @@
 {
   "format": "ai-live2d-openai-pricing-status",
-  "version": 1,
+  "version": 2,
   "checked_on": "2026-10-24",
-  "model_candidate": "gpt-image-1.5",
+  "model_candidate": "gpt-image-2.5-flare-2026-09-08",
   "current_official_prices_verified": false,
-  "text_input_usd_per_million_tokens": null,
-  "image_input_usd_per_million_tokens": null,
-  "image_output_usd_per_million_tokens": null,
-  "medium_1024_square_output_usd": null,
   "current_model_service_terms_verified": false,
-  "reason": "Official pricing, guide, Images reference, data policy and services agreement GETs failed with proxy CONNECT 403. Direct read-only requests also failed DNS. Do not substitute SDK license or remembered prices for current model prices or terms.",
+  "reason": "Official model/pricing/guide page GETs still fail with proxy CONNECT 403. Official OpenAPI and SDK confirm supported models/parameters, but do not give current image model rates. Owner reports 2.5 model availability; account access is not independently tested. Never use remembered prices as official quotes.",
   "official_urls": {
     "pricing": "https://openai.com/api/pricing/",
     "image_guide": "https://developers.openai.com/api/docs/guides/image-generation",
-    "image_api": "https://developers.openai.com/api/reference/resources/images/",
+    "model15": "https://developers.openai.com/api/docs/models/gpt-image-1.5",
+    "flare": "https://developers.openai.com/api/docs/models/gpt-image-2.5-flare",
+    "sunburst": "https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst",
     "data": "https://developers.openai.com/api/docs/guides/your-data",
     "terms": "https://openai.com/policies/services-agreement/"
   },
+  "openapi_verified_commit": "8243cc8fa6f04430fb1f1a6a2cb926fbeb4f7f26",
+  "openapi_sha256": "cc2a329f77bb06b451b9eb6c14cacd6c1c36276ae778f2d63940fab1c7bbb6f6",
   "sdk_verified_commit": "718aee979a9c334d37302aeff21cee6cbff4d43c",
-  "sdk_generate_source_sha256": "ce11e6fc1ad113d96c6d3a275a1906da43d7ea4718fb72d9804559bd9ef60709",
-  "sdk_edit_source_sha256": "f3182c188012e2905ef4e2f192ee368d7ad1199e930698eb6ee1c2e69c5b2887",
-  "base_requests": 6,
-  "maximum_requests_including_one_extra_attempt_per_job": 12,
+  "models": [
+    {
+      "model": "gpt-image-1.5",
+      "alias": "gpt-image-1.5",
+      "current_official_prices_verified": false,
+      "price_source_url": "https://openai.com/api/pricing/",
+      "price_verified_on": null,
+      "rates_usd_per_million_tokens": {
+        "text_input": null,
+        "image_input": null,
+        "image_output": null
+      },
+      "medium_1024_square_output_usd": null,
+      "usage_assumptions": {
+        "reference": {
+          "text_input": null,
+          "image_input": 0,
+          "image_output": null
+        },
+        "eye_part": {
+          "text_input": null,
+          "image_input": null,
+          "image_output": null
+        }
+      },
+      "verified_request_upper_bounds": {
+        "verified": false,
+        "source_url": null,
+        "reference_microusd": null,
+        "eye_part_microusd": null
+      }
+    },
+    {
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "alias": "gpt-image-2.5-flare",
+      "current_official_prices_verified": false,
+      "price_source_url": "https://openai.com/api/pricing/",
+      "price_verified_on": null,
+      "rates_usd_per_million_tokens": {
+        "text_input": null,
+        "image_input": null,
+        "image_output": null
+      },
+      "medium_1024_square_output_usd": null,
+      "usage_assumptions": {
+        "reference": {
+          "text_input": null,
+          "image_input": 0,
+          "image_output": null
+        },
+        "eye_part": {
+          "text_input": null,
+          "image_input": null,
+          "image_output": null
+        }
+      },
+      "verified_request_upper_bounds": {
+        "verified": false,
+        "source_url": null,
+        "reference_microusd": null,
+        "eye_part_microusd": null
+      }
+    },
+    {
+      "model": "gpt-image-2.5-sunburst-2026-09-08",
+      "alias": "gpt-image-2.5-sunburst",
+      "current_official_prices_verified": false,
+      "price_source_url": "https://openai.com/api/pricing/",
+      "price_verified_on": null,
+      "rates_usd_per_million_tokens": {
+        "text_input": null,
+        "image_input": null,
+        "image_output": null
+      },
+      "medium_1024_square_output_usd": null,
+      "usage_assumptions": {
+        "reference": {
+          "text_input": null,
+          "image_input": 0,
+          "image_output": null
+        },
+        "eye_part": {
+          "text_input": null,
+          "image_input": null,
+          "image_output": null
+        }
+      },
+      "verified_request_upper_bounds": {
+        "verified": false,
+        "source_url": null,
+        "reference_microusd": null,
+        "eye_part_microusd": null
+      }
+    }
+  ],
+  "base_requests": 2,
+  "maximum_requests_including_retries": 2,
+  "automatic_retries": 0,
+  "manual_retries_in_this_trial": 0,
+  "proposed_budget_ceiling_usd": "1.00",
+  "proposed_budget_ceiling_microusd": 1000000,
   "estimated_trial_usd": null,
   "maximum_trial_usd": null,
   "permitted_api_calls": 0,

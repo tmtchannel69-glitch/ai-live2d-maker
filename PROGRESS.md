@@ -1,5 +1,15 @@
 # 開発進捗
 
+## 2026-10-24 GPT Image 2.5比較と最大2回の試験準備（最新）
+
+- 1988679/remote一致、未コミット変更なしを確認。同じfeature/openai-image-pilot-preparationで、オーナー指示どおり調査/設計/未送信準備を更新。実API/課金/新契約/main統合/公開は行わない。
+- 公式OpenAPI8243cc8を取得し、固定commit原文SHA cc2a329f…一致を確認。1.5/2.5 Flare/2.5 Sunburstの生成/編集/透過/品質/sizeとfidelityを照合。モデル/料金/guideWebは今回もCONNECT403。単価/usage見込み/最大課金/利用条件は未確認のため3モデルの金額はnull。公式表/URLの共有を依頼し、回答がなくてもAPIを呼ばず準備まで進めた。
+- 新版2は参照1回＋本人左iris_l1回、再試行込み最大2call/2出力/2画像添付。候補はgpt-image-2.5-flare-2026-09-08を2段とも使用、Sunburst固定版と1.5も計画選択可。2.5へ未確認のinput_fidelityを送らない。モデルの優劣や低価格を推測して採用しない。
+- 予算案1.00USD、現在の支出許可0。cost-controlのオフラインsimulationで全入力/出力の整数microUSD会計、検証済み最大費用の予約、2call/予算超え拒否、unknown料金拒否、timeoutの予約保持/停止、想定外費用の記録/停止を準備。実API executor/secret読取はなく、実課金を1USDに止めるプロバイダー保証を確認したという報告にしない。
+- 新版prepareは2request/1guide/plan/価格status/費用比較/空のbudget_simulation/確認書の8ファイル、同設定で全バイト一致。旧v1/旧6requestは--legacy-six-call/pricing-status-v1.jsonで1988679の14ファイルと全バイト一致。PNGの構造検査/座標/alpha維持、旧manifest/33部品/Native/画像変換は維持する。
+- 各3モデルの2requestを公式JSON Schemaで照合。画像は未生成なのでfile入力はplaceholderの構造検査で、API受付/自然さ成功ではない。Node142件（追加10）/関連ブラウザ21件/build成功。全156ブラウザの再実行ではない。API実行/新AIモデル/今回のCreator/実機検査は未実施、実課金0。
+- docs/OPENAI_IMAGE_TWO_CALL_PILOT.md、PAYLOADS.md、VALIDATION.md/jsonへ比較/全文/費用の未確認/制限/再現と成否を保存。実物は/tmp/openai-two-call-*、旧準備は/tmp/openai-six-call-legacy-preservedにGit外保持。古い26MB ZIPはSHA18bf753f…不変。ソース/手順だけを同開発ブランチへコミット・プッシュする。
+
 ## 2026-10-24 OpenAI画像生成の実証準備（最新）
 
 - 08c0edd/元remote一致、未コミット変更なしを確認し、オーナー指示どおり新しいfeature/openai-image-pilot-preparationへ分岐。開始時Node121件/build成功。既存src/shared、旧33部品/モデルCLI、画像1枚からのAPIは変更しない。

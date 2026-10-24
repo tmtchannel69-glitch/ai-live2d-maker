@@ -73,7 +73,9 @@ export async function createPilotPlan(input={}){
 }
 
 export async function validatePilotPlan(value){
-  const expected=await createPilotPlan(value?.design);
+  const expected=value?.version===2
+    ?await (await import('./two-call-plan.mjs')).createTwoCallPilotPlan(value.design,{model:value.model})
+    :await createPilotPlan(value?.design);
   // Only the preparer may fill guide hashes; all other fields are canonical.
   for(const request of expected.requests){
     const received=value?.requests?.find(r=>r.id===request.id);
