@@ -1,0 +1,5 @@
+# Optional independent pixel/mesh diagnostics only. No Torch or AI weights.
+# Tested with Python 3.12.14; normal browser/Node generation needs no Python.
+numpy==2.5.2
+Pillow==12.3.0
+opencv-python-headless==4.13.0.92

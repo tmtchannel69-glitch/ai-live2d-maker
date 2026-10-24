@@ -1,17 +1,20 @@
 import {zip,strToU8} from 'fflate';
 import {validateCharacterManifest,createRigMetadata,createInochiIntermediate} from '../../shared/generated-character.js';
+import {createInochiGeometry} from '../../shared/generated-character.js';
+import {validateDesignedCharacter,createDesignedRigMetadata} from '../../shared/designed-character.js';
 
 export async function createCharacterArchive(character){
-  const m=validateCharacterManifest(character.manifest);
+  const designed=character.manifest?.version===2,m=designed?await validateDesignedCharacter(character.manifest):validateCharacterManifest(character.manifest);
   if(!(character.assets instanceof Map)||character.assets.size!==m.parts.length||m.parts.some(p=>!(character.assets.get(p.role) instanceof Blob))||!(character.preview instanceof Blob))throw new Error('保存するパーツと完成画像が不足しています。');
   const files={};let total=0;
   const put=(name,bytes)=>{total+=bytes.length;if(total>16*1024*1024)throw new Error('保存サイズが上限を超えています。');files[name]=[bytes,{mtime:new Date('2000-01-01T00:00:00Z')}];};
   const json=(name,value)=>put(name,strToU8(JSON.stringify(value,null,2)+'\n'));
   for(const p of m.parts)put(p.file,new Uint8Array(await character.assets.get(p.role).arrayBuffer()));
   put('preview.png',new Uint8Array(await character.preview.arrayBuffer()));
-  json('character_manifest.json',m);json('rig_metadata.json',createRigMetadata(m));json('inochi_intermediate.json',createInochiIntermediate(m));json('generation_recipe.json',m.generator.recipe);
+  json('character_manifest.json',m);json('rig_metadata.json',designed?createDesignedRigMetadata(m):createRigMetadata(m));json('inochi_intermediate.json',designed?createInochiGeometry(m):createInochiIntermediate(m));json('generation_recipe.json',m.generator.recipe);
+  if(designed){json('character_design.json',character.design);json('design_blueprint.json',character.blueprint);json('ai_generation_request.json',character.aiRequest);json('design_quality.json',character.quality);}
   if(character.native){
-    if(character.native.report?.profile!=='generated-maid-rig-v1'||!(character.native.inp instanceof Uint8Array)||!(character.native.inx instanceof Uint8Array))throw new Error('Inochi2Dの出力が不完全です。');
+    if(character.native.report?.profile!==(designed?'designed-character-rig-v1':'generated-maid-rig-v1')||!(character.native.inp instanceof Uint8Array)||!(character.native.inx instanceof Uint8Array))throw new Error('Inochi2Dの出力が不完全です。');
     put('character.inp',character.native.inp);put('character.inx',character.native.inx);
     json('inochi_model.json',character.native.model);json('inochi_rig.json',character.native.rig);json('inochi_report.json',character.native.report);
   }

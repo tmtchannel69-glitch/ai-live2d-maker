@@ -3,6 +3,8 @@
 // scripts/inochi2d/{model,quality-model,head-rig}.mjs and SDK v0.8.6.
 import {decode, encode} from 'fast-png';
 import {validateCharacterManifest, createInochiIntermediate} from './generated-character.js';
+import {createInochiGeometry} from './generated-character.js';
+import {validateDesignedCharacter} from './designed-character.js';
 
 export const GENERATED_RIG_PROFILE = 'generated-maid-rig-v1';
 export const GENERATED_INOCHI_PIN = Object.freeze({sdkTag:'v0.8.6', sdkCommit:'dda3a8f005f808104caa43183ab8753fb989e30f', creatorTag:'v0.8.6', creatorCommit:'371e5f4e21117102dbecc82371bfd9a6e2f5df02', container:'legacy-inp1'});
@@ -97,6 +99,15 @@ export function packGeneratedContainer(model,textures){
 export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()=>{}}={}){
   const m=validateCharacterManifest(manifest);abort(signal);
   need(m.generator.id==='template','配置確認用の図形は動作モデルとして出力できません。テンプレートを選んでください。');
+  return buildLayeredInochi(m,assets,{signal,onProgress},false);
+}
+
+export async function buildDesignedInochi(manifest,assets,options={}){
+  return buildLayeredInochi(await validateDesignedCharacter(manifest),assets,options,true);
+}
+
+async function buildLayeredInochi(m,assets,{signal,onProgress=()=>{}}={},designed=false){
+  abort(signal);
   for(const p of m.parts){
     need(p.enabled_in_neutral===(p.role!=='mouth_inside'),`${p.role}: テンプレートの通常表示と一致しません。`);
     need(p.clip_to===(/^(iris|highlight)_/.test(p.role)?`eye_white_${p.side}`:null),`${p.role}: 目のクリップ参照が一致しません。`);
@@ -116,9 +127,10 @@ export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()
   for(const p of m.parts){
     abort(signal);const im=decode(assets.get(p.role));
     need(im.channels===4&&im.depth===8&&im.data.length===p.rect.width*p.rect.height*4&&im.data.some((v,i)=>i%4===3&&v>0),`${p.role}: 空または不正なPNGはモデル化できません。`);
+    if(designed)need(im.data.some((v,i)=>i%4===3&&v===0),`${p.role}: デザイン版のパーツには背景を含めず透過PNGを渡してください。`);
     images.set(p.role,im);
   }
-  const intermediate=createInochiIntermediate(m),nodes=new Map();
+  const intermediate=designed?createInochiGeometry(m):createInochiIntermediate(m),nodes=new Map();
   for(const s of intermediate.nodes){
     const p=parts.get(s.id),isEye=p&&/^(eye_white|eyelid_upper|eyelid_lower|eyelashes)_/.test(p.role);
     nodes.set(s.id,{uuid:s.uuid,name:s.id,type:s.type,enabled:true,zsort:s.zsort??0,transform:structuredClone(s.transform),lockToRoot:false,children:[],
@@ -154,8 +166,10 @@ export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()
     bind(mouth.uuid,'deform',mouthAxis.map(v=>points(mp,mouth,(x,y)=>[0,(y-mp.anchor[1])*(.08+.92*v-1)]))),
   ],mouthAxis));
   const head=nodes.get('group_head'),neck=nodes.get('neck'),np=parts.get('neck'),pivot=groupById.get('group_head').anchor;
-  const neckWeight=y=>1-smooth((y-(pivot[1]+11))/40),headAxis=[0,.5,1];
-  for(const [id,name,field,amount] of [[1003,'HeadX','transform.t.x',8],[1006,'HeadY','transform.t.y',4],[1004,'HeadTilt','transform.r.z',.025]]){
+  const geometry=designed?m.rig_geometry:{neck_follow_y:pivot[1]+11,neck_fixed_y:pivot[1]+51,head_x:8,head_y:4,head_tilt:.025};
+  need(geometry.neck_fixed_y>geometry.neck_follow_y+12,'首と襟の間隔が不足しています。');
+  const neckWeight=y=>1-smooth((y-geometry.neck_follow_y)/(geometry.neck_fixed_y-geometry.neck_follow_y)),headAxis=[0,.5,1];
+  for(const [id,name,field,amount] of [[1003,'HeadX','transform.t.x',geometry.head_x],[1006,'HeadY','transform.t.y',geometry.head_y],[1004,'HeadTilt','transform.r.z',geometry.head_tilt]]){
     const values=[-amount,0,amount];
     const deform=values.map(v=>points(np,neck,(x,y)=>{
       if(v===0)return [0,0];const w=neckWeight(y);if(w===0)return [0,0];
@@ -166,6 +180,7 @@ export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()
   }
   const model={meta:{name:'Parts-first maid character',version:'v0.8.6',rigger:'AI Live2D Maker generated-part adapter',artist:'',copyright:'',licenseURL:'',contact:'',reference:'',preservePixels:false},
     physics:{pixelsPerMeter:1000,gravity:9.8},nodes:nodes.get('root'),param:params,automation:[],animations:{}};
+  if(designed)model.meta.name=m.design.name;
   const textures=[];
   for(const [i,p] of m.parts.entries()){
     abort(signal);textures.push(encodedTexture(p,images,parts));onProgress({completed:i+1,total:33,label:p.label});
@@ -173,15 +188,16 @@ export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()
     await new Promise(resolve=>setTimeout(resolve,0));
   }
   abort(signal);const inp=packGeneratedContainer(model,textures),all=flatten(model.nodes),drawables=all.filter(n=>n.type==='Part');
-  const report={format:'ai-live2d-generated-inochi-report',version:1,profile:GENERATED_RIG_PROFILE,pinned:GENERATED_INOCHI_PIN,
+  const report={format:'ai-live2d-generated-inochi-report',version:1,profile:designed?'designed-character-rig-v1':GENERATED_RIG_PROFILE,pinned:GENERATED_INOCHI_PIN,
     source_format:m.format,recipe:structuredClone(m.generator.recipe),parts:33,textures:33,nodes:all.length,
     vertices:drawables.reduce((s,n)=>s+n.mesh.verts.length/2,0),triangles:drawables.reduce((s,n)=>s+n.mesh.indices.length/3,0),
     decoded_texture_bytes:m.parts.reduce((s,p)=>s+p.rect.width*p.rect.height*4,0),parameters:params.map(p=>({name:p.name,min:p.min[0],max:p.max[0],default:p.defaults[0]})),
     eye_curves:curves,texture_encoding:'premultiplied-floor-rgb-8bit',source_pngs_unchanged:true,
     neutral_background:'transparent; composite against the selected preview background for comparison',
-    file_generation_passed:true,official_creator_tested:false,appearance_quality_passed:false,ai_generated:false,cubism_compatible:false,vtube_studio_tested:false,
+    file_generation_passed:true,official_creator_tested:false,appearance_quality_passed:false,ai_generated:designed?m.generator.ai_generated:false,cubism_compatible:false,vtube_studio_tested:false,
     limitations:['Template anatomy only; dummy geometry is rejected.','HeadX/Y are planar translation and HeadTilt is Z rotation, not reconstructed yaw/pitch.','Generated INP/INX use the legacy 0.8.6 runtime container without editor-specific metadata.','No hair physics, tracking or generative AI. Official runtime and visual acceptance require separate verification.']};
-  return {inp,inx:inp.slice(),model,report,rig:{format:'ai-live2d-generated-motion-rig',version:1,profile:GENERATED_RIG_PROFILE,
+  if(designed){report.design_id=m.generator.design_id;report.blueprint_id=m.generator.blueprint_id;report.rig_geometry=geometry;report.limitations[0]='Local parametric design only; genuine AI generation is not connected.';}
+  return {inp,inx:inp.slice(),model,report,rig:{format:'ai-live2d-generated-motion-rig',version:1,profile:report.profile,
     coordinates:m.coordinates,sides:m.sides,groups:structuredClone(m.groups),parts:m.parts.map(p=>({role:p.role,parent:p.parent,anchor:p.anchor,rect:p.rect,order:p.order,mesh:nodes.get(p.role).mesh})),
     parameters:structuredClone(params),rest_pose_only:false,physics:[],runtime_verified:false,appearance_quality_passed:false}};
 }

@@ -1,5 +1,15 @@
 # AI Live2D Maker 開発ルール
 
+## 共通デザインとAIパーツ生成の準備（2026-10-24、最新）
+- オーナーがccbb93aからのデザイン/AI接続設計と、外部送信/新課金不要の実装・検証を承認。同じfeature/part-first-character-generationで継続。実AIの外部呼出し・契約・課金・main統合・公開は未承認。旧33パーツ版1と画像1枚からの経路を維持する。
+- `shared/character-design.js`が髪/目/顔/服/雰囲気/パレット/線/陰影を正規化し、SHA256のdesign IDと33部品のblueprintを計算。位置/支点/首の追従範囲は設計から導出。行列は小数9桁へ正規化し、IDをAI品質や認証の証明と呼ばない。左右は本人、画面は768×1024、正面/胸上/通常顔。
+- 新manifestは版2/`shared/designed-character.js`。現在許可するoriginはlocal-design-v1/ai_generated:falseのみ。別デザイン/役割/配置/不正出典/背景入り・空PNGを拒否する。JSONオブジェクトの項目順は品質条件にせず、値とキー集合、配列順を照合する。真のAI接続ではprovider登録・server側の出典検証・API契約確認が必要。クライアントの自己申告でAI合格にしない。
+- `design-provider.js`は1character/1共通planから33PNGを返す契約。端末内のパラメータ描画をAIと表示しない。外部/ローカルdiffusionは未接続で、失敗時にテンプレートへ置換してAI成功としない。共通参照/透過/hidden layer/部位と接続の条件をAI依頼JSONへ保存するだけで送信しない。
+- 旧生成器/旧SVGは保持し、形状検査/合成/geometry/legacy serializerを共通化。新版の首と頭の範囲はblueprintから渡す。旧45項目ZIPとINP SHA553001d0…/ZIP3c78beb7…は不変。新版は49項目（design/blueprint/AI依頼仕様/構造検査を追加）。CGの旧結果は中止/失敗時に保持する。
+- 端末内の3デザインと実AIの成功率を分ける。独立CPUと公式Creator0.8.6の動作/保存/新プロセスを新モデルごとに検証し、外見の完成品質合格に流用しない。任意のAI絵の自由形状、不要な服パーツ、髪根元/眼の検出の一般化は未完成。Inox/Cubism/VTSも別のまま。
+- `design-trial.mjs`とdesign-examples.jsonで画像なしで再生成できる。任意の診断だけrequirements-diagnostics.txtを使う。Linuxの固定Xvfbでの公式再現はcreator-trial.py。生成画像/モデル/ZIP/画面写真はGit外に保持し、再生成コード/設定/固定依存/手順をGitへ保存する。古い26MB ZIPは変更しない。
+- 比較は`docs/AI_PARTS_PROVIDER_COMPARISON.md`、設計/再生成はCHARACTER_DESIGN_GENERATION.md、実測はCHARACTER_DESIGN_VALIDATION.md/json。公式料金/契約WebのGETはproxy403で未取得、SDK/FLUXの公式Gitソースだけ確認。未確認価格で課金承認を求めず、provider/モデル/単価/上限/文章・画像の送信内容/保存/ライセンスを確認してから外部実行の承認を求める。GPUなしで実AIの実行成功と報告しない。
+
 ## 33パーツのInochi2D自動モデリング（2026-10-24、最新）
 - オーナーがf107b71を基準に、新モードの33PNG→実INP/INXと独立した左右の瞬き/口/小さな頭部動作、公式Creator0.8.6の保存・新プロセス再読込を承認。同じfeature/part-first-character-generationで継続。AIパーツ生成/有料サービス/外部画像送信/公開/main統合は対象外。
 - `shared/generated-character-inochi.js`を新モード専用adapterとして追加。既存の中間ノード/静止配置と、旧生成器のコンテナ/動作キー/格納時premultiply/首の連続変形を再利用。旧5役割/詳細/頭/髪生成器、worker/API、33PNGの描画処理/元PNG/元manifest/静止rigを変更しない。

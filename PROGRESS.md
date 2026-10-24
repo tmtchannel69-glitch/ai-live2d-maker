@@ -1,5 +1,17 @@
 # 開発進捗
 
+## 2026-10-24 共通デザインとAIパーツ生成の接続準備（最新）
+
+- ccbb93a/remote一致、未コミット変更なし、既存Node99件とbuildを確認して同じfeature/part-first-character-generationを継続。先に33役割/配置/まつ毛検出/首の固定値の依存を整理し、docs/CHARACTER_DESIGN_GENERATION.mdへ設計・変更箇所・実装順を保存した。
+- 髪型/髪色、目の形/瞳色、顔立ち/肌色、メイド服2種/配色、雰囲気を共通デザインとして追加。全33部品の色/線/陰影、位置/支点/親/重なり/接続を同じblueprintから計算する。manifest版2を追加し、元の版1と画像1枚からの経路を維持。任意のAI形状や自由な衣装の推定は未完成。
+- 新provider契約は1体の共通planから33PNGを一括で返す。実装済みは端末内SVG描画だけで、UI/JSON/レポートにai_generated:falseを明記。未接続AI/出典混在/空・不透明背景PNGを拒否し、テンプレートへの置換でAI成功にしない。AI依頼JSONはローカル保存のみ、文章/画像の外部送信0回・課金0。
+- 合成/形状検査/メッシュ/legacy serializerを再利用し、新版だけ首の追従範囲と頭の移動量を設計から再計算。旧テンプレート45項目ZIP SHA3c78beb7…/INP SHA553001d0…は全バイト不変。新版は49項目ZIP、33PNG/preview/manifest/rig/INP/INXと共通デザイン/blueprint/AI依頼仕様/構造検査を出力する。
+- 端末内描画のsoft/bob/coolの3体で生成成功、49ファイルとZIP全体の再生成一致/CRC成功、保存済み33PNGからNodeで再生成したINPも一致。実AIの複数キャラ生成や意味的な一貫性の合格とは分ける。独立CPU72状態で首の検査範囲のalpha不足/固定胴体変化/折り返し/反対の目・口の干渉0。中立と元PNGの最大RGB差は3/2/3で完全一致とはしない。
+- 3体それぞれを未改変公式Creator0.8.6で26状態→実保存→新プロセス26状態、計156状態を確認。保存前後の全viewport差0、33格納RGBAと階層/mesh/マスク/6制御25bindings保持。新モデルの合格を旧モデルから流用していない。閉眼/開口の線、首の影など自然な完成品品質は未合格。
+- 最終Node121/ブラウザ156＝277件とbuild成功。320/390/844幅、失敗/中止時の前回結果保持、偽AI出典拒否、透明度、つり目の左右、独立schema検証も確認。Windows/iPhone/Safari実機やブラウザ内Inochi再生、実AIは未検証。APIキー/AI SDKのアプリ依存は追加していない。
+- OpenAI/Googleの公式SDKソースとFLUX.1 schnellのモデルカード/Apache2本文を固定コミットで調査。公式価格/契約WebはCONNECT proxy403で取得できず最新単価は未確認、GPUもなし。候補/実行環境/確認済みライセンスと未確認事項をAI_PARTS_PROVIDER_COMPARISON.mdへ保存。未確認価格で課金承認を求めず、実provider/モデル/単価/予算上限/送信内容/利用条件を具体化してからオーナー判断へ進む。
+- 設定3例/再生成CLI/optional診断の固定依存/公式確認手順/検証結果をソースとともに同作業ブランチへ保存する。成果物は/tmp/character-design-verified、再生成は/tmp/character-design-replay、公式証拠は/tmp/character-design-final/official-softと/tmp/character-design-official/{bob,cool}に私用保持。古い26MB ZIPはSHA18bf753f…不変、画像/モデル/ZIPはGitHubへ保存しない。main統合/公開/新課金/外部AI送信は行わない。
+
 ## 2026-10-24 33パーツからのInochi2D自動モデリング（最新）
 
 - f107b71/remote一致、未変更、既存テスト84とbuildを確認。オーナーの承認範囲で同じfeature/part-first-character-generationを継続。最初に構成/再利用/影響ファイルを報告し、PART_FIRST_INOCHI_DESIGN.mdへ保存して独立変換を実装した。

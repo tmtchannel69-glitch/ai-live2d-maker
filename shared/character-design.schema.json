@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"urn:ai-live2d-maker:character-design:1",
+  "type":"object","additionalProperties":false,
+  "required":["format","version","name","features","style","background"],
+  "properties":{
+    "format":{"const":"ai-live2d-character-design"},"version":{"const":1},"name":{"type":"string","minLength":1,"maxLength":60},
+    "background":{"enum":["transparent","white","lavender"]},
+    "features":{"type":"object","additionalProperties":false,"required":["hair","eyes","face","outfit","mood"],"properties":{
+      "hair":{"type":"object","additionalProperties":false,"required":["style","color"],"properties":{"style":{"enum":["long-straight","bob"]},"color":{"$ref":"#/$defs/color"}}},
+      "eyes":{"type":"object","additionalProperties":false,"required":["shape","color"],"properties":{"shape":{"enum":["round","almond","slanted"]},"color":{"$ref":"#/$defs/color"}}},
+      "face":{"type":"object","additionalProperties":false,"required":["shape","skin"],"properties":{"shape":{"enum":["soft","oval"]},"skin":{"$ref":"#/$defs/color"}}},
+      "outfit":{"type":"object","additionalProperties":false,"required":["style","color","accent"],"properties":{"style":{"enum":["classic-maid","cafe-maid"]},"color":{"$ref":"#/$defs/color"},"accent":{"$ref":"#/$defs/color"}}},
+      "mood":{"enum":["gentle","bright","cool"]}}},
+    "style":{"type":"object","additionalProperties":false,"required":["ink","line_width","shading","lighting"],"properties":{"ink":{"$ref":"#/$defs/color"},"line_width":{"type":"number","minimum":1.5,"maximum":2.5},"shading":{"const":"soft-cel"},"lighting":{"const":"upper-left"}}}
+  },
+  "$defs":{"color":{"type":"string","pattern":"^#[0-9a-f]{6}$"}}
+}

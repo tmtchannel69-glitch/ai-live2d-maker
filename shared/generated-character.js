@@ -33,6 +33,14 @@ export function validateCharacterManifest(m){
   need(m.generator?.id===recipe.provider&&m.generator?.version===1&&m.generator?.ai_generated===false,'生成方式の記録が一致しません。');
   need(m.preview==='preview.png'&&m.background===recipe.background,'プレビューの設定が一致しません。');
   need(m.template===TEMPLATE_ID&&m.scope?.pose==='front'&&m.scope?.crop==='bust'&&m.scope?.costume==='maid'&&m.scope?.expression==='neutral'&&m.scope?.person_count===1&&m.rigged===false&&m.appearance_quality_passed===false,'テンプレートの対象範囲が一致しません。');
+  return validateGeneratedGeometry(m);
+}
+
+// Shared geometry checks only. Provenance/recipe validation belongs to each
+// version's entry point; a new provider must never masquerade as template v1.
+export function validateGeneratedGeometry(m){
+  need(m?.coordinates==='canvas-pixels-top-left'&&m.sides==='character-personal-left-right','座標と左右の基準が正しくありません。');
+  need(m.canvas?.width===768&&m.canvas?.height===1024,'現在の正面・胸上のキャンバスは768×1024です。');
   need(Array.isArray(m.groups)&&m.groups.length>0&&m.groups.length<=16,'親子グループが正しくありません。');
   const groups=new Map(m.groups.map(g=>[g?.id,g]));
   need(groups.size===m.groups.length&&groups.has('root'),'グループが重複、またはrootがありません。');
@@ -74,13 +82,18 @@ export function createRigMetadata(manifest){
 }
 
 export function createInochiIntermediate(manifest){
-  const m=validateCharacterManifest(manifest),ids=new Map([...m.groups.map(g=>g.id),...m.parts.map(p=>p.id)].map((id,i)=>[id,i+1]));
+  return createInochiGeometry(validateCharacterManifest(manifest));
+}
+
+// Caller must validate its own version/provenance and common geometry first.
+export function createInochiGeometry(m){
+  const ids=new Map([...m.groups.map(g=>g.id),...m.parts.map(p=>p.id)].map((id,i)=>[id,i+1]));
   const groups=new Map(m.groups.map(g=>[g.id,g]));const transform=(x,y)=>({trans:[x,y,0],rot:[0,0,0],scale:[1,1]});
   const nodes=m.groups.map(g=>({id:g.id,uuid:ids.get(g.id),parent:g.parent,type:'Node',transform:g.parent?transform(g.anchor[0]-groups.get(g.parent).anchor[0],g.anchor[1]-groups.get(g.parent).anchor[1]):transform(0,0)}));
   for(const p of m.parts){const g=groups.get(p.parent);nodes.push({id:p.id,uuid:ids.get(p.id),parent:p.parent,type:'Part',texture:p.file,
     transform:transform(p.anchor[0]-g.anchor[0],p.anchor[1]-g.anchor[1]),zsort:-p.order,opacity:p.enabled_in_neutral?1:0,
     mesh:mesh(p),masks:p.clip_to?[{source:ids.get(p.clip_to),mode:'Mask'}]:[]});}
-  return {format:'ai-live2d-generated-inochi-source',version:1,target:{sdk:'0.8.6',container:'legacy-inp-inx'},
+  return {format:'ai-live2d-generated-inochi-source',version:m.version,target:{sdk:'0.8.6',container:'legacy-inp-inx'},
     coordinates:'model-centered-y-down',canvas:m.canvas,origin:groups.get('root').anchor,nodes,
     texture_encoding:'straight-rgba-png; premultiplication-required-before-legacy-storage',
     native_model:false,runtime_verified:false,cubism_compatible:false,

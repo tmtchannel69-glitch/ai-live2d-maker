@@ -7,7 +7,7 @@ import argparse
 import json
 from pathlib import Path
 import numpy as np
-from PIL import Image,ImageDraw
+from PIL import Image,ImageDraw,ImageOps
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -17,7 +17,7 @@ def analyze(evidence,output,reference=None):
     data=json.loads((evidence/'report.json').read_text());ox,oy=data['calibration']['origin'];viewport=data['calibration']['viewport']
     neutral=Image.open(evidence/'neutral.png').convert('RGB')
     def roi(b):return tuple(round(v+(ox if i%2==0 else oy)) for i,v in enumerate(b))
-    eye_l=roi((398,310,526,398));eye_r=roi((242,310,370,398));mouth=roi((347,441,421,481));results=[]
+    eye_l=data['calibration'].get('eye_rois',{}).get('l',roi((398,310,526,398)));eye_r=data['calibration'].get('eye_rois',{}).get('r',roi((242,310,370,398)));mouth=data['calibration'].get('mouth_roi',roi((347,441,421,481)));results=[]
     for pose in data['poses']:
         name=pose['name'];frame=Image.open(evidence/(name+'.png')).convert('RGB');checks={}
         if name in ('left_closed','left_half'):checks['opposite_eye_changed_pixels']=int(np.count_nonzero(np.any(np.array(frame.crop(eye_r))!=np.array(neutral.crop(eye_r)),axis=2)))
@@ -30,9 +30,9 @@ def analyze(evidence,output,reference=None):
     report={'official_screenshot_control_checks':results,'independent_eye_mouth_checks_passed':all(all(v==0 for k,v in r.items() if k!='pose') for r in results),'appearance_quality_passed':False}
     selected=['neutral','left_closed','both_closed','mouth_1','HeadTilt_1','combined_left']
     if all((evidence/(name+'.png')).is_file() for name in selected):
-        sheet=Image.new('RGB',(338*3,248*2),'white');face=roi((215,275,553,495));draw=ImageDraw.Draw(sheet)
+        sheet=Image.new('RGB',(338*3,248*2),'white');face=data['calibration'].get('face_roi',roi((215,275,553,495)));draw=ImageDraw.Draw(sheet)
         for i,name in enumerate(selected):
-            x=(i%3)*338;y=(i//3)*248;sheet.paste(Image.open(evidence/(name+'.png')).crop(face),(x,y+28));draw.text((x+8,y+8),name,fill='black')
+            x=(i%3)*338;y=(i//3)*248;tile=ImageOps.contain(Image.open(evidence/(name+'.png')).crop(face),(338,220));sheet.paste(tile,(x+(338-tile.width)//2,y+28+(220-tile.height)//2));draw.text((x+8,y+8),name,fill='black')
         sheet.save(output.with_name(output.stem+'-motions.png'))
     if reference:
         ref=Path(reference).resolve();refdata=json.loads((ref/'report.json').read_text())

@@ -8,6 +8,7 @@ import {decode,encode} from 'fast-png';
 import {readCharacterContainer} from '../inochi2d/character-model.mjs';
 import {packRigContainer} from '../inochi2d/head-rig.mjs';
 import {validateCharacterManifest} from '../../shared/generated-character.js';
+import {validateDesignedCharacter} from '../../shared/designed-character.js';
 
 const {values}=parseArgs({options:{input:{type:'string'},output:{type:'string'}}});
 if(!values.input||!values.output)throw new Error('Usage: reference.mjs --input PRIVATE_GENERATED_DIRECTORY --output NEW_PRIVATE_REFERENCE.inx');
@@ -15,7 +16,8 @@ const root=await realpath(fileURLToPath(new URL('../../',import.meta.url))),pare
 const output=resolve(parent,resolve(values.output).split(sep).at(-1));
 if(output===root||output.startsWith(root+sep))throw new Error('Reference model must be outside Git.');
 try{await lstat(output);throw new Error('Output exists.');}catch(e){if(e.code!=='ENOENT')throw e;}
-const folder=resolve(values.input),manifest=validateCharacterManifest(JSON.parse(await readFile(resolve(folder,'character_manifest.json'),'utf8')));
+const folder=resolve(values.input),rawManifest=JSON.parse(await readFile(resolve(folder,'character_manifest.json'),'utf8'));
+const manifest=rawManifest.version===2?await validateDesignedCharacter(rawManifest):validateCharacterManifest(rawManifest);
 if(manifest.background!=='transparent')throw new Error('Use the transparent recipe for the reference runtime comparison.');
 const bytes=await readFile(resolve(folder,'character.inp'));
 const {model,textures}=readCharacterContainer(new Uint8Array(bytes));

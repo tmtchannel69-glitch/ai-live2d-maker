@@ -1,0 +1,1378 @@
+{
+  "format": "ai-live2d-character-design-validation",
+  "version": 1,
+  "date": "2026-10-24",
+  "branch": "feature/part-first-character-generation",
+  "base_commit": "ccbb93acb83bd2a1a72636343a4798e874712ffc",
+  "generator_source_sha256": "2f4a29d717ef08ae3fc2da2d0d481c8969f0dbcf6a464615bbe454e2cd622ebf",
+  "scope": "Local parametric designs and provider contract; genuine AI generation is not connected or tested.",
+  "ai_generation_tested": false,
+  "external_ai_calls": 0,
+  "api_charges_usd": 0,
+  "new_ai_app_dependencies": false,
+  "official_creator_binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+  "pinned": {
+    "sdkTag": "v0.8.6",
+    "sdkCommit": "dda3a8f005f808104caa43183ab8753fb989e30f",
+    "creatorTag": "v0.8.6",
+    "creatorCommit": "371e5f4e21117102dbecc82371bfd9a6e2f5df02",
+    "container": "legacy-inp1"
+  },
+  "environment": {
+    "node": "24.19.0",
+    "chromium": "151.0.7922.173",
+    "python": "3.12.14",
+    "official_creator_platform": "Linux Xvfb1280x960/Mesa",
+    "windows_iphone_safari_tested": false,
+    "cuda_devices": 0
+  },
+  "automated_tests": {
+    "node_passed": 121,
+    "browser_passed": 156,
+    "total_passed": 277,
+    "production_build_passed": true,
+    "manifest_schema_validation_passed": true
+  },
+  "variants": [
+    {
+      "name": "soft",
+      "design": {
+        "format": "ai-live2d-character-design",
+        "version": 1,
+        "name": "Lavender Soft",
+        "features": {
+          "hair": {
+            "style": "long-straight",
+            "color": "#b6a4d9"
+          },
+          "eyes": {
+            "shape": "round",
+            "color": "#8065bd"
+          },
+          "face": {
+            "shape": "soft",
+            "skin": "#ffe5db"
+          },
+          "outfit": {
+            "style": "classic-maid",
+            "color": "#302d41",
+            "accent": "#b5a0d8"
+          },
+          "mood": "gentle"
+        },
+        "style": {
+          "ink": "#403042",
+          "line_width": 2,
+          "shading": "soft-cel",
+          "lighting": "upper-left"
+        },
+        "background": "transparent"
+      },
+      "design_id": "f447ec10d63045082071d4f206a312670d4e25ae2ba3573f815f6066a6ebba64",
+      "blueprint_id": "5d32542724f7a4e543e002eabee1c6ad9409701fc765fbda09f87c08a5e3a266",
+      "ai_generated": false,
+      "file_generation": {
+        "passed": true,
+        "parts": 33,
+        "textures": 33,
+        "nodes": 41,
+        "vertices": 1259,
+        "triangles": 1872,
+        "parameters": 6,
+        "bindings": 25,
+        "model_sha256": "936a1fb11bd7afc3c70bbefa1f2299d36370d6c7d3e075ccd57304d787e8db63",
+        "archive_sha256": "99ed4ff58a9cb66a3cc999240ac9b99138c751a6aeee8b4dbaee056f9037e4f9",
+        "archive_bytes": 6679349,
+        "archive_entries": 49,
+        "crc_passed": true,
+        "repeat_archive_and_49_entries_byte_identical": true,
+        "node_model_rebuild_byte_identical": true
+      },
+      "local_generation_plus_cpu_diagnostics_seconds": 47.57677568,
+      "independent_cpu": {
+        "geometry_checks_passed": true,
+        "states": 24,
+        "neutral_comparison": {
+          "background": "white",
+          "changed_pixels": 11835,
+          "rgb_above_3_pixels": 0,
+          "maximum_channel_difference": 3,
+          "mean_channel_difference": 0.009106530083550347
+        },
+        "states_metrics": [
+          {
+            "name": "neutral",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "left_closed",
+            "requested": {
+              "EyeOpenL": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "right_closed",
+            "requested": {
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "both_closed",
+            "requested": {
+              "EyeOpenL": 0,
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.025",
+            "requested": {
+              "EyeOpenL": 0.025,
+              "EyeOpenR": 0.025
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 68,
+              "r": 69
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.075",
+            "requested": {
+              "EyeOpenL": 0.075,
+              "EyeOpenR": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 203,
+              "r": 201
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.15",
+            "requested": {
+              "EyeOpenL": 0.15,
+              "EyeOpenR": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 413,
+              "r": 415
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.25",
+            "requested": {
+              "EyeOpenL": 0.25,
+              "EyeOpenR": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 668,
+              "r": 666
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.5",
+            "requested": {
+              "EyeOpenL": 0.5,
+              "EyeOpenR": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1335,
+              "r": 1336
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.75",
+            "requested": {
+              "EyeOpenL": 0.75,
+              "EyeOpenR": 0.75
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1951,
+              "r": 1951
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "mouth_0.075",
+            "requested": {
+              "MouthOpen": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.15",
+            "requested": {
+              "MouthOpen": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.25",
+            "requested": {
+              "MouthOpen": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.5",
+            "requested": {
+              "MouthOpen": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_1",
+            "requested": {
+              "MouthOpen": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "HeadX_-1",
+            "requested": {
+              "HeadX": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2480,
+              "r": 2479
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadX_1",
+            "requested": {
+              "HeadX": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2480,
+              "r": 2481
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_-1",
+            "requested": {
+              "HeadY": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2488,
+              "r": 2489
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_1",
+            "requested": {
+              "HeadY": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2488,
+              "r": 2487
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_-1",
+            "requested": {
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2528,
+              "r": 2530
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_1",
+            "requested": {
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2529,
+              "r": 2530
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_left",
+            "requested": {
+              "EyeOpenL": 0,
+              "MouthOpen": 1,
+              "HeadX": -1,
+              "HeadY": 1,
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 2527
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_right",
+            "requested": {
+              "EyeOpenR": 0,
+              "MouthOpen": 0.5,
+              "HeadX": 1,
+              "HeadY": -1,
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2532,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "neutral_return",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 2432,
+              "r": 2432
+            },
+            "folded_mesh_triangles": 0
+          }
+        ],
+        "native_runtime_tested_by_this_renderer": false
+      },
+      "official_creator": {
+        "version": "0.8.6",
+        "before_states": 26,
+        "fresh_reload_states": 26,
+        "control_values_verified": true,
+        "actual_save_and_fresh_reload_passed": true,
+        "saved_sha256": "599c57822fd4502d2e399365999ff6cb4156b714afe02d9d0ef65e92bb27a85a",
+        "max_reload_viewport_changed_pixels": 0,
+        "fixed_torso_tested_pixels_per_state": 3780,
+        "max_fixed_torso_changed_pixels": 0,
+        "stored_rgba_33_textures_identical": true,
+        "hierarchy_mesh_masks_bindings_retained": true,
+        "maximum_numeric_roundtrip_delta": 6.666666649834951e-06,
+        "independent_eye_mouth_checks_passed": true,
+        "private_evidence": "/tmp/character-design-final/official-soft"
+      },
+      "appearance_quality_passed": false
+    },
+    {
+      "name": "bob",
+      "design": {
+        "format": "ai-live2d-character-design",
+        "version": 1,
+        "name": "Cafe Bob",
+        "features": {
+          "hair": {
+            "style": "bob",
+            "color": "#b17654"
+          },
+          "eyes": {
+            "shape": "almond",
+            "color": "#6096ba"
+          },
+          "face": {
+            "shape": "soft",
+            "skin": "#ffe5db"
+          },
+          "outfit": {
+            "style": "cafe-maid",
+            "color": "#51414b",
+            "accent": "#b8768d"
+          },
+          "mood": "bright"
+        },
+        "style": {
+          "ink": "#403042",
+          "line_width": 2,
+          "shading": "soft-cel",
+          "lighting": "upper-left"
+        },
+        "background": "transparent"
+      },
+      "design_id": "1819ff5567730ca0037b2a39753437252e115228219788f96ec3419439198bce",
+      "blueprint_id": "8030cf831b8f96c66e283eed8b3d9055d2cbe31053ca3fcc9a939f0c36be8e67",
+      "ai_generated": false,
+      "file_generation": {
+        "passed": true,
+        "parts": 33,
+        "textures": 33,
+        "nodes": 41,
+        "vertices": 1259,
+        "triangles": 1872,
+        "parameters": 6,
+        "bindings": 25,
+        "model_sha256": "624bdc2af969abbf93473df2829f09e520efab65876a09285153e8e17ec4a282",
+        "archive_sha256": "376ae258eb6f2082e8ff28efb8c3f2764f6b0643cfca7883a5a4b0d6751b843b",
+        "archive_bytes": 6170974,
+        "archive_entries": 49,
+        "crc_passed": true,
+        "repeat_archive_and_49_entries_byte_identical": true,
+        "node_model_rebuild_byte_identical": true
+      },
+      "local_generation_plus_cpu_diagnostics_seconds": 44.188107669000004,
+      "independent_cpu": {
+        "geometry_checks_passed": true,
+        "states": 24,
+        "neutral_comparison": {
+          "background": "white",
+          "changed_pixels": 10662,
+          "rgb_above_3_pixels": 0,
+          "maximum_channel_difference": 2,
+          "mean_channel_difference": 0.008179982503255209
+        },
+        "states_metrics": [
+          {
+            "name": "neutral",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "left_closed",
+            "requested": {
+              "EyeOpenL": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "right_closed",
+            "requested": {
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "both_closed",
+            "requested": {
+              "EyeOpenL": 0,
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.025",
+            "requested": {
+              "EyeOpenL": 0.025,
+              "EyeOpenR": 0.025
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 49,
+              "r": 49
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.075",
+            "requested": {
+              "EyeOpenL": 0.075,
+              "EyeOpenR": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 149,
+              "r": 148
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.15",
+            "requested": {
+              "EyeOpenL": 0.15,
+              "EyeOpenR": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 296,
+              "r": 299
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.25",
+            "requested": {
+              "EyeOpenL": 0.25,
+              "EyeOpenR": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 481,
+              "r": 481
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.5",
+            "requested": {
+              "EyeOpenL": 0.5,
+              "EyeOpenR": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 951,
+              "r": 952
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.75",
+            "requested": {
+              "EyeOpenL": 0.75,
+              "EyeOpenR": 0.75
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1388,
+              "r": 1389
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "mouth_0.075",
+            "requested": {
+              "MouthOpen": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.15",
+            "requested": {
+              "MouthOpen": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.25",
+            "requested": {
+              "MouthOpen": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.5",
+            "requested": {
+              "MouthOpen": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_1",
+            "requested": {
+              "MouthOpen": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "HeadX_-1",
+            "requested": {
+              "HeadX": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1761,
+              "r": 1763
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadX_1",
+            "requested": {
+              "HeadX": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1763,
+              "r": 1761
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_-1",
+            "requested": {
+              "HeadY": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1782,
+              "r": 1782
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_1",
+            "requested": {
+              "HeadY": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1782,
+              "r": 1782
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_-1",
+            "requested": {
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1814,
+              "r": 1813
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_1",
+            "requested": {
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1812,
+              "r": 1814
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_left",
+            "requested": {
+              "EyeOpenL": 0,
+              "MouthOpen": 1,
+              "HeadX": -1,
+              "HeadY": 1,
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 1805
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_right",
+            "requested": {
+              "EyeOpenR": 0,
+              "MouthOpen": 0.5,
+              "HeadX": 1,
+              "HeadY": -1,
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1813,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "neutral_return",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1968,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1727,
+              "r": 1727
+            },
+            "folded_mesh_triangles": 0
+          }
+        ],
+        "native_runtime_tested_by_this_renderer": false
+      },
+      "official_creator": {
+        "version": "0.8.6",
+        "before_states": 26,
+        "fresh_reload_states": 26,
+        "control_values_verified": true,
+        "actual_save_and_fresh_reload_passed": true,
+        "saved_sha256": "d988a74fd4d8992437e441d6c324f4630dfd6f37294379cd04064b1ff6fa7aaa",
+        "max_reload_viewport_changed_pixels": 0,
+        "fixed_torso_tested_pixels_per_state": 3780,
+        "max_fixed_torso_changed_pixels": 0,
+        "stored_rgba_33_textures_identical": true,
+        "hierarchy_mesh_masks_bindings_retained": true,
+        "maximum_numeric_roundtrip_delta": 6.666666649834951e-06,
+        "independent_eye_mouth_checks_passed": true,
+        "private_evidence": "/tmp/character-design-official/bob"
+      },
+      "appearance_quality_passed": false
+    },
+    {
+      "name": "cool",
+      "design": {
+        "format": "ai-live2d-character-design",
+        "version": 1,
+        "name": "Silver Cool",
+        "features": {
+          "hair": {
+            "style": "long-straight",
+            "color": "#c7c7df"
+          },
+          "eyes": {
+            "shape": "slanted",
+            "color": "#ca9759"
+          },
+          "face": {
+            "shape": "oval",
+            "skin": "#ffe5db"
+          },
+          "outfit": {
+            "style": "classic-maid",
+            "color": "#293b50",
+            "accent": "#689fac"
+          },
+          "mood": "cool"
+        },
+        "style": {
+          "ink": "#403042",
+          "line_width": 2,
+          "shading": "soft-cel",
+          "lighting": "upper-left"
+        },
+        "background": "transparent"
+      },
+      "design_id": "d2f10e31ac3f60259870abb18c6796eaa74708678d521901dd8ecba8a9516b71",
+      "blueprint_id": "e0e699d3cc0db8dc16de4d692bfd0d555477573e137576237da3f45eb3135491",
+      "ai_generated": false,
+      "file_generation": {
+        "passed": true,
+        "parts": 33,
+        "textures": 33,
+        "nodes": 41,
+        "vertices": 1259,
+        "triangles": 1872,
+        "parameters": 6,
+        "bindings": 25,
+        "model_sha256": "a63b2413739c36564424657e30a77d090646d3df01b7c9ecd31d36f9ff48c308",
+        "archive_sha256": "dea8355363cb7ddaa6da4954e48a17effc29ecc267805bfae45fa2eb7d195d23",
+        "archive_bytes": 6422004,
+        "archive_entries": 49,
+        "crc_passed": true,
+        "repeat_archive_and_49_entries_byte_identical": true,
+        "node_model_rebuild_byte_identical": true
+      },
+      "local_generation_plus_cpu_diagnostics_seconds": 48.828748690000005,
+      "independent_cpu": {
+        "geometry_checks_passed": true,
+        "states": 24,
+        "neutral_comparison": {
+          "background": "white",
+          "changed_pixels": 11078,
+          "rgb_above_3_pixels": 0,
+          "maximum_channel_difference": 3,
+          "mean_channel_difference": 0.008719126383463541
+        },
+        "states_metrics": [
+          {
+            "name": "neutral",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "left_closed",
+            "requested": {
+              "EyeOpenL": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "right_closed",
+            "requested": {
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0,
+            "opposite_eye_changed_pixels": 0
+          },
+          {
+            "name": "both_closed",
+            "requested": {
+              "EyeOpenL": 0,
+              "EyeOpenR": 0
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.025",
+            "requested": {
+              "EyeOpenL": 0.025,
+              "EyeOpenR": 0.025
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 50,
+              "r": 50
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.075",
+            "requested": {
+              "EyeOpenL": 0.075,
+              "EyeOpenR": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 155,
+              "r": 154
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.15",
+            "requested": {
+              "EyeOpenL": 0.15,
+              "EyeOpenR": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 319,
+              "r": 320
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.25",
+            "requested": {
+              "EyeOpenL": 0.25,
+              "EyeOpenR": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 523,
+              "r": 528
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.5",
+            "requested": {
+              "EyeOpenL": 0.5,
+              "EyeOpenR": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1034,
+              "r": 1033
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "blink_0.75",
+            "requested": {
+              "EyeOpenL": 0.75,
+              "EyeOpenR": 0.75
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1518,
+              "r": 1518
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "mouth_0.075",
+            "requested": {
+              "MouthOpen": 0.075
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.15",
+            "requested": {
+              "MouthOpen": 0.15
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.25",
+            "requested": {
+              "MouthOpen": 0.25
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_0.5",
+            "requested": {
+              "MouthOpen": 0.5
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "mouth_1",
+            "requested": {
+              "MouthOpen": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0,
+            "eyes_changed_pixels": 0
+          },
+          {
+            "name": "HeadX_-1",
+            "requested": {
+              "HeadX": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1934,
+              "r": 1935
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadX_1",
+            "requested": {
+              "HeadX": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1934,
+              "r": 1936
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_-1",
+            "requested": {
+              "HeadY": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1940,
+              "r": 1941
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadY_1",
+            "requested": {
+              "HeadY": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1940,
+              "r": 1941
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_-1",
+            "requested": {
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1982,
+              "r": 1980
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "HeadTilt_1",
+            "requested": {
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1979,
+              "r": 1982
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_left",
+            "requested": {
+              "EyeOpenL": 0,
+              "MouthOpen": 1,
+              "HeadX": -1,
+              "HeadY": 1,
+              "HeadTilt": -1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 0,
+              "r": 1980
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "combined_right",
+            "requested": {
+              "EyeOpenR": 0,
+              "MouthOpen": 0.5,
+              "HeadX": 1,
+              "HeadY": -1,
+              "HeadTilt": 1
+            },
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1980,
+              "r": 0
+            },
+            "folded_mesh_triangles": 0
+          },
+          {
+            "name": "neutral_return",
+            "requested": {},
+            "fixed_torso_changed_pixels": 0,
+            "neck_tested_pixels": 1200,
+            "neck_alpha_below_250": 0,
+            "iris_contributing_pixels": {
+              "l": 1890,
+              "r": 1892
+            },
+            "folded_mesh_triangles": 0
+          }
+        ],
+        "native_runtime_tested_by_this_renderer": false
+      },
+      "official_creator": {
+        "version": "0.8.6",
+        "before_states": 26,
+        "fresh_reload_states": 26,
+        "control_values_verified": true,
+        "actual_save_and_fresh_reload_passed": true,
+        "saved_sha256": "2de8232020f20354cdbe68ed1ef5cb4c4a81791e60930fb8b13ff97a85dfafe3",
+        "max_reload_viewport_changed_pixels": 0,
+        "fixed_torso_tested_pixels_per_state": 3780,
+        "max_fixed_torso_changed_pixels": 0,
+        "stored_rgba_33_textures_identical": true,
+        "hierarchy_mesh_masks_bindings_retained": true,
+        "maximum_numeric_roundtrip_delta": 6.6666665929915325e-06,
+        "independent_eye_mouth_checks_passed": true,
+        "private_evidence": "/tmp/character-design-official/cool"
+      },
+      "appearance_quality_passed": false
+    }
+  ],
+  "legacy_v1": {
+    "45_entry_archive_sha256": "3c78beb7e2f99162454f3ffa93abb88e79353b88506784c70b5c6e1310d98e88",
+    "model_sha256": "553001d0735e93a1158b8145d276bfec590038bb34c13f2a42e2bbf655f46e44",
+    "matches_previous_release_byte_for_byte": true
+  },
+  "older_private_zip": {
+    "sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+    "unchanged": true
+  },
+  "unresolved": [
+    "Genuine AI provider, server-side provenance, reference generation, coherent AI layers and completion are not connected or evaluated.",
+    "Current API prices, model terms, retention and account availability could not be verified: official website GETs failed with proxy CONNECT 403. SDK licenses do not establish model service terms.",
+    "Only fixed front-bust canvas, two hairstyles and two maid outfit families; arbitrary anatomy and variable optional roles need further work.",
+    "Appearance quality is not passed: blink lines, mouth transitions and neck shading need improvement.",
+    "Native Inochi motion in browser, Windows/iPhone/Safari, Cubism and VTube Studio compatibility are not verified."
+  ],
+  "approval_status": "External AI sending and any paid usage remain unauthorized. Obtain concrete verified provider/model/unit cost/total budget/payload/terms before asking the owner."
+}

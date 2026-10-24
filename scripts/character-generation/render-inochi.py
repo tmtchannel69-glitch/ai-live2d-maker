@@ -31,12 +31,16 @@ def audit(folder,output):
     poses += [('combined_left',{'EyeOpenL':0,'MouthOpen':1,'HeadX':-1,'HeadY':1,'HeadTilt':-1}),
               ('combined_right',{'EyeOpenR':0,'MouthOpen':.5,'HeadX':1,'HeadY':-1,'HeadTilt':1}),('neutral_return',{})]
     baseline=None;records=[];started=time.monotonic();thumbs=[]
+    neck_box=(360,550,408,585);eye_box=(236,310,532,406)
+    if manifest['version']==2:
+        g=manifest['rig_geometry'];neck_box=(round(g['head_pivot'][0]-24),round(g['neck_follow_y']+3),round(g['head_pivot'][0]+24),round(g['neck_fixed_y']-3))
+        q=[p['rect'] for p in manifest['parts'] if p['parent'].startswith('group_eye')];eye_box=(min(p['x'] for p in q),min(p['y'] for p in q),max(p['x']+p['width'] for p in q),max(p['y']+p['height'] for p in q))
     eye_boxes={s:manifest['parts'][next(i for i,p in enumerate(manifest['parts']) if p['role']=='eye_white_'+s)]['rect'] for s in ['l','r']}
     for name,values in poses:
         frame,layers=diag.render(model,textures,(768,1024),(0,0,768,1024),values)
         if baseline is None:baseline=frame.copy()
         Image.fromarray(frame).save(output/(name+'.png'))
-        torso=frame[805:980,342:426];neck=frame[550:585,360:408]
+        torso=frame[805:980,342:426];neck=frame[neck_box[1]:neck_box[3],neck_box[0]:neck_box[2]]
         record={'name':name,'requested':values,'fixed_torso_changed_pixels':int(np.count_nonzero(np.any(torso!=baseline[805:980,342:426],axis=2))),
             'neck_tested_pixels':neck.shape[0]*neck.shape[1],'neck_alpha_below_250':int(np.count_nonzero(neck[:,:,3]<250)),
             'iris_contributing_pixels':{s:int(np.count_nonzero(layers.get('iris_'+s,np.zeros((1,1,4)))[:,:,3]>0)) for s in ['l','r']}}
@@ -47,7 +51,7 @@ def audit(folder,output):
             cross=(q[:,1,0]-q[:,0,0])*(q[:,2,1]-q[:,0,1])-(q[:,1,1]-q[:,0,1])*(q[:,2,0]-q[:,0,0]);folded+=int(np.count_nonzero(cross < -1e-7))
         record['folded_mesh_triangles']=folded
         if name.startswith('mouth_'):
-            record['eyes_changed_pixels']=int(np.count_nonzero(np.any(frame[310:406,236:532]!=baseline[310:406,236:532],axis=2)))
+            record['eyes_changed_pixels']=int(np.count_nonzero(np.any(frame[eye_box[1]:eye_box[3],eye_box[0]:eye_box[2]]!=baseline[eye_box[1]:eye_box[3],eye_box[0]:eye_box[2]],axis=2)))
         if name=='left_closed':
             q=eye_boxes['r'];record['opposite_eye_changed_pixels']=int(np.count_nonzero(np.any(frame[q['y']:q['y']+q['height'],q['x']:q['x']+q['width']]!=baseline[q['y']:q['y']+q['height'],q['x']:q['x']+q['width']],axis=2)))
         if name=='right_closed':
@@ -60,11 +64,13 @@ def audit(folder,output):
     # Compare over an identical white background; low-alpha RGB roundoff is
     # not counted as opaque skin/line damage. Browser and GPU filtering still
     # need their own comparison, separate from this CPU implementation.
-    def white(a):return np.rint(a[:,:,:3]*(a[:,:,3:4]/255)+255-a[:,:,3:4]).astype(np.uint8)
-    delta=np.abs(white(baseline).astype(int)-white(preview).astype(int))
+    def matte(a):
+        if manifest['background']=='lavender':return np.rint(a[:,:,:3]*(a[:,:,3:4]/255)+np.array([238,234,247])*(255-a[:,:,3:4])/255).astype(np.uint8)
+        return np.rint(a[:,:,:3]*(a[:,:,3:4]/255)+255-a[:,:,3:4]).astype(np.uint8)
+    delta=np.abs(matte(baseline).astype(int)-matte(preview).astype(int))
     report={'format':'generated-character-inochi-cpu-audit','version':1,'model_sha256':hashlib.sha256((folder/'character.inp').read_bytes()).hexdigest(),'preview_sha256':hashlib.sha256((folder/'preview.png').read_bytes()).hexdigest(),'states':records,'seconds':round(time.monotonic()-started,3),
-        'neutral_comparison':{'background':'white','changed_pixels':int(np.count_nonzero(np.any(delta,axis=2))),'rgb_above_3_pixels':int(np.count_nonzero(np.any(delta>3,axis=2))),'maximum_channel_difference':int(delta.max()),'mean_channel_difference':float(delta.mean())},
-        'native_runtime_tested_by_this_renderer':False,'appearance_quality_passed':False}
+        'neutral_comparison':{'background':'lavender' if manifest['background']=='lavender' else 'white','changed_pixels':int(np.count_nonzero(np.any(delta,axis=2))),'rgb_above_3_pixels':int(np.count_nonzero(np.any(delta>3,axis=2))),'maximum_channel_difference':int(delta.max()),'mean_channel_difference':float(delta.mean())},
+        'neck_test_roi':neck_box,'eye_test_roi':eye_box,'native_runtime_tested_by_this_renderer':False,'appearance_quality_passed':False}
     report['geometry_checks_passed']=all(r['fixed_torso_changed_pixels']==r['neck_alpha_below_250']==r['folded_mesh_triangles']==0 and r.get('opposite_eye_changed_pixels',0)==0 and r.get('eyes_changed_pixels',0)==0 for r in records)
     (output/'report.json').write_text(json.dumps(report,indent=2))
     print(json.dumps(report))

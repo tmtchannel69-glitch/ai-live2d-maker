@@ -21,7 +21,7 @@ async function rasterize(part,recipe,signal){
 // No network provider or paid service is registered by this MVP.
 export const localPartProvider=Object.freeze({id:'local-template-v1',aiGenerated:false,generate:rasterize});
 
-async function validateAsset(part,blob,signal){
+export async function validateAsset(part,blob,signal,{requireTransparency=false}={}){
   checkAbort(signal);
   if(!(blob instanceof Blob)||blob.type!=='image/png'||!blob.size||blob.size>4*MIB)throw new Error(`${part.label}のPNGを生成できませんでした。`);
   const b=new Uint8Array(await blob.slice(0,33).arrayBuffer()),v=new DataView(b.buffer);
@@ -31,11 +31,18 @@ async function validateAsset(part,blob,signal){
     bitmap=await createImageBitmap(blob);checkAbort(signal);context(c).drawImage(bitmap,0,0);
     const data=context(c).getImageData(0,0,c.width,c.height).data;
     if(!data.some((value,index)=>index%4===3&&value>0))throw new Error(`${part.label}が空の画像です。生成をやり直してください。`);
+    if(requireTransparency&&!data.some((value,index)=>index%4===3&&value===0))throw new Error(`${part.label}には透明な領域が必要です。背景を含む画像をパーツとして成功扱いできません。`);
   }finally{bitmap?.close();c.width=c.height=0;}
 }
 
 export async function assembleCharacter(manifest,assets,{signal}={}){
-  const m=validateCharacterManifest(manifest);checkAbort(signal);
+  return assembleValidatedCharacter(validateCharacterManifest(manifest),assets,{signal});
+}
+
+// Each version's entry point validates its own design/provenance before this
+// shared source-over compositor. The static v1 API above remains unchanged.
+export async function assembleValidatedCharacter(m,assets,{signal}={}){
+  checkAbort(signal);
   if(!(assets instanceof Map)||assets.size!==m.parts.length||m.parts.some(p=>!assets.has(p.role)))throw new Error('パーツが不足しています。');
   const c=canvas(m.canvas.width,m.canvas.height),ctx=context(c),parts=new Map(m.parts.map(p=>[p.role,p]));
   try{

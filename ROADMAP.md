@@ -1,5 +1,15 @@
 # 開発ロードマップ
 
+## 共通デザインからのAIパーツ生成（2026-10-24、最新）
+
+ccbb93aから、既存の33パーツ/Native生成を保つ版2のデザイン経路を追加。[設計と再生成](docs/CHARACTER_DESIGN_GENERATION.md)、[実測](docs/CHARACTER_DESIGN_VALIDATION.md)、[provider比較](docs/AI_PARTS_PROVIDER_COMPARISON.md)。
+
+1. **今回完了**：7種類の特徴と共通パレット/線/陰影、33役割/座標/支点/親子/接続点/hidden layerのblueprint、1characterを返すprovider契約、元のモデル生成処理への接続。端末内の3デザインで検証。AI生成とは表示しない。
+2. **次のAI接続の前提**：候補は参照/マスク/透過を確認できたOpenAI系、Google画像系、ローカルFLUX。料金/契約Webは403で最新単価未確認。実行/課金上限0のまま、モデル固定版・最新単価・予算上限・送信する文章/参照画像・保存/学習・ライセンスを確認してオーナー判断へ。
+3. **実providerの実装**：APIキーをサーバー管理し、実応答/出典/画像SHA/共通参照の記録と停止/再試行/費用管理を追加。SDKの対応型だけでAI画像品質やアカウント利用可能性を合格にしない。
+4. **自由形状への一般化**：現在は共通のメイド上半身の参照形状から設計を導出。任意の髪型/衣装、不要なapron等の扱い、AI出力からの位置/接続/髪根元/瞼検出は未実装。承認範囲に合わせて版を拡張し、失敗をダミー成功にしない。
+5. **品質と製品化**：実AIの複数デザインによる一貫性/欠損/瞬き/首/髪を評価。現状の線の切替/首影も改善。iPhone/Safari/Windows、ブラウザの実Inochi runtimeは未検証。Cubism/VTS互換/main統合/公開も別判断。
+
 ## 33パーツの自動モデリング（2026-10-24、最新）
 
 f107b71の別モードを維持し、独立33PNG→6制御/25bindings→Inochi2D legacy0.8.6のINP/INXを接続した。[設計](docs/PART_FIRST_INOCHI_DESIGN.md)、[公式の保存/再読込・中立比較・残課題・再生成](docs/PART_FIRST_INOCHI_VALIDATION.md)。通常の画像1枚→モデルの処理は変更しない。

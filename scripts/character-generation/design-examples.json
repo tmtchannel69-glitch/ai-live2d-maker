@@ -1,0 +1,5 @@
+{
+  "soft": {"name":"Lavender Soft"},
+  "bob": {"name":"Cafe Bob","features":{"hair":{"style":"bob","color":"#b17654"},"eyes":{"shape":"almond","color":"#6096ba"},"outfit":{"style":"cafe-maid","color":"#51414b","accent":"#b8768d"},"mood":"bright"}},
+  "cool": {"name":"Silver Cool","features":{"hair":{"color":"#c7c7df"},"eyes":{"shape":"slanted","color":"#ca9759"},"face":{"shape":"oval"},"outfit":{"color":"#293b50","accent":"#689fac"},"mood":"cool"}}
+}

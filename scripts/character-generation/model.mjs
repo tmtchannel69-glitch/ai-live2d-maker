@@ -7,6 +7,8 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {validateCharacterManifest} from '../../shared/generated-character.js';
 import {buildGeneratedInochi} from '../../shared/generated-character-inochi.js';
+import {buildDesignedInochi} from '../../shared/generated-character-inochi.js';
+import {validateDesignedCharacter} from '../../shared/designed-character.js';
 
 const ROOT=fileURLToPath(new URL('../../',import.meta.url));
 const need=(ok,message)=>{if(!ok)throw new Error(message);};
@@ -19,10 +21,11 @@ export async function generateModelDirectory(input,requestedOutput){
   const canonical=s=>process.platform==='win32'?s.toLowerCase():s;
   need(canonical(output)!==canonical(root)&&!canonical(output).startsWith(canonical(root)+sep),'モデルの保存先はGitリポジトリ外にしてください。');
   try{await lstat(output);throw new Error('出力先が存在します。新規フォルダを指定してください。');}catch(e){if(e.code!=='ENOENT')throw e;}
-  const manifest=validateCharacterManifest(JSON.parse((await ordinary(join(folder,'character_manifest.json'),256*1024)).toString('utf8')));
+  const rawManifest=JSON.parse((await ordinary(join(folder,'character_manifest.json'),256*1024)).toString('utf8'));
+  const manifest=rawManifest.version===2?await validateDesignedCharacter(rawManifest):validateCharacterManifest(rawManifest);
   const partDir=await lstat(join(folder,'parts'));need(partDir.isDirectory()&&!partDir.isSymbolicLink(),'通常のpartsディレクトリが必要です。');
   let bytes=0;const assets=new Map();for(const p of manifest.parts){const b=await ordinary(join(folder,p.file),4*1024*1024);bytes+=b.length;need(bytes<=12*1024*1024,'合計PNGサイズが上限を超えています。');assets.set(p.role,new Uint8Array(b));}
-  const built=await buildGeneratedInochi(manifest,assets),report={...built.report,source_png_sha256:Object.fromEntries([...assets].map(([role,b])=>[role,hash(b)])),model_sha256:hash(built.inp)};
+  const built=await (manifest.version===2?buildDesignedInochi(manifest,assets):buildGeneratedInochi(manifest,assets)),report={...built.report,source_png_sha256:Object.fromEntries([...assets].map(([role,b])=>[role,hash(b)])),model_sha256:hash(built.inp)};
   await mkdir(output,{mode:0o700});
   for(const [name,b] of [['character.inp',built.inp],['character.inx',built.inx],['inochi_model.json',JSON.stringify(built.model,null,2)+'\n'],['inochi_rig.json',JSON.stringify(built.rig,null,2)+'\n'],['inochi_report.json',JSON.stringify(report,null,2)+'\n']])await writeFile(join(output,name),b,{flag:'wx',mode:0o600});
   return {output,model_sha256:report.model_sha256,parts:33,parameters:report.parameters,file_generation_passed:true,official_creator_tested:false,appearance_quality_passed:false};
