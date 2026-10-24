@@ -8,3 +8,12 @@
 #cg-external-import #cg-ex-status{min-height:38px;line-height:1.7;overflow-wrap:anywhere}
 #cg-external-import #cg-ex-results{margin-top:20px}
 #cg-external-import #cg-ex-summary{overflow-wrap:anywhere}
+/* Isolated batch-import controls (including narrow iPhone viewports). */
+#cg-batch-import{margin-top:24px}
+#cg-batch-import>label{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+#cg-batch-import input[type=file]{box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:48px;font-size:16px;border:1px solid #5b506e;border-radius:8px;padding:10px;color:#eee5ff;background:#211c2e}
+#cg-batch-import #cg-batch-apply,#cg-batch-import #cg-batch-download{width:100%;margin:12px 0}
+#cg-batch-import #cg-batch-cancel{width:100%;margin:8px 0}
+#cg-batch-import #cg-batch-selection,#cg-batch-import #cg-batch-status{overflow-wrap:anywhere;line-height:1.7}
+#cg-batch-import #cg-batch-output{margin-top:20px}
+#cg-batch-import code{overflow-wrap:anywhere}
