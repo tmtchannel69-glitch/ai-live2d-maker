@@ -53,6 +53,23 @@ npm ci --cache /tmp/ai-live2d-npm-cache
 
 CPU診断の比較画像は同じコマンドで再生成する。公式Creatorの画面写真は下記の別検証であり、CPU画像を公式の画面写真と呼ばない。髪の深度や推定補完の自然さ、まばたきの肌ぼけは未解決として残す。
 
+## 頭部に加えて髪も生成する
+
+同じ依存で`--stage hair`を指定する。これまでの出力も残し、毛束の独立操作版と公式物理版を別々に作る。Windowsでは上記のPython/画像/出力パスへ置き換える。
+
+```sh
+.venv/bin/python scripts/parts/rig.py --source /path/to/original-character.jpg --output /tmp/NEW-hair-rig-trial --stage hair
+```
+
+| 追加出力 | 内容 |
+|---|---|
+| `hair/` | 9候補の小さい変形、HairSway00〜08、モデル/配置/根元/制限/診断 |
+| `hair-physics/` | 同じ変形に公式0.8.6のpendulumを接続した別モデル |
+| `hair-quality/` | 実モデルの独立CPU描画25状態、比較/差分PNG、穴/固定胴体の検査 |
+| `hair-blink-quality/` | 髪版モデルのまばたき10開度と品質警告 |
+
+生成だけで`official_creator_passed`や`physics_official_runtime_passed`をtrueにしない。これらは下記GUIの別報告でモデルSHAごとに確認する。頭皮の根元、正しい前後関係、自然な完成品質、通常スマホ画面への接続は未完了。[設計](HAIR_RIG_DESIGN.md)、[実画像の検証](HAIR_RIG_VALIDATION.md)。
+
 ## 公式Creator 0.8.6での検証
 
 Windowsでは[公式リリース](https://github.com/Inochi2D/inochi-creator/releases/tag/v0.8.6)の0.8.6を使用し、`head/model.inp`を開く。左右のEyeOpenL/R、HeadX/HeadTilt、組み合わせを確認し、別名INXへ保存してCreatorを終了、保存INXを新しいプロセスで開き直す。生成元のINP/INXは上書きしない。
@@ -83,5 +100,27 @@ X11/Xvfb、SDL2、Mesa、xdotool/libxdo3、D-Bus、ImageMagick、tesseract等が
 ```
 
 構造検査は親子/元位置/mesh/マスク/閾値/パラメータの対象とキーを別照合する。公式保存のfloat32丸めは最大1e-4まで許容し、変更した親や閾値/キーを見逃さない負例テストを持つ。この構造検査だけを公式での動作確認や自然さの合格としない。
+
+### 髪モデルの公式GUI検証
+
+髪版を`save-creator.py`で保存するときは、ソフトウェア描画の負荷に合わせて`--input-delay-scale 2.5`を追加できる。実際のファイル更新を確認する条件は同じ。
+
+`hair/model.inx`を`hair-working.inx`へコピーして公式GUIで開く。パラメータ数が増えてスクロールバーが出るため、従来26状態へ`--parameter-scrollbar-width 14 --input-delay-scale 2.5`を追加する。他の引数は頭部の例の`head/`を`hair/`へ置き換え、`--output /tmp/NEW-hair-first-audit`へ保存する。フィルターは空にし、リスト先頭・既定の展開状態を使う。記録の許容誤差は緩めない。
+
+次に同じモデルで各毛束を検査する。
+
+```sh
+.venv/bin/python scripts/inochi2d/verify-hair-creator.py --model /tmp/NEW-hair-rig-trial/hair/hair-working.inx --manifest /tmp/NEW-hair-rig-trial/hair/model.layout.json --reference /tmp/NEW-hair-first-audit/creator-report.json --output /tmp/NEW-hair-strands-first --xdotool /path/to/xdotool --display :94
+```
+
+公式で実保存した後、Creatorを終了し、保存したINXを新プロセスで開く。26状態を`--compare /tmp/NEW-hair-first-audit`で確認。その新しい`creator-report.json`をreferenceにして、毛束検査を別出力先へ`--compare /tmp/NEW-hair-strands-first`で実行する。referenceのSHAと開いているモデルが一致しなければ拒否する。保存前後のテクスチャ/構造も上の2コマンドで検査する。
+
+物理版は同時に開かず、別の`hair-physics/physics-working.inx`を作って公式の新プロセスで開く。通常の初回案内を閉じ、同じ100px広げたパラメータ欄で次を実行する。
+
+```sh
+.venv/bin/python scripts/inochi2d/verify-hair-physics.py --model /tmp/NEW-hair-rig-trial/hair-physics/physics-working.inx --manifest /tmp/NEW-hair-rig-trial/hair-physics/model.layout.json --reference /tmp/NEW-hair-first-audit/creator-report.json --output /tmp/NEW-native-physics-first --xdotool /path/to/xdotool --display :94
+```
+
+referenceは同じ入力/配置の静的モデルによる画面領域の照合用。物理モデル自身のSHA/実時刻/表示値/画面/停止/揺れ戻し/減衰/胴体固定は別に記録する。物理版も実保存→新プロセス再読込→別出力先で同じ検査を行い、2種類の保存検査を実行する。時間列は実際のGUI時間に従うため、異なる実行で動画画素や時刻が完全一致するとの保証はしない。Pythonの独立描画は物理を実行しない。
 
 PCからこのクラウド内ファイルを取得できるかは別の接続機能の問題。取得経路の完成を前提にせず、元画像とGitHubのコードからPC側で再生成する経路を維持する。既存約26MB ZIPは変更せず保持し、素材をGitHubへ上げない。

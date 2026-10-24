@@ -42,6 +42,10 @@ def digest(path):
 
 def run_audit(args):
     extra=args.controller_extra_width
+    scrollbar=args.parameter_scrollbar_width
+    input_scale=args.input_delay_scale
+    if not 1<=input_scale<=4:raise ValueError('Input delay scale must be between 1 and 4.')
+    if not 0<=scrollbar<=24:raise ValueError('Invalid parameter scrollbar width.')
     if not 0<=extra<=200:raise ValueError('Controller extra width must be between 0 and 200 pixels.')
     viewport=(VIEWPORT[0]+extra,*VIEWPORT[1:])
     output = Path(args.output).resolve()
@@ -79,14 +83,14 @@ def run_audit(args):
         xdo('mousemove', x, y)
         # SDL/ImGui samples input by frame. Separating motion/modifiers/button
         # edges prevents a busy software-rendering frame using the old point.
-        time.sleep(.10)
+        time.sleep(.10*input_scale)
         if shift:
             xdo('keydown', 'Shift_L')
-            time.sleep(.08)
+            time.sleep(.08*input_scale)
         xdo('mousedown', 1)
-        time.sleep(.30)
+        time.sleep(.30*input_scale)
         xdo('mouseup', 1)
-        time.sleep(.08)
+        time.sleep(.08*input_scale)
         if shift:
             xdo('keyup', 'Shift_L')
 
@@ -117,13 +121,13 @@ def run_audit(args):
             requested.append(('HeadTilt', tilt))
         for name, value in requested:
             if extra:
-                x=round(158+(31+extra)*((value+1)/2 if name.startswith('Head') else value))
+                x=round(158+(31+extra-scrollbar)*((value+1)/2 if name.startswith('Head') else value))
             else:
                 x = ((173 if value == 0 else 157 if value < 0 else 189) if name.startswith('Head')
                      else 173 if value == .5 else round(158+31*value))
             click(x, controls[name], shift=name.startswith('Head') or value in (0, 1))
         xdo('mousemove', 1200, 850)
-        time.sleep(.4)
+        time.sleep(.4*input_scale)
 
     # At initial fit zoom the reset-to-100% button is at this position. Once
     # already at 100%, this position contains only the position readout.
@@ -274,6 +278,8 @@ def run_audit(args):
               'native_eye_template_correlation': score, 'source_origin_xy': origin,
               'native_face_template_correlation': face_score, 'native_scale_calibration': calibration,
               'viewport_roi': viewport, 'controller_extra_width':extra,'face_roi': face_roi, 'eye_rois': eye_rois, 'fixed_torso_roi': torso_roi,
+              'parameter_scrollbar_width':scrollbar,
+              'input_delay_scale':input_scale,
               'neck_bridge_roi':neck_roi,'independent_head_profile':manifest.get('independent_head',{}).get('profile'),
               'quality_profile': bool(args.quality),
               'audit_scope': 'seven-pose-compatibility' if args.smoke else 'twelve-poses-plus-quality-motion' if args.quality else 'twelve-poses',
@@ -302,4 +308,6 @@ if __name__ == '__main__':
     parser.add_argument('--transitions', action='store_true', help='Also audit ten quantized opening states, recording actual displayed values')
     parser.add_argument('--smoke', action='store_true', help='Seven compatibility states for additional corpus cases; not a dense appearance audit')
     parser.add_argument('--controller-extra-width',type=int,default=0,help='Normal GUI parameter panel was widened by this many pixels; records ten distinct opening states.')
+    parser.add_argument('--parameter-scrollbar-width',type=int,default=0,help='Measured UI scrollbar reduces slider width for models with many parameters; never changes model keys.')
+    parser.add_argument('--input-delay-scale',type=float,default=1,help='Hold ordinary input edges over slower software-rendering frames; acceptance tolerances do not change.')
     run_audit(parser.parse_args())

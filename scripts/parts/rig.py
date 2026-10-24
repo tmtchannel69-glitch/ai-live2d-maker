@@ -66,7 +66,8 @@ def generate(args):
     source=Path(args.source).resolve();output=Path(args.output).resolve()
     if output.is_relative_to(ROOT) or output.exists():raise ValueError('Use a new private directory outside Git.')
     os.umask(0o077);output.mkdir(parents=True,mode=0o700);started=time.monotonic()
-    proof=provenance(source);(output/'provenance.json').write_text(json.dumps(proof,indent=2))
+    proof=provenance(source);proof['requested_stage']=args.stage
+    (output/'provenance.json').write_text(json.dumps(proof,indent=2))
     with decode_image(source) as image:
         prepared=prepare_character_parts(image,blink_profile='contour-lid-v2')
         extended=extend_head_structure(image,prepared)
@@ -109,6 +110,27 @@ def generate(args):
         (output/'trial-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
         raise
     report.update(automatic_head_diagnostic_passed=True,elapsed_seconds=round(time.monotonic()-started,3))
+    if args.stage=='hair':
+        report.update(hair_file_generation_passed=False,hair_cpu_diagnostic_passed=None,
+                      physics_file_generation_passed=False,physics_official_runtime_passed=False)
+        try:
+            for folder,physics in [('hair',False),('hair-physics',True)]:
+                destination=output/folder;destination.mkdir()
+                command('node',ROOT/'scripts/inochi2d/hair-rig.mjs',manifest,destination/'model',*(['--physics'] if physics else []))
+                (destination/'preparation-report.json').write_text(json.dumps(prepared['five']['diagnostics'],indent=2))
+                report[('physics' if physics else 'hair')+'_file_generation_passed']=True
+                report[('physics' if physics else 'hair')+'_model_sha256']=sha(destination/'model.inp')
+                (output/'trial-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+            command(sys.executable,ROOT/'scripts/inochi2d/render-hair.py','--model',output/'hair/model.inp',
+                '--baseline',target/'model.inp','--common',manifest,'--output',output/'hair-quality',timeout=240)
+            command(sys.executable,ROOT/'scripts/inochi2d/render-diagnostic.py','--model',output/'hair/model.inp',
+                '--common',manifest,'--output',output/'hair-blink-quality')
+            report['hair_cpu_diagnostic_passed']=True
+        except Exception as error:
+            report.update(hair_cpu_diagnostic_passed=False,hair_failure=str(error)[:500],elapsed_seconds=round(time.monotonic()-started,3))
+            (output/'trial-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+            raise
+        report['elapsed_seconds']=round(time.monotonic()-started,3)
     (output/'trial-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps(report,ensure_ascii=False))
 
@@ -116,4 +138,5 @@ def generate(args):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',required=True);parser.add_argument('--output',required=True)
+    parser.add_argument('--stage',choices=['head','hair'],default='head',help='hair adds independent bounded strands and a separate native-physics candidate; verified head output is retained.')
     generate(parser.parse_args())

@@ -20,6 +20,8 @@ def digest(path):
 
 
 def save(args):
+    delay=args.input_delay_scale
+    if not 1<=delay<=4:raise ValueError('Input delay scale must be between 1 and 4.')
     working=Path(args.working).resolve();generated=Path(args.generated).resolve();out=Path(args.output).resolve()
     if working==generated or working.is_relative_to(ROOT) or out.is_relative_to(ROOT) or out.exists():
         raise ValueError('Use a separate existing private INX working copy and new private report.')
@@ -34,9 +36,9 @@ def save(args):
     if working.name not in xdo('getwindowname',windows[0]):raise ValueError('Working filename is not in Creator title.')
     xdo('windowfocus','--sync',windows[0]);time.sleep(.2)
     try:
-        xdo('keydown','Control_L');time.sleep(.15);xdo('keydown','s');time.sleep(.25)
+        xdo('keydown','Control_L');time.sleep(.15*delay);xdo('keydown','s');time.sleep(.25*delay)
     finally:
-        xdo('keyup','s');time.sleep(.15);xdo('keyup','Control_L')
+        xdo('keyup','s');time.sleep(.15*delay);xdo('keyup','Control_L')
     started=time.monotonic()
     while time.monotonic()-started<15:
         time.sleep(.25)
@@ -49,7 +51,7 @@ def save(args):
     if digest(generated)!=original:raise ValueError('Generated input changed during save audit.')
     report={'official_gui_save_observed':True,'generated_sha256_unchanged':original,
         'working_sha256_before':before,'creator_saved_sha256':digest(working),
-        'saved_bytes':working.stat().st_size,'save_wait_seconds':round(time.monotonic()-started,3),
+        'saved_bytes':working.stat().st_size,'save_wait_seconds':round(time.monotonic()-started,3),'input_delay_scale':delay,
         'runtime_reload_verified':False,'appearance_quality_passed':False}
     out.write_text(json.dumps(report,indent=2));print(json.dumps(report))
 
@@ -57,4 +59,4 @@ def save(args):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for key in ['working','generated','output','xdotool']:p.add_argument('--'+key,required=True)
-    p.add_argument('--display',default=':94');save(p.parse_args())
+    p.add_argument('--display',default=':94');p.add_argument('--input-delay-scale',type=float,default=1);save(p.parse_args())

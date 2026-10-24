@@ -30,15 +30,19 @@ npm run dev
 
 現在の作業ブランチは`feature/head-neck-body-rig`です。元画像から頭・首・胴体を独立した共通パーツへ拡張し、既存のまばたきモデルを維持した別出力を検証しています。既存の通常画面/APIは切り替えません。[実装設計](docs/HEAD_RIG_DESIGN.md)、[必要な元画像・依存・固定版・Windows/Linuxの再生成手順](docs/REPRODUCING_CHARACTER_RIG.md)。
 
-STEP 2は提供画像1枚で生成/公式Creator0.8.6の保存・新プロセス52状態を検証し、全viewport一致。中立RGBA一致、検査した首の穴/胴体の変化0、同じJPEGからモデル・共通PNG106枚・動作PNG21枚の再生成一致を確認しました。[結果と残課題](docs/HEAD_RIG_VALIDATION.md)。**自然な完成品質は未合格**で、顔X/Y角度や独立した髪の揺れは次の段階です。
+STEP 2は提供画像1枚で生成/公式Creator0.8.6の保存・新プロセス52状態を検証し、全viewport一致。中立RGBA一致、検査した首の穴/胴体の変化0、同じJPEGからモデル・共通PNG106枚・動作PNG21枚の再生成一致を確認しました。[結果と残課題](docs/HEAD_RIG_VALIDATION.md)。**自然な完成品質は未合格**で、顔X/Y角度は未実装です。
+
+STEP 3では9毛束候補の自動支点と小さい独立変形、狭い補完、公式0.8.6の物理演算版を追加しています。頭部版を残して別モデルへ出力します。[設計](docs/HAIR_RIG_DESIGN.md)、[動作・保存・品質の別判定](docs/HAIR_RIG_VALIDATION.md)。通常のスマホ画面には未接続で、真の毛束根元/前後関係や完成品質の合格ではありません。
 
 ```sh
 .venv/bin/python scripts/parts/rig.py --source /path/to/original-character.jpg --output /tmp/NEW-head-rig-trial
+# 髪の独立操作版・物理版と25状態の診断も追加
+.venv/bin/python scripts/parts/rig.py --source /path/to/original-character.jpg --output /tmp/NEW-hair-rig-trial --stage hair
 ```
 
 新しいGit外の出力先に共通部品、従来5役割とSTEP 1比較モデル、新しい頭部モデル、瞬き10状態/頭部10状態の診断画像、入力/モデル重み/依存/コード版を保存します。元画像は別途必要です。公開/外部画像送信は行わず、画像/モデル/ZIPはGitHubへ保存しません。クラウド環境のデータ保持は保証できないため、このスクリプトと自分の元画像からPCでも再生成する経路を維持します。Windows実機と完成品質は未合格で、公式Creatorの検証はモデルごとに別記録です。以下は前段の実装履歴です。
 
-最新のSTEP 1では、詳細版のまつ毛と開口maskを曲線に沿うmeshへ変え、低開度の二重線と途中で薄くなる線を改善しました。肌と下まつ毛の準備も拡張しています。[10状態の比較・検証・残課題](docs/BLINK_RIG_VALIDATION.md)、[STEP 1〜3の計画](docs/AUTO_RIGGING_STAGES.md)。下の詳細CLIは`contour-lid-v2`が既定で、`--blink-profile detailed-v1`を付けると前段の詳細版を再現できます。**肌の細部/境界の警告は残り、完成品質は未合格**。頭/首の独立化と髪物理はこの結果確認後の段階です。
+前段のSTEP 1では、詳細版のまつ毛と開口maskを曲線に沿うmeshへ変え、低開度の二重線と途中で薄くなる線を改善しました。肌と下まつ毛の準備も拡張しています。[10状態の比較・検証・残課題](docs/BLINK_RIG_VALIDATION.md)、[STEP 1〜3の計画](docs/AUTO_RIGGING_STAGES.md)。下の詳細CLIは`contour-lid-v2`が既定で、`--blink-profile detailed-v1`を付けると前段の詳細版を再現できます。**肌の細部/境界の警告は残り、完成品質は未合格**です。
 
 最新の`feature/detailed-character-parts`では、左右の目の詳細分類と独立した共通パーツデータ、補完領域を分けた保存、髪の候補、自動品質検査を追加しました。既存5役割の画面/APIは維持しています。[今回の比較・公式Creator結果・制限](docs/DETAILED_PARTS_VALIDATION.md)、[公開資料と設計](docs/PARTS_RESEARCH_AND_DESIGN.md)。
 

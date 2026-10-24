@@ -40,3 +40,24 @@ def test_changed_parent_mask_threshold_or_binding_is_rejected(corruption):
     elif corruption=='threshold':part['mask_threshold']=.5
     else:b['param'][0]['bindings'][0]['values'][1][0]=.5
     with pytest.raises(ValueError):audit.equivalent(a,b)
+
+
+def physics_fixture():
+    model=fixture();model['nodes']['children'].append({'uuid':3,'name':'pendulum','type':'SimplePhysics',
+        'transform':copy.deepcopy(model['nodes']['transform']),'children':[],'param':1001,'model_type':'Pendulum',
+        'map_mode':'AngleLength','local_only':False,'gravity':1,'length':200,'frequency':1,
+        'angle_damping':.45,'length_damping':.6,'output_scale':[40,0]})
+    return model
+
+
+def test_physics_target_survives_parameter_uuid_remapping_and_invalid_targets_fail():
+    a=physics_fixture();b=copy.deepcopy(a);b['param'][0]['uuid']=5001;b['nodes']['children'][1]['param']=5001
+    assert audit.equivalent(a,b)['hierarchy_mesh_masks_bindings_retained']
+    a['nodes']['children'][1]['param']=999;b['nodes']['children'][1]['param']=999
+    with pytest.raises(ValueError,match='target'):audit.equivalent(a,b)
+
+
+@pytest.mark.parametrize('field,value',[('param',999),('length',300),('angle_damping',.9),('model_type','SpringPendulum'),('local_only',True),('enabled',False),('lockToRoot',True)])
+def test_changed_native_physics_configuration_fails_retention(field,value):
+    a=physics_fixture();b=copy.deepcopy(a);b['nodes']['children'][1][field]=value
+    with pytest.raises(ValueError):audit.equivalent(a,b)

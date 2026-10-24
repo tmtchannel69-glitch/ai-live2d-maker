@@ -1,0 +1,374 @@
+{
+  "format": "ai-live2d-maker-hair-rig-validation",
+  "date_utc": "2026-10-24",
+  "branch": "feature/head-neck-body-rig",
+  "base_commit": "db0172993260a9f7315dce8f78443852e0893c28",
+  "input": {
+    "sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "width": 960,
+    "height": 1280,
+    "image_included": false,
+    "manually_specified_points_boxes_or_rigging": false,
+    "external_image_api_requests": false
+  },
+  "version_pins": {
+    "format": "legacy INP/INX",
+    "creator": "0.8.6",
+    "creator_binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "sdk_revision": "dda3a8f005f808104caa43183ab8753fb989e30f",
+    "fghj_version_in_creator": "1.0.2",
+    "physics_enum_serialization": [
+      "Pendulum",
+      "AngleLength"
+    ]
+  },
+  "verdicts": {
+    "file_generation_passed": true,
+    "official_static_save_and_fresh_process_passed": true,
+    "official_native_physics_save_and_fresh_process_passed": true,
+    "appearance_quality_passed": false,
+    "general_image_success_rate_established": false,
+    "cubism_vtube_studio_compatibility_tested": false,
+    "normal_mobile_ui_connected": false
+  },
+  "preserved_generators": {
+    "head_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "blink_sha256": "fee8d92bb66b7bbe174355d93d7b4e2551d38a45c4a05dde6f28e8a24175c253",
+    "stable_five_part_exporters_and_normal_ui_api_changed": false
+  },
+  "models": {
+    "static_sha256": "27518c9332d12a660500dee98bb73b2afc4fc881eaff5dd0007053545d22bd1c",
+    "static_saved_sha256": "76d0b5ba51e5f7bc4ea60e5984dfce95208ba7bb52e9ef17b2229b5f16df5a7e",
+    "physics_sha256": "a83ae1799dcb4ce906ca041929d57d8ba3f614a7756682e1e87433ebc9b44d32",
+    "physics_saved_sha256": "8d18e1a000840ea950c21839014a75d6162752613527ee5849d83351f8022664",
+    "drawables": 38,
+    "textures": 37,
+    "parameters": 13,
+    "bindings": 40,
+    "vertices": 7986,
+    "triangles": 13960,
+    "decoded_rgba_bytes": 16009984,
+    "source_strands": 9,
+    "coarse_hair_masses_follow_head_only": 4,
+    "tip_travel_maximum_pixels_range": [
+      1.5,
+      1.75
+    ],
+    "anatomical_roots_or_depth_verified": false
+  },
+  "cpu_diagnostic": {
+    "neutral_changed_pixels": 0,
+    "maximum_hole_candidates": 0,
+    "maximum_torso_change": 0,
+    "appearance_quality_passed": false
+  },
+  "official_static": {
+    "initial_head_blink_operations": 26,
+    "initial_hair_operations": 27,
+    "reloaded_head_blink_operations": 7,
+    "reloaded_hair_operations": 27,
+    "saved_reloaded_viewport_differences": 0,
+    "fixed_torso_differences": 0,
+    "all_hair_controls_have_actual_viewport_effect": true,
+    "texture_retention": true,
+    "structure_retention": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 38,
+      "parameters": 13,
+      "bindings": 40,
+      "maximum_numeric_roundtrip_delta": 9.707469416753156e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    }
+  },
+  "official_native": {
+    "first_process_pid": 171670,
+    "reloaded_process_pid": 176039,
+    "first": {
+      "model_sha256": "a83ae1799dcb4ce906ca041929d57d8ba3f614a7756682e1e87433ebc9b44d32",
+      "native_physics_driver_count": 9,
+      "sample_count": 72,
+      "last_sample_seconds": 5.0781,
+      "head_x_after": 0.0,
+      "actual_timestamps_not_fixed_fps": true,
+      "outputs": [
+        {
+          "parameter": "HairSway00",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.24,
+          "maximum": 0.06,
+          "peak_abs": 0.24,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway01",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.4,
+          "maximum": 0.12,
+          "peak_abs": 0.4,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway02",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.32,
+          "maximum": 0.09,
+          "peak_abs": 0.32,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway03",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.42,
+          "maximum": 0.14,
+          "peak_abs": 0.42,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway04",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.38,
+          "maximum": 0.11,
+          "peak_abs": 0.38,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway05",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.46,
+          "maximum": 0.16,
+          "peak_abs": 0.46,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway06",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.44,
+          "maximum": 0.15,
+          "peak_abs": 0.44,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway07",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.45,
+          "maximum": 0.16,
+          "peak_abs": 0.45,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway08",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.46,
+          "maximum": 0.17,
+          "peak_abs": 0.46,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        }
+      ],
+      "native_physics_runtime_passed": true
+    },
+    "fresh_saved_model": {
+      "model_sha256": "8d18e1a000840ea950c21839014a75d6162752613527ee5849d83351f8022664",
+      "native_physics_driver_count": 9,
+      "sample_count": 72,
+      "last_sample_seconds": 4.35,
+      "head_x_after": 0.0,
+      "actual_timestamps_not_fixed_fps": true,
+      "outputs": [
+        {
+          "parameter": "HairSway00",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.24,
+          "maximum": 0.06,
+          "peak_abs": 0.24,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway01",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.4,
+          "maximum": 0.13,
+          "peak_abs": 0.4,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway02",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.32,
+          "maximum": 0.09,
+          "peak_abs": 0.32,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway03",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.41,
+          "maximum": 0.14,
+          "peak_abs": 0.41,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway04",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.38,
+          "maximum": 0.11,
+          "peak_abs": 0.38,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway05",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.46,
+          "maximum": 0.16,
+          "peak_abs": 0.46,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway06",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.43,
+          "maximum": 0.15,
+          "peak_abs": 0.43,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway07",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.45,
+          "maximum": 0.16,
+          "peak_abs": 0.45,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        },
+        {
+          "parameter": "HairSway08",
+          "initial_rest_max_abs": 0.0,
+          "minimum": -0.46,
+          "maximum": 0.16,
+          "peak_abs": 0.46,
+          "last_six_samples_max_abs": 0.0,
+          "signed_sway_back_observed": true,
+          "motion_decay_passed": true
+        }
+      ],
+      "native_physics_runtime_passed": true
+    },
+    "texture_retention": true,
+    "structure_retention": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 47,
+      "parameters": 13,
+      "bindings": 40,
+      "maximum_numeric_roundtrip_delta": 9.707469416753156e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    },
+    "every_sample_measured_torso_unchanged": true,
+    "python_physics_used_as_runtime": false,
+    "equal_video_timing_across_runs_promised": false,
+    "raw_capture_matches_png_viewport": true
+  },
+  "official_appearance_warnings": {
+    "viewport": [
+      358,
+      88,
+      1170,
+      900
+    ],
+    "any_changed_pixels": 88210,
+    "changed_pixels_over_rgb3": 16943,
+    "max_channel_delta": 175
+  },
+  "reproduction": {
+    "same_source_full_pipeline_repeated": true,
+    "png_comparison": {
+      "common": {
+        "pngs": 106,
+        "all_bytes_identical": true
+      },
+      "head-quality": {
+        "pngs": 22,
+        "all_bytes_identical": true
+      },
+      "blink-quality": {
+        "pngs": 11,
+        "all_bytes_identical": true
+      },
+      "hair-quality": {
+        "pngs": 51,
+        "all_bytes_identical": true
+      },
+      "hair-blink-quality": {
+        "pngs": 11,
+        "all_bytes_identical": true
+      }
+    },
+    "total_identical_pngs": 201,
+    "head_and_static_models_identical": true,
+    "corrected_native_model_matches_full_pipeline": true,
+    "elapsed_seconds_final_full_pipeline": 244.507,
+    "gui_concurrent_timing_not_speed_benchmark": true
+  },
+  "checks": {
+    "node_tests_passed": 68,
+    "python_tests_passed": 86,
+    "build_passed": true,
+    "pip_check_passed": true,
+    "common_schema_passed": true,
+    "browser_tests_passed_previous_step": 140,
+    "browser_rerun_this_step": false,
+    "normal_ui_api_changes_this_step": false,
+    "existing_starlette_httpx_warning_count": 1
+  },
+  "known_issues": [
+    "Hair boundary pixels differ in official neutral view despite exact CPU neutral reconstruction.",
+    "Hair/clothing inferred underlap edges show jagged paint during head translation.",
+    "STEP 1 skin blur and boundaries remain.",
+    "Roots are observed-fragment tops; depth and scalp attachments are unverified.",
+    "Only bounded small bends; four coarse masses, collisions and larger hair movement are not rigged.",
+    "Face yaw/pitch, generalization, Windows/iPhone and normal smartphone UI integration are incomplete.",
+    "Inox zero/opacity defects are a separate issue."
+  ],
+  "private_artifacts": {
+    "final_generation": "/tmp/inochi-hair-rig-trial/replay-final",
+    "static_official": "/tmp/inochi-hair-rig-trial/v3",
+    "physics_official": "/tmp/inochi-hair-rig-trial/v4",
+    "previous_zip_sha256_unchanged": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+    "artwork_models_screenshots_or_archives_included": false
+  }
+}

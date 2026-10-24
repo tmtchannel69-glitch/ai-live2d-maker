@@ -43,7 +43,7 @@ function premultiply(im){
   for(let i=0;i<data.length;i+=4)for(let c=0;c<3;c++)data[i+c]=Math.floor(data[i+c]*data[i+3]/255);
   return encode({...im,data,depth:8,channels:4});
 }
-function pack(model,textures){
+export function packRigContainer(model,textures){
   const json=Buffer.from(JSON.stringify(model));need(json.length<=2*1024*1024,'Layered model JSON exceeds budget.');
   const bytes=new Uint8Array(Buffer.concat([Buffer.from('TRNSRTS\0'),uint(json.length),json,Buffer.from('TEX_SECT'),uint(textures.length),...textures.flatMap(p=>[uint(p.length),Buffer.from([0]),p])]));
   need(bytes.length<=100*1024*1024,'Layered model container exceeds budget.');return bytes;
@@ -158,7 +158,7 @@ export function buildHeadModel(graph,images){
     p.bindings=[binding(head.uuid,field,[-range,0,range]),...necks.map(neck=>binding(neck.node.uuid,'deform',[-1,0,1].map(v=>neckWarp(neck,isTilt?0:v*travel,isTilt?v*angle:0))))];
   }
   model.meta.rigger='AI Live2D Maker independent head / neck / fixed body';
-  const inp=pack(model,textures),all=flatten(model.nodes).filter(n=>n.type==='Part');
+  const inp=packRigContainer(model,textures),all=flatten(model.nodes).filter(n=>n.type==='Part');
   let decoded=0;for(const t of textures){const d=decode(t);decoded+=d.width*d.height*4;}
   need(decoded<=64*1024*1024,'Layered textures exceed decoded budget.');
   return {inp,inx:inp.slice(),model,layout:{...built.layout,parts:[...built.layout.parts.filter(p=>p.role!=='face_base'),...runtimeParts],
@@ -179,7 +179,7 @@ export function buildHeadModel(graph,images){
         'Blink artwork and naturalness limitations from STEP 1 remain.']}};
 }
 
-export async function generateHeadModel(manifestPath,outputBase){
+export async function generateHeadModel(manifestPath,outputBase,{builder=buildHeadModel}={}){
   const manifest=resolve(manifestPath),folder=await realpath(dirname(manifest));
   const stat=await lstat(manifest);need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=512*1024,'Invalid common manifest.');
   const output=resolve(outputBase),outdir=await realpath(dirname(output)),rel=relative(ROOT,join(outdir,output.split(sep).at(-1)));
@@ -195,7 +195,7 @@ export async function generateHeadModel(manifestPath,outputBase){
     need(w>0&&h>0&&w<=4096&&h<=4096,'Common dimensions exceed budget.');budget+=w*h*4;need(budget<=128*1024*1024,'Common decoded budget exceeded.');
     const im=decode(bytes);need(im.depth===8&&im.channels===4,'8-bit RGBA required.');images[path]=im;
   }
-  const result=buildHeadModel(graph,images);
+  const result=builder(graph,images);
   for(const [ext,data] of [['inp',result.inp],['inx',result.inx],['json',JSON.stringify(result.model,null,2)],['layout.json',JSON.stringify(result.layout,null,2)],['report.json',JSON.stringify(result.report,null,2)]])await writeFile(output+'.'+ext,data,{flag:'wx',mode:0o600});
   return result.report;
 }

@@ -42,10 +42,13 @@ def equivalent(before,after):
     for name in relevant:
         x,y=a[name],b[name]
         if x['type']=='SimplePhysics':
+            if x.get('enabled',True)!=y.get('enabled',True) or x.get('lockToRoot',False)!=y.get('lockToRoot',False):
+                raise ValueError('Saved physics enable/anchor configuration differs.')
             for field in ('model_type','map_mode','local_only'):
                 if x[field]!=y[field]:raise ValueError('Saved physics configuration differs: '+field)
             pa={p['uuid']:p['name'] for p in before['param']};pb={p['uuid']:p['name'] for p in after['param']}
-            if pa.get(x['param'])!=pb.get(y['param']):raise ValueError('Saved physics parameter target differs.')
+            if pa.get(x['param']) is None or pb.get(y['param']) is None or pa[x['param']]!=pb[y['param']]:
+                raise ValueError('Saved physics parameter target differs or is missing.')
             for field in ('gravity','length','frequency','angle_damping','length_damping','output_scale'):numbers(x[field],y[field],name+'/'+field)
             continue
         for field in ('verts','uvs','origin'):numbers(x['mesh'].get(field,[]),y['mesh'].get(field,[]),name+'/'+field)
