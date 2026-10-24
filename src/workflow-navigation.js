@@ -56,7 +56,7 @@ export function createWorkflowNavigation({getState}) {
     if(!state.file && !['image','save'].includes(current))select('image');
   }
   function track() {
-    frame=0;const edge=nav.getBoundingClientRect().bottom+32;
+    frame=0;if(!nav.getClientRects().length)return;const edge=nav.getBoundingClientRect().bottom+32;
     const visible=routes.map(r=>({r,target:document.querySelector(r.selector)})).filter(({r,target})=>!target.hidden && !buttons.get(r.id).disabled).map(({r,target})=>({id:r.id,top:target.getBoundingClientRect().top})).sort((a,b)=>a.top-b.top);
     const before=visible.filter(r=>r.top<=edge);let id=before.at(-1)?.id||'image';
     const same=before.find(r=>r.id===current && Math.abs(r.top-before.at(-1).top)<1);if(same)id=current;

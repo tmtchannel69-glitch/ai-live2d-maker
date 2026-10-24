@@ -1,0 +1,121 @@
+{
+  "format": "ai-live2d-part-first-mvp-validation",
+  "date_utc": "2026-10-24",
+  "branch": "feature/part-first-character-generation",
+  "base_commit": "c297aebd48eb9dce23eeb17ec1301ed6ee5d00c5",
+  "scope": {
+    "pose": "front",
+    "crop": "bust",
+    "costume": "maid",
+    "expression": "neutral",
+    "person_count": 1
+  },
+  "generator": {
+    "id": "template",
+    "version": 1,
+    "ai_generated": false,
+    "recipe": {
+      "template": "maid-bust-front-v1",
+      "version": 1,
+      "provider": "template",
+      "hair": "lavender",
+      "eyes": "violet",
+      "background": "transparent"
+    }
+  },
+  "output": {
+    "parts": 33,
+    "pngs": 34,
+    "json_files_in_archive": 4,
+    "archive_entries": 39,
+    "archive_bytes": 2137727,
+    "archive_sha256": "7c711bcc03f24b7733d2bd516324a90440812a0c516e705c6c08d577ec1a1d0c",
+    "decoded_part_rgba_bytes": 7036208,
+    "preview_size": [
+      768,
+      1024
+    ]
+  },
+  "verdicts": {
+    "assembly_mvp_passed": true,
+    "independent_pngs_passed": true,
+    "exported_png_json_reconstruction_passed": true,
+    "separate_modes_and_original_work_retention_passed": true,
+    "ai_generation_connected": false,
+    "native_inochi_model_generated": false,
+    "official_creator_tested_for_this_output": false,
+    "finished_character_motion_quality_passed": false
+  },
+  "checks": {
+    "browser_tests_passed": 147,
+    "new_mode_browser_tests": 7,
+    "node_tests_passed": 84,
+    "new_data_tests": 16,
+    "production_build_passed": true,
+    "json_schema_passed": true,
+    "preview_reconstruction_different_pixels": 0,
+    "api_requests_by_new_mode": 0,
+    "same_recipe_repeated_archive_identical": true,
+    "same_recipe_repeated_entries_identical": 39,
+    "archive_crc_passed": true,
+    "git_output_refused": true,
+    "existing_output_refused": true,
+    "phone_widths_tested": [
+      320,
+      390,
+      844,
+      1280
+    ],
+    "main_controls_minimum_height_px": 48,
+    "input_font_minimum_px": 16,
+    "iphone_safari_or_windows_real_device_tested": false
+  },
+  "inochi_bridge": {
+    "format": "ai-live2d-generated-inochi-source",
+    "target": {
+      "sdk": "0.8.6",
+      "container": "legacy-inp-inx"
+    },
+    "scene_nodes": 41,
+    "parts": 33,
+    "mesh_vertices": 297,
+    "mesh_triangles": 264,
+    "source_world_positions_reconstructed": true,
+    "native_model": false,
+    "runtime_verified": false,
+    "pending": [
+      "texture-serialization",
+      "blink-and-motion-keys",
+      "native-export",
+      "official-creator-validation"
+    ]
+  },
+  "existing_functions": {
+    "normal_inochi_api_workers_and_exporters_changed": false,
+    "old_project_format_changed": false,
+    "existing_work_content_retained": true,
+    "old_work_zip_timestamps_not_used_as_content_comparison": true,
+    "legacy_escape_preview_cleanup_fixed": true,
+    "old_private_zip_sha256_unchanged": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf"
+  },
+  "private_artifacts": {
+    "final": "/tmp/part-first-character-mvp-final",
+    "replay": "/tmp/part-first-character-mvp-replay",
+    "artwork_or_model_data_included_here": false
+  },
+  "known_limits": [
+    "Local template illustration and explicit dummy layout mode; no generative AI service is connected.",
+    "Only the fixed front-facing maid bust template with neutral expression.",
+    "Rest-pose meshes and anchors only; no blink/head/hair keys or physical simulation in this new mode.",
+    "Inochi intermediate is not INP/INX; native encoding and official Creator validation are pending.",
+    "Cubism and VTube Studio compatibility are not established.",
+    "New ZIP is separate from the old project format and cannot yet be reopened as old work.",
+    "Browser-dependent rasterization may differ across engines; Windows/iPhone/Safari real-device behavior is untested."
+  ],
+  "execution_environment": {
+    "node": "24.19.0",
+    "chromium": "151.0.7922.173",
+    "os": "Debian GNU/Linux 13",
+    "new_dependencies_added": false
+  }
+}

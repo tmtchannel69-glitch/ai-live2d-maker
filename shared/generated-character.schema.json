@@ -1,0 +1,30 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"urn:ai-live2d-maker:generated-character:1",
+  "title":"Independently generated overlapping character PNG layers, version 1",
+  "type":"object",
+  "required":["format","version","canvas","coordinates","sides","preview","background","generator","groups","parts","template","scope","rigged","appearance_quality_passed"],
+  "properties":{
+    "format":{"const":"ai-live2d-generated-character"},"version":{"const":1},
+    "canvas":{"type":"object","required":["width","height"],"properties":{"width":{"const":768},"height":{"const":1024}}},
+    "coordinates":{"const":"canvas-pixels-top-left"},"sides":{"const":"character-personal-left-right"},
+    "preview":{"const":"preview.png"},"background":{"enum":["transparent","white","lavender"]},
+    "generator":{"type":"object","required":["id","version","ai_generated","recipe"],"properties":{"id":{"enum":["template","dummy"]},"version":{"const":1},"ai_generated":{"const":false},"recipe":{"$ref":"#/$defs/recipe"}}},
+    "groups":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","required":["id","parent","anchor"],"properties":{"id":{"type":"string","pattern":"^(group_[a-z_]+|root)$"},"parent":{"type":["string","null"]},"anchor":{"$ref":"#/$defs/pair"}}}},
+    "parts":{"type":"array","minItems":33,"maxItems":33,"items":{"$ref":"#/$defs/part"}},
+    "template":{"const":"maid-bust-front-v1"},"scope":{"type":"object","required":["pose","crop","costume","expression","person_count"],"properties":{"pose":{"const":"front"},"crop":{"const":"bust"},"costume":{"const":"maid"},"expression":{"const":"neutral"},"person_count":{"const":1}}},
+    "rigged":{"const":false},"appearance_quality_passed":{"const":false}
+  },
+  "$defs":{
+    "pair":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number","minimum":0,"maximum":1024}},
+    "recipe":{"type":"object","additionalProperties":false,"required":["template","version","provider","hair","eyes","background"],"properties":{"template":{"const":"maid-bust-front-v1"},"version":{"const":1},"provider":{"enum":["template","dummy"]},"hair":{"enum":["lavender","silver","brown"]},"eyes":{"enum":["violet","blue","amber"]},"background":{"enum":["transparent","white","lavender"]}}},
+    "part":{"type":"object","required":["id","role","label","side","file","rect","anchor","parent","order","enabled_in_neutral","clip_to"],"properties":{
+      "id":{"type":"string","pattern":"^[a-z_]+$"},
+      "role":{"enum":["face_base","ear_l","ear_r","eye_white_l","eye_white_r","iris_l","iris_r","highlight_l","highlight_r","eyelid_upper_l","eyelid_upper_r","eyelid_lower_l","eyelid_lower_r","eyelashes_l","eyelashes_r","brow_l","brow_r","mouth_base","mouth_inside","bangs_front","side_hair_l","side_hair_r","back_hair","neck","torso","shoulder_l","shoulder_r","dress_base","collar","ribbon","sleeve_l","sleeve_r","apron"]},
+      "label":{"type":"string","minLength":1,"maxLength":80},"side":{"enum":["l","r",null]},
+      "file":{"type":"string","pattern":"^parts/[a-z_]+\\.png$"},
+      "rect":{"type":"object","required":["x","y","width","height"],"properties":{"x":{"type":"integer","minimum":0,"maximum":767},"y":{"type":"integer","minimum":0,"maximum":1023},"width":{"type":"integer","minimum":1,"maximum":768},"height":{"type":"integer","minimum":1,"maximum":1024}}},
+      "anchor":{"$ref":"#/$defs/pair"},"parent":{"type":"string"},"order":{"type":"integer"},"enabled_in_neutral":{"type":"boolean"},"clip_to":{"type":["string","null"]}
+    }}
+  }
+}

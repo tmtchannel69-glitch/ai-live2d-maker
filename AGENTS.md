@@ -1,5 +1,13 @@
 # AI Live2D Maker 開発ルール
 
+## パーツからのキャラクター生成（2026-10-24、最新）
+- オーナーはc297aebを維持した別モードの設計整理→最小実装を承認。作業はfeature/part-first-character-generation。正面/胸上/メイド服/通常顔/女の子1人と指定33役割の独立PNGがMVP。新モードの追加は今回承認済みで、既存の画像1枚→Inochi2Dの経路と作業保存版1〜12を維持する。
+- `src/character-generation/`のテンプレート/生成provider/合成/保存/画面を独立追加。図形は配置確認用、テンプレートは端末内描画と表示する。AI自由生成/外部APIは未接続で、ダミーを実AIの成功と扱わない。生成失敗時に図形で埋めず、33PNGの実サイズ/可視alphaを検査して拒否する。
+- 新形式は`shared/generated-character.js`/schemaのai-live2d-generated-character版1。元観測の排他的所有とは異なる、完全な重なりのあるPNG。左右は本人、位置/支点は768×1024の左上ピクセル、order昇順、parentはグループ。口内はPNGを作るが通常は非表示、虹彩/反射は白目で合成時にクリップし元PNGを保持する。
+- manifest/rig/中間データ/再生成recipeをZIPへ保存。rigは静止meshのみでキー/物理なし。inochi_intermediateは接続候補でINP/INX未出力/公式Creator未検証。既存の5役割や非重複観測形式へそのまま渡さない。Inochi2D/Cubism/VTSを区別する。
+- モード切替は旧DOMと状態を保持。旧工程ナビは非表示時のscrollを無視する。新結果は生成成功時だけ置換し、中止/失敗は前回を保持。新ZIPを旧作業ファイルとして開く機能は未実装。画面はスマホ縦/48px操作/16px入力を維持する。
+- 再生成は`node scripts/character-generation/export.mjs --output NEW_PRIVATE_DIR [--recipe generation_recipe.json]`。ローカルViteとChromiumを使用。出力の上書き/Git内保存を拒否。入力画像は不要。成果物はGit外、ソース/設定/手順をコミット・プッシュ。詳細は`docs/PART_FIRST_CHARACTER_MODE.md`。既存画像/モデル/26MB ZIPを変更しない。外部画像送信/新課金/公開/main統合は別承認。
+
 ## STEP 3：髪の独立リギングと公式物理（2026-10-24）
 - 同じfeature/head-neck-body-rigでSTEP 2のdb01729を維持して拡張。入口は`rig.py --stage hair`。既定head、安定5役割/旧詳細/品質版、worker/API/UIは切り替えない。頭部版a759efab…とSTEP 1版fee8d92b…のSHAを保持。
 - `hair-rig.mjs`は9候補の観測上端を支点に小さい独立変形を設定し、別下地をDodgeMaskで隠す。先端は1.5〜1.75pxの範囲。真の頭皮の根元、front/side/backの順序は未検証。4粗領域は頭への追従だけ。目/首のbindingsを維持する。

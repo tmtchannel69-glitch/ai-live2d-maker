@@ -1,5 +1,17 @@
 # 開発進捗
 
+## 2026-10-24 パーツからキャラ生成する別モード（最新）
+
+- オーナーが新モードの画面/保存形式/ファイル/実装順の整理と、その後の最小実装を承認。c297aeb/remote一致、未変更からfeature/part-first-character-generationへ分岐。最初の構成を報告し、docs/PART_FIRST_CHARACTER_MODE.mdへ保存してから実装した。
+- 新しい制作モード切替と独立したsrc/character-generation/を追加。旧DOMと状態を保持し、画像1枚→Inochi2DのAPI/worker/生成器、既存の作業保存版1〜12を維持。旧工程ナビは非表示中のscrollを無視する。新モードは入力画像を使わず、33役割を個別に描く。
+- 配置確認用の図形と、正面/胸上/メイド服/通常顔のテンプレートを区別。髪/瞳/背景を選択し、本人左右/位置/順序/支点/親子で自動配置。目の下にも肌を持ち、虹彩/反射は白目alphaで合成時だけclip。口内は独立PNGだが通常非表示。SVGの初期座標誤りは空PNG検査で拒否して修正し、ダミーで成功扱いしていない。
+- 新形式ai-live2d-generated-character版1をshared/generated-character.js/schemaへ保存。PNG/manifest/rig/中間/recipe/説明のZIP39項目。データの参照/循環/画像のサイズ/可視alphaを検査し、失敗/中止は前回の結果を保持する。API要求0で、AI自由生成は未接続と表示する。
+- 33PNG、768×1024完成画像、4JSONを保存。実ダウンロードを別の合成処理へ渡して再構成差0。中間は8グループ+33Part/297頂点/264三角形で、world位置を検査。静止mesh/支点のみでキー/物理/INP出力/公式Creator確認は未実装。生成データを旧排他的所有の形式へ直接流していない。
+- CLI scripts/character-generation/export.mjsで同じrecipeから2回実行し、全39項目とZIPのバイト一致/CRCを確認。2,137,727bytes、SHA 7c711bcc03f24b7733d2bd516324a90440812a0c516e705c6c08d577ec1a1d0c。Git内と既存フォルダへの出力は拒否。版/入力設定/ソース指紋/未コミットの有無を記録し、PC/クラウドの再生成手順を保存。
+- Node84件（新規16）、ブラウザ147件（新モード7）、build/schema成功。変更前のブラウザ140件も成功。全体検証で旧比較画面のEscape後の比較画素の解放遅延を再現し、cancel時に解放して関連19件/全147件を再確認した。ZIPの時刻の差は旧作業内容の比較から分ける。
+- 320/390/844/1280px幅の横はみ出しなし、主要48px操作/16px入力を確認。私用画像/ZIPは/tmp/part-first-character-mvp-final と /tmp/part-first-character-mvp-replay、写真は/tmp/part-first-character-review。旧26MB ZIPはSHA不変。画像/モデルをGitHubへ保存せず、ソース/設定/手順を開発ブランチへコミット・プッシュする。
+- 次はAI providerでの整合性とInochi中間からのキー/独立モデル出力を検討。現状はテンプレートの静止MVPで、AI自由生成や自然な動作モデルの完成ではない。新ZIPの再読込/スマホ実機/Cubism・VTS互換は未完了。外部画像送信/新課金/公開/main統合は行わない。結果はdocs/PART_FIRST_CHARACTER_VALIDATION.md/json。
+
 ## 2026-10-24 STEP 3：独立毛束と公式物理（最新）
 
 - STEP 2のdb01729をコミット/プッシュしてremote一致を確認後、同じfeature/head-neck-body-rigで継続。既存9毛束候補の根元/mesh/小さい変形と別下地を自動設定。4粗い髪領域は頭へ追従のみ。通常の5役割/詳細/品質版、worker/API/UI、既定頭部モデルa759efab…とSTEP 1モデルfee8d92b…を維持する。

@@ -1,0 +1,81 @@
+import {generateCharacter} from './generator.js';
+import {createCharacterArchive} from './archive.js';
+import './style.css';
+
+function save(blob,name){
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60_000);
+}
+
+export function createCharacterGenerationMode(){
+  const main=document.querySelector('main'),footer=main.querySelector('footer'),legacy=document.createElement('div');
+  legacy.id='image-conversion-mode';
+  // Move existing nodes only after all old panels have mounted. Event handlers,
+  // project blobs, DOM identities and the existing save format stay intact.
+  for(const node of [...main.children])if(node!==footer)legacy.append(node);
+  const nav=document.createElement('nav');nav.className='creation-mode-switch';nav.setAttribute('aria-label','制作モード');
+  nav.innerHTML='<button type="button" class="secondary" id="mode-convert" aria-pressed="true" aria-controls="image-conversion-mode">画像1枚から変換</button><button type="button" class="secondary" id="mode-generate" aria-label="パーツからキャラ生成" aria-pressed="false" aria-controls="character-generation-mode">パーツから生成</button>';
+  const section=document.createElement('section');section.id='character-generation-mode';section.hidden=true;section.setAttribute('aria-labelledby','cg-heading');
+  section.innerHTML=`<div class="cg-intro"><span class="eyebrow">PARTS FIRST / TEMPLATE</span><h1 id="cg-heading" tabindex="-1">パーツから、<span>キャラクターを作る。</span></h1><p>顔・目・髪・服を別々に描いて、自動で組み立てます。</p><p class="cg-scope">正面 ／ 胸から上 ／ メイド服 ／ 通常顔</p></div>
+    <div class="cg-workspace"><section class="panel cg-settings" aria-labelledby="cg-settings-title"><h2 id="cg-settings-title">Live2D向けキャラ生成</h2><p>まずはテンプレート方式です。AIによる自由生成は未接続です。画像のアップロードや外部送信はありません。</p>
+    <form id="cg-form"><label>作り方<select id="cg-provider"><option value="template">テンプレートの女の子</option><option value="dummy">配置確認用の図形</option></select></label><div class="cg-colors"><label>髪の色<select id="cg-hair"><option value="lavender">ラベンダー</option><option value="silver">シルバー</option><option value="brown">ブラウン</option></select></label><label>瞳の色<select id="cg-eyes"><option value="violet">バイオレット</option><option value="blue">ブルー</option><option value="amber">アンバー</option></select></label></div><label>完成画像の背景<select id="cg-background"><option value="transparent">透過</option><option value="white">白</option><option value="lavender">薄紫</option></select></label>
+    <button id="cg-generate" class="primary" type="submit">パーツを生成して組み立てる</button><button id="cg-cancel" class="secondary" type="button" hidden>キャラ生成を中止</button></form>
+    <progress id="cg-progress" max="33" value="0" aria-label="キャラクターのパーツ生成" hidden></progress><p id="cg-status" role="status" aria-live="polite">色を選び、生成ボタンを押してください。</p><p class="muted">左右はキャラクター本人の左右です。左のパーツは画面の右に配置します。</p></section>
+    <section class="panel cg-preview-panel" aria-labelledby="cg-preview-title"><h2 id="cg-preview-title">完成プレビュー</h2><div class="cg-preview"><p id="cg-empty">33パーツを組み立てた<br>キャラクターを表示します</p><img id="cg-preview-image" alt="パーツから自動で組み立てたメイド服のキャラクター" hidden></div><p id="cg-summary" class="muted"></p></section></div>
+    <section class="panel cg-output" id="cg-output" hidden aria-labelledby="cg-output-title"><h2 id="cg-output-title">パーツの確認と保存</h2><p id="cg-saved-settings" class="muted"></p><div class="cg-part-layout"><div><label for="cg-part">確認するパーツ</label><select id="cg-part"></select><p id="cg-part-info" class="muted"></p><button type="button" id="cg-part-download" class="secondary">選んだパーツのPNGを保存</button></div><div class="cg-part-preview"><img id="cg-part-image" alt=""></div></div>
+    <div class="cg-downloads"><button type="button" id="cg-download-zip" class="primary">パーツと設定をZIP保存</button><button type="button" id="cg-download-preview" class="secondary">完成PNGを保存</button><button type="button" id="cg-download-recipe" class="secondary">再生成設定を保存</button></div>
+    <p class="muted">ZIPに完成PNG、33パーツのPNG、配置・支点・親子のJSON、Inochi2D接続用の中間データを入れます。動作設定や完成したモデルの出力はこれからです。</p><p class="muted">この素材ZIPは、従来の作業ファイルとは別形式です。画面を閉じる前に保存してください。パーツを用意しただけでは、Cubism・VTube Studio用のモデルにはなりません。</p></section>`;
+  main.prepend(nav,legacy,section);
+  const $=s=>section.querySelector(s);let active=null,result=null,previewUrl=null,partUrl=null,packing=false;
+  for(const [id,show] of [['mode-convert',false],['mode-generate',true]])nav.querySelector('#'+id).addEventListener('click',()=>{
+    legacy.hidden=show;section.hidden=!show;
+    nav.querySelector('#mode-convert').setAttribute('aria-pressed',String(!show));nav.querySelector('#mode-generate').setAttribute('aria-pressed',String(show));
+    const title=show?$('#cg-heading'):legacy.querySelector('h1');title.setAttribute('tabindex','-1');title.focus({preventScroll:true});
+  });
+  function controls(){
+    const locked=Boolean(active)||packing;
+    for(const e of section.querySelectorAll('select,button'))e.disabled=locked;
+    $('#cg-cancel').disabled=!active;$('#cg-cancel').hidden=!active;$('#cg-progress').hidden=!active;
+    $('#cg-generate').textContent=active?'パーツを生成中…':result?'設定でキャラを作り直す':'パーツを生成して組み立てる';
+    section.setAttribute('aria-busy',String(locked));
+  }
+  function selectPart(){
+    if(partUrl)URL.revokeObjectURL(partUrl);partUrl=null;
+    const p=result?.manifest.parts.find(p=>p.role===$('#cg-part').value);if(!p)return;
+    partUrl=URL.createObjectURL(result.assets.get(p.role));$('#cg-part-image').src=partUrl;$('#cg-part-image').alt=p.label+'の独立した透明PNG';
+    $('#cg-part-info').textContent=`${p.role} ／ ${p.rect.width}×${p.rect.height}px ／ 位置 ${p.rect.x}, ${p.rect.y} ／ ${p.enabled_in_neutral?'通常顔で表示':'通常顔では非表示'}`;
+  }
+  function publish(next){
+    const preparedUrl=URL.createObjectURL(next.preview);
+    const options=next.manifest.parts.map(p=>{const o=document.createElement('option');o.value=p.role;o.textContent=p.label;return o;});
+    if(previewUrl)URL.revokeObjectURL(previewUrl);result=next;previewUrl=preparedUrl;
+    $('#cg-preview-image').src=previewUrl;$('#cg-preview-image').hidden=false;$('#cg-empty').hidden=true;$('#cg-output').hidden=false;
+    $('#cg-summary').textContent=`33パーツ ／ 768×1024px ／ ${result.manifest.generator.id==='dummy'?'配置確認用の図形':'テンプレート描画'}（AI生成ではありません）`;
+    $('#cg-part').replaceChildren(...options);$('#cg-part').value='face_base';selectPart();
+    $('#cg-saved-settings').textContent='表示とダウンロードは、最後に生成が完了した設定のものです。';
+    if(!section.hidden)$('#cg-preview-title').scrollIntoView({block:'start',behavior:'auto'});
+  }
+  function changed(){if(result&&!active)$('#cg-saved-settings').textContent='設定を変えた場合は、作り直すとプレビューと保存内容に反映します。現在は前回の完成結果です。';}
+  for(const e of section.querySelectorAll('#cg-form select'))e.addEventListener('change',changed);
+  $('#cg-form').addEventListener('submit',async event=>{
+    event.preventDefault();if(active||packing)return;const job=new AbortController();active=job;controls();$('#cg-progress').value=0;$('#cg-status').textContent='独立したパーツを準備しています…';
+    try{
+      const next=await generateCharacter({provider:$('#cg-provider').value,hair:$('#cg-hair').value,eyes:$('#cg-eyes').value,background:$('#cg-background').value},
+        {signal:job.signal,onProgress:p=>{if(active===job){$('#cg-progress').value=p.completed;$('#cg-status').textContent=`${p.completed} / ${p.total}：${p.label}を準備しました`;}}});
+      if(active!==job||job.signal.aborted)return;publish(next);$('#cg-status').textContent='33パーツを組み立てました。完成画像とパーツを確認して、ZIPを保存できます。';
+    }catch(error){if(active===job)$('#cg-status').textContent=`${error.name==='AbortError'?'生成を中止しました。':`生成できませんでした。${error.message}`} ${result?'前回の完成結果は保持しています。':'設定を確認して、もう一度生成できます。'}`;}
+    finally{if(active===job){active=null;controls();}}
+  });
+  $('#cg-cancel').addEventListener('click',()=>active?.abort());
+  $('#cg-part').addEventListener('change',selectPart);
+  $('#cg-part-download').addEventListener('click',()=>{if(result&&!active&&!packing)save(result.assets.get($('#cg-part').value),$('#cg-part').value+'.png');});
+  $('#cg-download-preview').addEventListener('click',()=>{if(result&&!active&&!packing)save(result.preview,'character-preview.png');});
+  $('#cg-download-recipe').addEventListener('click',()=>{if(result&&!active&&!packing)save(new Blob([JSON.stringify(result.manifest.generator.recipe,null,2)+'\n'],{type:'application/json'}),'generation_recipe.json');});
+  $('#cg-download-zip').addEventListener('click',async()=>{
+    if(!result||active||packing)return;packing=true;controls();$('#cg-status').textContent='PNGと設定をZIPにまとめています…';
+    try{save(await createCharacterArchive(result),'ai-live2d-generated-character.zip');$('#cg-status').textContent='ZIPの保存を開始しました。端末のダウンロード先を確認してください。';}
+    catch(error){$('#cg-status').textContent=`ZIPを作成できませんでした。${error.message} 完成結果は保持しています。もう一度保存できます。`;}
+    finally{packing=false;controls();}
+  });
+  controls();return {element:section};
+}

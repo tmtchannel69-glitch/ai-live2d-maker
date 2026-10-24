@@ -3,6 +3,14 @@
 スマートフォン・PC で利用できるキャラクターパーツ準備用 Web アプリです。
 Vite と Vanilla JavaScript で実装しています。
 
+## パーツからキャラ生成する新モード
+
+`feature/part-first-character-generation`では、アプリ上部の「パーツから生成」から、正面・胸上・メイド服・通常顔の女の子を作れます。端末内で顔/目/髪/衣服の33PNGを個別に描き、自動で組み立てるテンプレート方式です。完成した一枚絵から切り分ける方式ではありません。AIによる自由生成は未接続です。
+
+髪/瞳/背景を選び、生成後に完成PNGやパーツ単体を確認して、一式ZIPを保存します。ZIPには`preview.png`、`parts/*.png`、`character_manifest.json`、`rig_metadata.json`、`inochi_intermediate.json`、再生成設定を含みます。既存の画像から変換するモードと編集データは切替後も保持します。
+
+[画面・保存仕様・実装ファイル・再生成コマンド・検証](docs/PART_FIRST_CHARACTER_MODE.md)。この出力は静止素材と接続用の中間データです。動作キー/物理/INP出力は未実装で、Cubism/VTube Studioモデルの互換を意味しません。画像や生成物はGitHubへ保存せず、同じコードと設定で再生成する手順を維持します。
+
 ## 起動
 
 Node.js 20.19 以上、または 22.12 以上を使用してください。この環境では Node.js 24 で確認しました。
@@ -28,7 +36,7 @@ npm run dev
 
 ## Inochi2Dの独立した技術試作
 
-現在の作業ブランチは`feature/head-neck-body-rig`です。元画像から頭・首・胴体を独立した共通パーツへ拡張し、既存のまばたきモデルを維持した別出力を検証しています。既存の通常画面/APIは切り替えません。[実装設計](docs/HEAD_RIG_DESIGN.md)、[必要な元画像・依存・固定版・Windows/Linuxの再生成手順](docs/REPRODUCING_CHARACTER_RIG.md)。
+画像1枚からの自動変換の開発成果は`feature/head-neck-body-rig`に保存しています。元画像から頭・首・胴体を独立した共通パーツへ拡張し、既存のまばたきモデルを維持した別出力を検証しています。既存の通常画面/APIは切り替えません。[実装設計](docs/HEAD_RIG_DESIGN.md)、[必要な元画像・依存・固定版・Windows/Linuxの再生成手順](docs/REPRODUCING_CHARACTER_RIG.md)。
 
 STEP 2は提供画像1枚で生成/公式Creator0.8.6の保存・新プロセス52状態を検証し、全viewport一致。中立RGBA一致、検査した首の穴/胴体の変化0、同じJPEGからモデル・共通PNG106枚・動作PNG21枚の再生成一致を確認しました。[結果と残課題](docs/HEAD_RIG_VALIDATION.md)。**自然な完成品質は未合格**で、顔X/Y角度は未実装です。
 

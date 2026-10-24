@@ -1,5 +1,6 @@
 import {createModelBuildPanel} from './model-build-panel.js';
 import {createInochiModelPanel} from './inochi-model-panel.js';
+import {createCharacterGenerationMode} from './character-generation/panel.js';
 import {validateExpressionNotes,invalidateExpressionNotes} from './expression-notes.js';
 import {createAuthoringHandoff} from './authoring-handoff.js';
 import {createMotionChecklist} from './motion-checklist.js';
@@ -428,3 +429,4 @@ $('#try-sample').addEventListener('click',async()=>{
 document.querySelector('#prompt-dialog').addEventListener('close', updateSelectionStatus);
 document.querySelector('#prompt-part').addEventListener('change', updateEditorNote);
 renderPartChoices();updateButton();
+createCharacterGenerationMode();

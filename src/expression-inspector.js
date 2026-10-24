@@ -85,6 +85,9 @@ export function createExpressionInspector({isLocked,render,onEdit,getNotes=()=>(
   }
   function close(restore=true){restoreFocus=restore;comparison.close();noteEditor.reset();syncComparison();releaseDetail();if(dialog.open)dialog.close();}
   $('#inspector-close').addEventListener('click',()=>close());
+  // Escape's native close event is queued. Release comparison pixels and
+  // pending detail reads during cancel, before the dialog becomes hidden.
+  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
   dialog.addEventListener('close',()=>{comparison.close();noteEditor.reset();syncComparison();releaseDetail();originalFile=null;originalAssets=[];ctx.clearRect(0,0,canvas.width,canvas.height);isolatedCtx.clearRect(0,0,isolated.width,isolated.height);bounds=null;if(restoreFocus)opener?.focus({preventScroll:true});});
   $('#inspector-detail').addEventListener('click',toggleDetail);
   $('#inspector-zoom').addEventListener('change',()=>layout());
