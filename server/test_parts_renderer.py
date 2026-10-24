@@ -42,3 +42,31 @@ def test_actual_raw_zero_opacity_and_partial_alpha_are_applied():
         'bindings':[{'node':2,'param_name':'opacity','values':[[0],[1]]}]}]
     rgba,layers=renderer.render(model,textures,(20,20),(0,0,20,20),{'EyeOpenL':0})
     assert not rgba.any() and not layers
+
+
+def test_inverse_mask_keeps_alpha254_neutral_and_reveals_underpaint_only_after_motion():
+    model,textures=fixture();textures[0][:]=[100,80,60,254]
+    before,_=renderer.render(model,textures,(20,20),(0,0,20,20),{})
+    under=copy.deepcopy(model['nodes']['children'][0]);under.update(uuid=3,name='underpaint',zsort=1,textures=[1],
+        masks=[{'source':2,'mode':'DodgeMask'}])
+    model['nodes']['children'].append(under);textures.append(np.full((20,20,4),[180,160,140,255],np.uint8))
+    model['param']=[{'name':'HeadX','min':[-1,0],'max':[1,1],'defaults':[0,0],'axis_points':[[0,.5,1],[0]],
+        'bindings':[{'node':2,'param_name':'transform.t.x','values':[[-3],[0],[3]]}]}]
+    neutral,_=renderer.render(model,textures,(20,20),(0,0,20,20),{})
+    np.testing.assert_array_equal(neutral,before)
+    moved,_=renderer.render(model,textures,(20,20),(0,0,20,20),{'HeadX':1})
+    assert np.all(moved[:,:3]==[180,160,140,255])
+    assert np.all(moved[:,3:,3]==254)
+
+
+def test_serialized_mask_threshold_is_respected_in_diagnostic():
+    model,textures=fixture();mask=copy.deepcopy(model['nodes']['children'][0])
+    mask.update(uuid=3,name='coverage',opacity=0,textures=[1],mask_threshold=.75)
+    model['nodes']['children'].append(mask)
+    model['nodes']['children'][0]['masks']=[{'source':3,'mode':'Mask'}]
+    textures.append(np.full((1,1,4),[120,120,120,128],np.uint8))
+    rgba,_=renderer.render(model,textures,(20,20),(0,0,20,20),{})
+    assert not rgba.any()
+    mask['mask_threshold']=.25
+    rgba,_=renderer.render(model,textures,(20,20),(0,0,20,20),{})
+    np.testing.assert_array_equal(rgba,textures[0])

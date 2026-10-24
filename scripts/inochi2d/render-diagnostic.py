@@ -95,7 +95,8 @@ def render(model,textures,source_size,roi,values):
         if masks:
             normal=[m for m in masks if m['mode']=='Mask'];clip=np.zeros(out.shape[:2],bool) if normal else np.ones(out.shape[:2],bool)
             for m in masks:
-                mask=raw(evaluated[m['source']])[:,:,3]>=.5
+                mask_source=evaluated[m['source']]
+                mask=raw(mask_source)[:,:,3]>=mask_source['node'].get('mask_threshold',.5)
                 if m['mode']=='Mask':clip|=mask
                 else:clip &= ~mask
             rgba[~clip]=0

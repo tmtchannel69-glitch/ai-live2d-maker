@@ -23,7 +23,7 @@
       "required": ["id", "role", "side", "parent", "order", "source_box_xywh", "placement", "observed", "completion", "occluded_by", "recognition", "motion"],
       "properties": {
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,70}$"},
-        "role": {"enum": ["upper_lid", "lower_lid", "eyelash_upper", "eyelash_lower", "sclera", "iris", "pupil", "highlight", "context", "closed_eyelash", "skin_completion", "hair_strand", "hair_region", "foreground_remainder"]},
+        "role": {"enum": ["upper_lid", "lower_lid", "eyelash_upper", "eyelash_lower", "sclera", "iris", "pupil", "highlight", "context", "closed_eyelash", "skin_completion", "hair_strand", "hair_region", "foreground_remainder", "head_surface", "neck", "body"]},
         "side": {"enum": ["l", "r", null]},
         "parent": {"type": "string"},
         "order": {"type": "integer"},

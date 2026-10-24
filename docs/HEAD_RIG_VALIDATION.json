@@ -1,0 +1,550 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-24",
+  "branch": "feature/head-neck-body-rig",
+  "base_commit": "dae0a82a020219019d3ab06b37c1a4c5686c409a",
+  "scope": "one owner-provided image; automatic head/neck/body extension; not general image success rate",
+  "source": {
+    "sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "size": [
+      960,
+      1280
+    ],
+    "original_or_generated_artwork_in_git": false
+  },
+  "verdicts": {
+    "file_generation_passed": true,
+    "official_creator_086_passed": true,
+    "appearance_quality_passed": false
+  },
+  "generation": {
+    "model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "saved_inx_sha256": "ce213991f2923bfd4a7095ae9cbd3afecc7617d73ba4292ac3a948dd30b1f618",
+    "baseline_sha256": "fee8d92bb66b7bbe174355d93d7b4e2551d38a45c4a05dde6f28e8a24175c253",
+    "common_parts": 38,
+    "observed_reconstruction_rgba_exact": true,
+    "visible_source_rgb_changed_pixels": 0,
+    "drawables": 28,
+    "textures": 27,
+    "vertices": 19868,
+    "triangles": 36880,
+    "decoded_texture_bytes": 12970140,
+    "full_pipeline_seconds": [
+      91.771,
+      98.086
+    ],
+    "notes": "Elapsed includes local inference and independent PNG diagnostics; not a smartphone or production latency benchmark."
+  },
+  "head_cpu_diagnostic": {
+    "format": "ai-live2d-maker-independent-head-cpu-diagnostic",
+    "source_size": [
+      960,
+      1280
+    ],
+    "neutral_before_after_changed_pixels": 0,
+    "neutral_max_channel_delta": 0,
+    "neck_bridge_roi": [
+      435,
+      647,
+      514,
+      723
+    ],
+    "fixed_torso_roi": [
+      483,
+      888,
+      524,
+      929
+    ],
+    "poses": [
+      {
+        "pose": "neutral",
+        "head_x": 0,
+        "head_tilt": 0,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 0
+      },
+      {
+        "pose": "shift_left",
+        "head_x": -1,
+        "head_tilt": 0,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 414877
+      },
+      {
+        "pose": "shift_right",
+        "head_x": 1,
+        "head_tilt": 0,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 414884
+      },
+      {
+        "pose": "tilt_left",
+        "head_x": 0,
+        "head_tilt": -1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 408395
+      },
+      {
+        "pose": "tilt_right",
+        "head_x": 0,
+        "head_tilt": 1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 408187
+      },
+      {
+        "pose": "combined_left",
+        "head_x": -1,
+        "head_tilt": -1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 424758
+      },
+      {
+        "pose": "combined_right",
+        "head_x": 1,
+        "head_tilt": 1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 424714
+      },
+      {
+        "pose": "opposed_left",
+        "head_x": -1,
+        "head_tilt": 1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 414574
+      },
+      {
+        "pose": "opposed_right",
+        "head_x": 1,
+        "head_tilt": -1,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 414643
+      },
+      {
+        "pose": "neutral_return",
+        "head_x": 0,
+        "head_tilt": 0,
+        "neck_bridge_tested_pixels": 6004,
+        "neck_bridge_transparent_pixels": 0,
+        "fixed_torso_changed_pixels": 0,
+        "changed_pixels": 0
+      }
+    ],
+    "official_runtime_evidence": false,
+    "appearance_quality_passed": false
+  },
+  "blink_cpu_diagnostic": {
+    "frames": 10,
+    "maximum_hole_candidates": 0,
+    "closed_iris_residual": 0,
+    "low_opening_central_double_lash_candidates": 0,
+    "official_runtime": false
+  },
+  "official_creator": {
+    "version": "0.8.6",
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "platform": "Linux/Xvfb/Mesa; not Windows or iPhone",
+    "initial_poses": 26,
+    "fresh_process_poses": 26,
+    "all_reloaded_viewports_identical": true,
+    "source_eye_correlation": 0.9810212850570679,
+    "pose_results": [
+      {
+        "pose": "neutral",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "left_closed",
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "right_closed",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "both_closed",
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "left_half",
+        "displayed": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "right_half",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 0.5,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "both_half",
+        "displayed": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "head_left",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "head_right",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_left",
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": -1.0,
+          "HeadTilt": -1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "closed_head_right",
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 1.0,
+          "HeadTilt": 1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "neutral_return",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "shift_left_only",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": -1.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "shift_right_only",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 1.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_left_only",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": -1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "tilt_right_only",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 1.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_00",
+        "displayed": {
+          "EyeOpenL": 0.0,
+          "EyeOpenR": 0.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_01",
+        "displayed": {
+          "EyeOpenL": 0.02,
+          "EyeOpenR": 0.02,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_02",
+        "displayed": {
+          "EyeOpenL": 0.05,
+          "EyeOpenR": 0.05,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_03",
+        "displayed": {
+          "EyeOpenL": 0.08,
+          "EyeOpenR": 0.08,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_04",
+        "displayed": {
+          "EyeOpenL": 0.1,
+          "EyeOpenR": 0.1,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_05",
+        "displayed": {
+          "EyeOpenL": 0.15,
+          "EyeOpenR": 0.15,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_06",
+        "displayed": {
+          "EyeOpenL": 0.25,
+          "EyeOpenR": 0.25,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_07",
+        "displayed": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_08",
+        "displayed": {
+          "EyeOpenL": 0.75,
+          "EyeOpenR": 0.75,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      },
+      {
+        "pose": "blink_09",
+        "displayed": {
+          "EyeOpenL": 1.0,
+          "EyeOpenR": 1.0,
+          "HeadX": 0.0,
+          "HeadTilt": 0.0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_bridge_tested_skin_pixels": 5690,
+        "neck_bridge_background_like_pixels": 0,
+        "previous_process_viewport_changed_pixels": 0
+      }
+    ]
+  },
+  "texture_retention": {
+    "parts": 28,
+    "all_rgba_identical": true,
+    "saved_codecs": [
+      1
+    ]
+  },
+  "structure_retention": {
+    "hierarchy_mesh_masks_bindings_retained": true,
+    "drawables_and_drivers": 28,
+    "parameters": 4,
+    "bindings": 22,
+    "maximum_numeric_roundtrip_delta": 9.707469416753156e-06,
+    "float_tolerance": 0.0001,
+    "runtime_validation": false,
+    "appearance_quality_passed": false
+  },
+  "reproduction": {
+    "head_model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "common_pngs_identical": 106,
+    "head_and_blink_pngs_identical": 21,
+    "same_source_full_pipeline_repeated": true,
+    "external_requests": false
+  },
+  "checks": {
+    "node_tests_passed": 64,
+    "python_tests_passed": 78,
+    "browser_tests_passed": 140,
+    "build_passed": true,
+    "pip_check_passed": true,
+    "common_schema_passed": true
+  },
+  "known_issues": [
+    "STEP 1 inferred eyelid skin blur/boundary remains; appearance is not approved.",
+    "Hidden clothing/neck underlaps are narrow estimates, not recovered anatomy.",
+    "Face yaw/pitch are not rigged; HeadX is translation and HeadTilt planar Z.",
+    "Hair source order/root candidates are unverified; independent sway/physics follows STEP 2.",
+    "One real image does not measure generalization; Windows/iPhone are untested.",
+    "Detailed head CLI is not connected to the normal smartphone screen."
+  ],
+  "private_artifacts": "/tmp/inochi-head-rig-trial/v7 and replay; screenshots creator-head-final / creator-head-reloaded; originals remain outside Git"
+}

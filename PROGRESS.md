@@ -1,5 +1,16 @@
 # 開発進捗
 
+## 2026-10-24 STEP 2：独立した頭・首・胴体と再生成
+
+- オーナーが転送を中断してSTEP 2→STEP 3の継続と、作業ごとのコミット/プッシュ、元画像から再生成できるコード/設定/依存/手順の保存を承認。dae0a82/remote一致、変更なしを確認し、feature/head-neck-body-rigへ分岐。開始時Inochi Node27/Python67を確認。既存約26MB ZIPは変更していない。
+- `server/head_preparation.py`、`head-rig.mjs`、`scripts/parts/rig.py`で既存詳細処理→顎/首/襟の自動観測→共通役割→独立モデルを追加。通常5役割/旧詳細/品質版/worker/API/UIは不変。HeadX/HeadTiltを維持し、Root→Body→Neck→Head、襟の曲線固定へ。顔X/Y角度は未実装。
+- 提供960×1280の1枚で共通38パーツの観測RGBA一致/可視元RGB変更0/重複0。中立は従来版と全RGBA一致。頭10状態で首6,004画素の穴0、41×41胴体内部の差0。既存瞬き10状態も穴/閉眼虹彩寄与/低開度中央二重線候補0。
+- 最終INP SHA a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde。公式Creator0.8.6で26状態、実保存、新プロセス26状態の全viewport一致。保存INX ce213991f2923bfd4a7095ae9cbd3afecc7617d73ba4292ac3a948dd30b1f618。28描画Part/27テクスチャRGBA保持、親子/mesh/マスク/閾値/4パラメータ22bindingsも保持。float丸め差最大9.71e-6。
+- alpha254の内側を不透明化せず、DodgeMaskの別下敷きで露出を埋める。SAMの影の穴、顎の外挿、直線的な襟固定、補間の透明な継ぎ目の不採用例を私用領域に保持。Ctrl+Sだけを保存成功とせず、`save-creator.py`が実更新を確認する。
+- 同じJPEGから2回全処理を実行し、モデル/共通PNG106枚/動作PNG21枚の全バイト一致。91.771/98.086秒は推論+独立診断の開発計測。`provenance.json`に入力/重み/依存/コードの版と指紋を記録。Windows/Linuxの準備・再生成と固定公式バイナリ取得をdocs/REPRODUCING_CHARACTER_RIG.mdへ保存。
+- Node64/Python78/既存ブラウザ140＝282件、build/pip check/schema成功。Starlette/httpx既存警告1件。画像/モデルなしの検証はdocs/HEAD_RIG_VALIDATION.md/json、設計はHEAD_RIG_DESIGN.md。私用成果物は/tmp/inochi-head-rig-trial配下のv7/replayと公式写真フォルダ。環境消失時はオーナーの元JPEGが必要。
+- 見た目は未合格。瞬き肌のぼけ/境界、狭い推定衣装/首、髪の奥行き/根元、一般画像の精度、Windows/iPhone実機、通常スマホ画面への詳細接続は残る。次は承認済みSTEP 3の小さい毛束揺れとSDK物理へ。Inochi2DとCubism/VTSを区別し、外部画像送信/新課金/公開/main統合はしない。
+
 ## 2026-10-23 STEP 1：まばたきリギング（最新）
 
 - 同じfeature/detailed-character-partsのe89bcf0/remote一致、変更なしから継続。既存Node52/Python59を確認。オーナー指定のSTEP 1修正/検証/結果確認→STEP 2頭/首/胴体→STEP 3髪物理の順を維持し、今回はSTEP 1を実装。通常の5役割/品質版/worker/API/UIは不変。

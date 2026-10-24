@@ -7,3 +7,11 @@ playwright-report/
 .models/
 __pycache__/
 .pytest_cache/
+
+# Private character artifacts; regenerate them from the owner's input image.
+private-output/
+artifacts/
+*.inp
+*.inx
+*.moc3
+*.zip

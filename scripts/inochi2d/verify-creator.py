@@ -175,12 +175,22 @@ def run_audit(args):
     face_roi = (max(viewport[0], fx + origin[0]), max(viewport[1], fy + origin[1]),
                 min(viewport[2], fx + fw + origin[0]), min(viewport[3], fy + fh + origin[1]))
     torso_roi = None
+    neck_roi = None
     if args.quality:
         fixed_y = manifest['quality']['neckBlend']['fixedY'] * source.height
         torso_roi = (max(viewport[0], round(fx + fw*.35 + origin[0])),
                      round(fixed_y + max(5, fw*.03) + origin[1]),
                      min(viewport[2], round(fx + fw*.65 + origin[0])),
                      min(viewport[3], round(min(source.height-2, fixed_y + fw*.22) + origin[1])))
+        if manifest.get('independent_head',{}).get('fixed_torso_roi'):
+            # Automatically selected measured body interior; excludes the
+            # moving hair envelope, rather than counting hair occlusion as
+            # an underlying torso deformation.
+            box=manifest['independent_head']['fixed_torso_roi']
+            torso_roi=tuple(round(v+origin[i%2]) for i,v in enumerate(box))
+            geometry=manifest['independent_head'];jaw=geometry['jaw'];cx=jaw['center_x'];cy=jaw['center_y'];width=jaw['x_scale']
+            box=(round(cx-width*.075),round(cy-8),round(cx+width*.075),round(geometry['collar_y']+3))
+            neck_roi=tuple(round(v+origin[i%2]) for i,v in enumerate(box))
         if torso_roi[3] <= torso_roi[1] or torso_roi[1] < viewport[1]:
             raise ValueError('Fixed torso ROI is not visible in this native-size view.')
         if np.max(np.std(np.array(neutral.crop(torso_roi)), axis=(0, 1))) < 2:
@@ -224,6 +234,14 @@ def run_audit(args):
             records[-1]['fixed_torso_changed_pixels'] = int(np.any(
                 np.array(image.crop(torso_roi)) != np.array(neutral.crop(torso_roi)), axis=2).sum())
             assert records[-1]['fixed_torso_changed_pixels'] == 0, f'Torso moved at {name}'
+        if neck_roi:
+            patch=np.array(image.crop(neck_roi)).astype(int);base=np.array(neutral.crop(neck_roi)).astype(int)
+            expected=(base[:,:,0]-base[:,:,1]>8)&(base.mean(axis=2)>140)
+            background=(patch.max(axis=2)-patch.min(axis=2)<3)&(patch.mean(axis=2)<75)
+            records[-1]['neck_bridge_tested_skin_pixels']=int(expected.sum())
+            records[-1]['neck_bridge_background_like_pixels']=int((expected&background).sum())
+            assert expected.sum()>100,'Neck audit lacks measured skin evidence'
+            assert not np.any(expected&background),f'Background-like hole appeared in neck at {name}'
         face = image.crop(face_roi)
         face.thumbnail((310, 310))
         faces.append((name, observed, face))
@@ -256,6 +274,7 @@ def run_audit(args):
               'native_eye_template_correlation': score, 'source_origin_xy': origin,
               'native_face_template_correlation': face_score, 'native_scale_calibration': calibration,
               'viewport_roi': viewport, 'controller_extra_width':extra,'face_roi': face_roi, 'eye_rois': eye_rois, 'fixed_torso_roi': torso_roi,
+              'neck_bridge_roi':neck_roi,'independent_head_profile':manifest.get('independent_head',{}).get('profile'),
               'quality_profile': bool(args.quality),
               'audit_scope': 'seven-pose-compatibility' if args.smoke else 'twelve-poses-plus-quality-motion' if args.quality else 'twelve-poses',
               'poses': records, 'input_retries':input_retries,'runtime_controls_and_independence_passed': True,
@@ -264,7 +283,8 @@ def run_audit(args):
               'notes': ['GUI controls test playback states; no manual rigging was performed.',
                         'Near-half control clicks are quantized; displayed values are recorded.',
                         'Color candidates are diagnostics, not proof of natural eyelid artwork.',
-                        ('HeadX / HeadTilt use a neck transition and a fixed torso; semantic layers remain incomplete.'
+                        ('Independent head/neck/body layers with explicit estimated underlaps; XY face angles remain unimplemented.'
+                         if neck_roi else 'HeadX / HeadTilt use a neck transition and a fixed torso; semantic layers remain incomplete.'
                          if args.quality else 'HeadX combines whole-foreground translation and planar rotation.'),
                         'Linux/Xvfb/Mesa is not a Windows or mobile device verification.']}
     (output / 'creator-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
