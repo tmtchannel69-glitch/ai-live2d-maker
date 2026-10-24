@@ -2,6 +2,7 @@
 import {zip,strToU8} from 'fflate';
 import {matchExternalPartFiles} from '../../shared/external-part-file-list.js';
 import {importExternalPartBatch} from './external-part-batch.js';
+import {buildExternalPartComparison} from '../../shared/external-part-comparison.js';
 
 export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
   const region=document.createElement('section');
@@ -19,12 +20,37 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
     '<div id="cg-batch-output" hidden><div class="cg-preview"><img id="cg-batch-preview" alt="外部PNGを複数パーツに使った実験プレビュー"></div>'+
     '<p id="cg-batch-summary" class="muted"></p>'+ 
     '<div id="cg-batch-warnings" role="status" aria-live="polite"></div>'+ 
+    '<section id="cg-batch-review"><h4>元画像と差し替え画像を比較</h4>'+ 
+    '<label for="cg-batch-review-role">確認するパーツ<select id="cg-batch-review-role"></select></label>'+ 
+    '<div class="cg-batch-comparison">'+ 
+    '<figure><div class="cg-part-preview"><img id="cg-batch-original" alt="差し替え前のテンプレートパーツ"></div><figcaption>変更前（テンプレート）</figcaption></figure>'+ 
+    '<figure><div class="cg-part-preview"><img id="cg-batch-replacement" alt="差し替えた外部PNGパーツ"></div><figcaption>変更後（外部PNG）</figcaption></figure></div>'+ 
+    '<p id="cg-batch-review-info" class="muted"></p>'+ 
+    '<p class="muted">サイズと透過を比較できます。警告がなくても絵柄・隠れた部分・動作時の自然さは未検証です。</p></section>'+ 
     '<button id="cg-batch-download" type="button" class="secondary">モデル・33パーツ・検証記録をZIP保存</button></div>'+
     '<p class="muted">未選択のパーツはローカル描画のままです。33枚そろってもAI出典や品質を認定するものではありません。通常のキャラクターZIPは変更しません。</p>';
   section.querySelector('#cg-external-import').after(region);
   const $=s=>region.querySelector(s);
-  let result=null,previewUrl=null,aborter=null,packing=false;
+  let result=null,previewUrl=null,aborter=null,packing=false,reviewUrls=[];
+  function releaseReviewImages(){
+    for(const url of reviewUrls)URL.revokeObjectURL(url);
+    reviewUrls=[];
+    $('#cg-batch-original').removeAttribute('src');$('#cg-batch-replacement').removeAttribute('src');
+  }
+  function showComparison(){
+    releaseReviewImages();
+    const base=getCharacter(),role=$('#cg-batch-review-role').value;
+    if(!result||!base?.assets.has(role)||!result.replacements.has(role))return;
+    const info=buildExternalPartComparison(result.manifest,result.report,role);
+    const before=URL.createObjectURL(base.assets.get(role)),after=URL.createObjectURL(result.replacements.get(role));
+    reviewUrls=[before,after];
+    $('#cg-batch-original').src=before;$('#cg-batch-replacement').src=after;
+    $('#cg-batch-review-info').textContent=info.role+' ／ 可視画素 '+info.visible_percent+'% ／ 端の接触 '+info.edge_contact_percent+'% ／ '+(info.warning_count?'警告 '+info.warning_count+'件':'画素統計上の警告なし');
+  }
+  $('#cg-batch-review-role').addEventListener('change',showComparison);
   function clearResult(){
+    releaseReviewImages();
+    $('#cg-batch-review-role').replaceChildren();$('#cg-batch-review-info').textContent='';
     result=null;
     if(previewUrl)URL.revokeObjectURL(previewUrl);
     previewUrl=null;$('#cg-batch-preview').removeAttribute('src');$('#cg-batch-output').hidden=true;
@@ -91,6 +117,12 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
         }
         warningHost.append(list);
       }
+      const options=created.report.provided_roles.map(role=>{
+        const part=created.manifest.parts.find(p=>p.role===role),option=document.createElement('option');
+        option.value=role;option.textContent=part.label+' ('+role+')';return option;
+      });
+      $('#cg-batch-review-role').replaceChildren(...options);
+      showComparison();
       $('#cg-batch-status').textContent='一括取り込みを完了しました。通常のキャラクターは変更していません。';
     }catch(error){
       clearResult();

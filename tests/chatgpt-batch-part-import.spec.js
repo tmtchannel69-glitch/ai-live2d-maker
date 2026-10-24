@@ -101,3 +101,23 @@ test('single visible pixel prompts quality review but never claims AI quality',a
   expect(report.human_visual_review_completed).toBe(false);
   expect(report.appearance_quality_passed).toBe(false);
 });
+test('compares template and user PNG for each imported role without altering canonical results',async({page})=>{
+  await setup(page);
+  const original=await download(page,'#cg-download-zip');
+  const selections=[await imageForRole(page,'iris_l'),await imageForRole(page,'iris_r')];
+  await page.locator('#cg-batch-files').setInputFiles(selections);
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:90000});
+  const selector=page.locator('#cg-batch-review-role');
+  await expect(selector.locator('option')).toHaveCount(2);
+  await selector.selectOption('iris_l');
+  await expect(page.locator('#cg-batch-review-info')).toContainText('iris_l');
+  const first=await page.locator('#cg-batch-replacement').getAttribute('src');
+  await expect(page.locator('#cg-batch-original')).toHaveAttribute('src',/^blob:/);
+  await expect(page.locator('#cg-batch-replacement')).toHaveAttribute('src',/^blob:/);
+  await selector.selectOption('iris_r');
+  await expect(page.locator('#cg-batch-review-info')).toContainText('iris_r');
+  const second=await page.locator('#cg-batch-replacement').getAttribute('src');
+  expect(first).not.toBe(second);
+  expect(await download(page,'#cg-download-zip')).toEqual(original);
+});

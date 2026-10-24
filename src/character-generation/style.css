@@ -17,3 +17,14 @@
 #cg-batch-import #cg-batch-selection,#cg-batch-import #cg-batch-status{overflow-wrap:anywhere;line-height:1.7}
 #cg-batch-import #cg-batch-output{margin-top:20px}
 #cg-batch-import code{overflow-wrap:anywhere}
+/* Part-by-part manual comparison: side by side on desktop, stacked on phones. */
+#cg-batch-review{margin:18px 0;padding:16px;border:1px solid #5b506e;border-radius:12px}
+#cg-batch-review h4{margin:0 0 12px}
+#cg-batch-review>label{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+#cg-batch-review select{width:100%;min-height:48px;font-size:16px}
+.cg-batch-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cg-batch-comparison figure{margin:0;min-width:0}
+.cg-batch-comparison figcaption{font-size:14px;text-align:center;margin-top:7px}
+.cg-batch-comparison .cg-part-preview{height:180px;min-width:0}
+.cg-batch-comparison img{width:100%;height:100%;object-fit:contain}
+@media(max-width:420px){.cg-batch-comparison{grid-template-columns:1fr}.cg-batch-comparison .cg-part-preview{height:160px}}
