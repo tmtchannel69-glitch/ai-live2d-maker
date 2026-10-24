@@ -15,3 +15,7 @@ artifacts/
 *.inx
 *.moc3
 *.zip
+
+# Server secrets: never expose a key through VITE_* or committed env files.
+.env
+.env.*

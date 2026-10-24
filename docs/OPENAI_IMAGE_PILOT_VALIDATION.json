@@ -1,0 +1,149 @@
+{
+  "format": "ai-live2d-openai-image-pilot-preparation-validation",
+  "version": 1,
+  "date": "2026-10-24",
+  "base_commit": "08c0eddbdeb5b873365b1218158bddf2837c26b6",
+  "branch": "feature/openai-image-pilot-preparation",
+  "model_candidate": "gpt-image-1.5",
+  "model_is_snapshot": false,
+  "plan_id": "e339f04bfdc391d23c8d18c3914b13f282aba26ff90493e6d020272c053260cc",
+  "trial_counts": {
+    "base_requests": 6,
+    "maximum_requests": 12,
+    "base_output_images": 6,
+    "maximum_output_images": 12,
+    "base_image_attachments": 10,
+    "maximum_image_attachments": 20
+  },
+  "current_official_prices_verified": false,
+  "estimated_trial_usd": null,
+  "maximum_trial_usd": null,
+  "api_transport_implemented": false,
+  "api_key_read": false,
+  "external_ai_requests_sent": 0,
+  "api_charges_usd": 0,
+  "real_ai_generation_tested": false,
+  "official_creator_tested_this_task": false,
+  "appearance_quality_passed": false,
+  "tests": {
+    "baseline_node_passed": 121,
+    "final_node_passed": 132,
+    "new_node_tests": 11,
+    "related_browser_passed": 21,
+    "browser_suite": "character-generation, character-inochi, character-design, inochi-model",
+    "production_build_passed": true,
+    "not_a_full_browser_suite_run": true
+  },
+  "offline_payloads": {
+    "files": 14,
+    "all_files_reproduce_byte_identically": true,
+    "private_output": "/tmp/openai-image-pilot-prepared",
+    "private_repeat": "/tmp/openai-image-pilot-replayed",
+    "guides": [
+      {
+        "role": "face_base",
+        "sha256": "9fd273b6d2a5df9b02e4404db5f4906b494f73d61a67c46f13f6ee85bece1501",
+        "bytes": 5942,
+        "is_ai_artwork": false
+      },
+      {
+        "role": "bangs_front",
+        "sha256": "a2926ba52ad51b6596cfcc9d64dbfbbdc248a72eda2fd8366d680ed050c9f1d2",
+        "bytes": 5283,
+        "is_ai_artwork": false
+      },
+      {
+        "role": "eye_white_l",
+        "sha256": "d85847be61b81e2cbb78ab0db4a45e59d5b3b6885e715a1dbf987035481c7ae3",
+        "bytes": 4646,
+        "is_ai_artwork": false
+      },
+      {
+        "role": "iris_l",
+        "sha256": "f4354cb455b31b2f49abf8b93b4160a25f753d03d82098cc6887804415f4f450",
+        "bytes": 4555,
+        "is_ai_artwork": false
+      },
+      {
+        "role": "eyelashes_l",
+        "sha256": "2687b3770f7424d58ff834478610179d4693e7873eb3e109d3292eb8046db80c",
+        "bytes": 4550,
+        "is_ai_artwork": false
+      }
+    ]
+  },
+  "quality_test_scope": "Synthetic RGBA fixtures and technical guides test structure, corruption rejection, bounds/alpha preservation and refusal to certify AI provenance or appearance. No genuine AI character or parts have been generated.",
+  "existing_generation_source_changed": false,
+  "browser_ai_key_settings_added": false,
+  "browser_dist_contains_new_pilot": false,
+  "old_private_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+  "public_readonly_research": [
+    {
+      "name": "pricing",
+      "url": "https://openai.com/api/pricing/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "image-guide",
+      "url": "https://developers.openai.com/api/docs/guides/image-generation",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "api-image",
+      "url": "https://developers.openai.com/api/reference/resources/images/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "data",
+      "url": "https://developers.openai.com/api/docs/guides/your-data",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "contract",
+      "url": "https://openai.com/policies/services-agreement/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "raw-pricing",
+      "url": "https://raw.githubusercontent.com/openai/openai-cookbook/main/examples/Generate_Images_With_GPT_Image.ipynb",
+      "status": 200,
+      "bytes": 307811,
+      "sha256": "2d069a3815188435db5473bb355b9065b3c224e4798c91542400f2e429b57e6f"
+    },
+    {
+      "name": "raw-api",
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/image_generate_params.py",
+      "status": 200,
+      "bytes": 6443,
+      "sha256": "ce11e6fc1ad113d96c6d3a275a1906da43d7ea4718fb72d9804559bd9ef60709"
+    },
+    {
+      "name": "raw-edit",
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/image_edit_params.py",
+      "status": 200,
+      "bytes": 7030,
+      "sha256": "f3182c188012e2905ef4e2f192ee368d7ad1199e930698eb6ee1c2e69c5b2887"
+    },
+    {
+      "name": "raw-readme",
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/README.md",
+      "status": 200,
+      "bytes": 42146,
+      "sha256": "a4d7bc27c600379c57a5ecb6f547edb01355fc226a2223f480a6484a74f48237"
+    }
+  ],
+  "next_blockers": [
+    "Verified current official rates and model service/data terms",
+    "Normal and retry-inclusive USD estimate including image/text input and output",
+    "Explicit owner authorization for exact prompts, images, model, terms and budget",
+    "Server-only transport, authenticated backend and spend/attempt tracking after authorization"
+  ],
+  "remaining_untested": [
+    "Actual account/model access",
+    "AI reference identity/layout",
+    "Real AI PNG transparency and hidden anatomy",
+    "Real AI line/color/style consistency",
+    "Full 33 AI roles and native model with official Creator",
+    "Windows/iPhone/Safari"
+  ]
+}

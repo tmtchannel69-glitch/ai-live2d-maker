@@ -1,5 +1,13 @@
 # AI Live2D Maker 開発ルール
 
+## OpenAI画像生成の実証準備（2026-10-24、最新）
+- オーナーは08c0eddを維持した調査/設計/実行前の準備を承認。新しいfeature/openai-image-pilot-preparationで作業し、有料API/文章・画像のAI送信/新契約/公開/main統合は未承認。
+- server/ai-image-pilotとscripts/ai-image-pilotは共通参照1枚→face_base/bangs_front/eye_white_l/iris_l/eyelashes_lの5枚を計画。生成された同じ参照のSHAを固定し、各editへ参照+自作配置ガイドを添付する設計。1024正方形へ元キャンバスをx+128で移し、拡縮しない。5枚で33パーツ成功と扱わない。
+- gpt-image-1.5/medium/1024x1024は公式SDKでhigh input fidelityを確認できた暫定候補。最新/最良・アカウント利用可能・snapshot固定の保証ではない。現行の公式価格/モデル契約Webは再度CONNECT403、直接GETもDNS失敗で未確認。通常6/最大12回の提案と、推定/最大USDが未算定であることを区別する。現在の許可は0回/0USD。
+- 今回は送信transport/キー読取/API SDK依存/HTTP routerを追加しない。prepareは全文JSONと技術ガイドだけをGit外へ出力し、--executeはない。APIキーは将来サーバーのsecret管理だけに置き、VITE_*、CLI引数、Git/JSON/logへ含めない。SDKの自動retryは承認後も0にし、timeoutも課金済みの可能性として試行枠を数える。
+- 構造検査は空/不透明背景/範囲外を拒否し、RGBA/位置を保持するが、AI出典・同一キャラ・線・hidden面の品質は認定しない。矩形だけのガイドや1画素も構造に合い得る。偽のAI出典や不足28枚のtemplate補充で完全AI成功としない。既存manifest版1/2は変更せず、真の33AIパーツは将来の明示adapterで接続する。
+- 実行前資料/現行価格の未確認/送信する全文/費用の式/再現はdocs/OPENAI_IMAGE_PILOT.mdとOPENAI_IMAGE_PILOT_PAYLOADS.md。検証はOPENAI_IMAGE_PILOT_VALIDATION.md/json。未確認料金を記憶で埋めず、単価・通常/最大予算・送信内容・利用条件を具体化してからオーナー判断を求める。以前の画像/モデル/ZIPを変更・アップロードしない。
+
 ## 共通デザインとAIパーツ生成の準備（2026-10-24、最新）
 - オーナーがccbb93aからのデザイン/AI接続設計と、外部送信/新課金不要の実装・検証を承認。同じfeature/part-first-character-generationで継続。実AIの外部呼出し・契約・課金・main統合・公開は未承認。旧33パーツ版1と画像1枚からの経路を維持する。
 - `shared/character-design.js`が髪/目/顔/服/雰囲気/パレット/線/陰影を正規化し、SHA256のdesign IDと33部品のblueprintを計算。位置/支点/首の追従範囲は設計から導出。行列は小数9桁へ正規化し、IDをAI品質や認証の証明と呼ばない。左右は本人、画面は768×1024、正面/胸上/通常顔。

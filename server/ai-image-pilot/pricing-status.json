@@ -1,0 +1,30 @@
+{
+  "format": "ai-live2d-openai-pricing-status",
+  "version": 1,
+  "checked_on": "2026-10-24",
+  "model_candidate": "gpt-image-1.5",
+  "current_official_prices_verified": false,
+  "text_input_usd_per_million_tokens": null,
+  "image_input_usd_per_million_tokens": null,
+  "image_output_usd_per_million_tokens": null,
+  "medium_1024_square_output_usd": null,
+  "current_model_service_terms_verified": false,
+  "reason": "Official pricing, guide, Images reference, data policy and services agreement GETs failed with proxy CONNECT 403. Direct read-only requests also failed DNS. Do not substitute SDK license or remembered prices for current model prices or terms.",
+  "official_urls": {
+    "pricing": "https://openai.com/api/pricing/",
+    "image_guide": "https://developers.openai.com/api/docs/guides/image-generation",
+    "image_api": "https://developers.openai.com/api/reference/resources/images/",
+    "data": "https://developers.openai.com/api/docs/guides/your-data",
+    "terms": "https://openai.com/policies/services-agreement/"
+  },
+  "sdk_verified_commit": "718aee979a9c334d37302aeff21cee6cbff4d43c",
+  "sdk_generate_source_sha256": "ce11e6fc1ad113d96c6d3a275a1906da43d7ea4718fb72d9804559bd9ef60709",
+  "sdk_edit_source_sha256": "f3182c188012e2905ef4e2f192ee368d7ad1199e930698eb6ee1c2e69c5b2887",
+  "base_requests": 6,
+  "maximum_requests_including_one_extra_attempt_per_job": 12,
+  "estimated_trial_usd": null,
+  "maximum_trial_usd": null,
+  "permitted_api_calls": 0,
+  "permitted_spend_usd": 0,
+  "external_ai_requests_sent": 0
+}

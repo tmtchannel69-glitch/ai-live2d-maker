@@ -1,5 +1,16 @@
 # 開発ロードマップ
 
+## OpenAI画像生成の実証準備（2026-10-24、最新）
+
+08c0eddを維持し、別のfeature/openai-image-pilot-preparationで[実行前計画](docs/OPENAI_IMAGE_PILOT.md)と[既定の送信予定全文](docs/OPENAI_IMAGE_PILOT_PAYLOADS.md)を保存。
+
+1. **今回完了**：共有デザインを使う参照1枚/5layerのrequest準備、全パーツで同じ参照を固定する方式、位置ガイド、PNGの構造検査、Git外への再現CLI。送信/キー読取/実AI生成はない。
+2. **現在の障害**：公式価格/契約Webは接続403、最新料金と利用条件が未確認。通常6/再試行込み最大12回という試験案のUSD費用は未算定。実行枠は0回/0USDのまま、価格とモデルの利用可否/利用条件を確認して入力課金/予算/送信内容を具体化する。
+3. **オーナー承認後**：サーバーだけのOpenAI adapter/secret管理/固定送信先/自動retry0/usage台帳を追加し、まず参照の同一性と配置を確認する。その後5つの独立PNGで色/線/透過/hidden面を検証。
+4. **実AI品質確認後**：左右の詳細目/10開度→残りの髪/首/胴体/衣装へ拡張し、全33役割の本物の出典を持つadapterで既存mesh/瞬き/口/首/serializerへ接続。新モデルで公式Creator0.8.6の動作/保存/新プロセスを検査する。
+
+従来のテンプレート/デザイン指定33部品/画像1枚の生成器を変更しない。準備した技術ガイドや過去のCreator合格を実AI成功として使わず、モデル/画像/ZIPをGitHubへ保存しない。
+
 ## 共通デザインからのAIパーツ生成（2026-10-24、最新）
 
 ccbb93aから、既存の33パーツ/Native生成を保つ版2のデザイン経路を追加。[設計と再生成](docs/CHARACTER_DESIGN_GENERATION.md)、[実測](docs/CHARACTER_DESIGN_VALIDATION.md)、[provider比較](docs/AI_PARTS_PROVIDER_COMPARISON.md)。

@@ -1,5 +1,7 @@
 # AI Live2D Maker
 
+OpenAI画像生成の実証は[実行前の仕様・料金の確認状況・接続計画](docs/OPENAI_IMAGE_PILOT.md)と[送信予定の全文](docs/OPENAI_IMAGE_PILOT_PAYLOADS.md)を参照してください。`node scripts/ai-image-pilot/prepare.mjs --output /tmp/NEW-openai-pilot`で、APIキーや外部送信なしに確認用JSON/配置ガイドを作れます。現行公式価格は接続403で未確認、推定費用/最大費用は算定待ち、許可済みAPI実行は0回です。これはAI生成や33パーツ完成の成功例ではありません。
+
 スマートフォン・PC で利用できるキャラクターパーツ準備用 Web アプリです。
 Vite と Vanilla JavaScript で実装しています。
 

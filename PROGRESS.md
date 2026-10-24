@@ -1,5 +1,16 @@
 # 開発進捗
 
+## 2026-10-24 OpenAI画像生成の実証準備（最新）
+
+- 08c0edd/元remote一致、未コミット変更なしを確認し、オーナー指示どおり新しいfeature/openai-image-pilot-preparationへ分岐。開始時Node121件/build成功。既存src/shared、旧33部品/モデルCLI、画像1枚からのAPIは変更しない。
+- 公式料金/生成guide/API/data/契約Webの公開GETは再度CONNECT403、直接GETもDNS失敗。OpenAI公式SDK718aee9の現行mainと一致する型と実ルート、公式cookbookの技術例は確認できた。SDK/古い例を現行料金やモデル契約へ流用せず、単価/推定USD/最大USDは未確認・nullで保存した。
+- gpt-image-1.5/medium/1024正方形/透過PNGを暫定候補とし、共通参照1枚→face_base/bangs_front/eye_white_l/iris_l/eyelashes_lの5部品を準備。参照をSHA固定して全editへ同じバイト+技術ガイドを添付する計画。元768×1024はx+128で拡縮せず配置。本人左右/位置/alpha/支点/親/順を保持する。
+- 通常6/各1回追加で最大12回、添付10/最大20画像を見積単位として定義。入力料金とタイムアウト/再送も数えるが、回数だけでUSD上限は保証しない。現行価格と通常/最大予算、保存/利用条件、送信する全文/画像の確認とオーナー承認が必要で、許可済み実行は0回/0USDのまま。
+- server/ai-image-pilotとscripts/ai-image-pilotに独立したprepare/guide/構造検査を追加。実送信transport/キー読取/API SDK/router/UI接続はない。準備は6JSON/5技術PNG/plan/価格status/確認書の14ファイル、別実行で全バイト一致。JSON全文と画像の指紋はOPENAI_IMAGE_PILOT_PAYLOADS.mdへレビュー用に保存、PNGはGit外。
+- 空/不透明背景/指定tile外を拒否し、切り出しはstraight RGBA/透明RGB/座標を保持。矩形図や1画素のfixtureでも構造は通り得るため、AI出典・同一性・線/hidden面の品質は未検証とする。5枚をtemplate28枚で埋めず、既存版2の生成元を偽装せず、全33AI役割は将来の別adapterから共通mesh/動作/serializerへ接続する計画。
+- 最終Node132件（新規11）/関連ブラウザ21件成功、build成功。全156ブラウザの再実行ではない。実AI/モデル生成/今回の公式Creator/実機/自然さは未実施。キーは将来のサーバーsecretだけ、.env*をGit除外しVITE_*や引数/Git/JSONへ含めない。新SDK依存やAPIキー設定は追加しない。
+- 計画/費用/送信前確認/再現/段階的な33役割拡張はdocs/OPENAI_IMAGE_PILOT.md、数値/成否はOPENAI_IMAGE_PILOT_VALIDATION.md/json。準備/再生成は/tmp/openai-image-pilot-prepared/replayed、研究は/tmp/openai-image-pilot-researchへ保持。旧26MB ZIPはSHA18bf753f…不変。新ブランチへソース/手順をコミット・プッシュし、画像/モデル/ZIPのGitHub保存、実AI送信/新課金/契約、main統合/公開は行わない。
+
 ## 2026-10-24 共通デザインとAIパーツ生成の接続準備（最新）
 
 - ccbb93a/remote一致、未コミット変更なし、既存Node99件とbuildを確認して同じfeature/part-first-character-generationを継続。先に33役割/配置/まつ毛検出/首の固定値の依存を整理し、docs/CHARACTER_DESIGN_GENERATION.mdへ設計・変更箇所・実装順を保存した。
