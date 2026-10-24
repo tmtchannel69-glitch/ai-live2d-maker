@@ -18,7 +18,7 @@ test('assembles 33 genuine independent PNGs, exports data, and reconstructs the 
   await page.goto('/');let requests=0;await page.route('**/api/**',r=>{requests++;return r.abort();});
   await generate(page);await expect(page.locator('#image-conversion-mode')).toBeHidden();await expect(page.locator('#cg-part option')).toHaveCount(33);
   const zip=await download(page,'#cg-download-zip');expect(zip.name).toBe('ai-live2d-generated-character.zip');const files=unzipSync(zip.bytes),m=validateCharacterManifest(json(files,'character_manifest.json'));
-  expect(Object.keys(files)).toHaveLength(39);expect(m.generator).toMatchObject({id:'template',ai_generated:false});
+  expect(Object.keys(files)).toHaveLength(45);expect(m.generator).toMatchObject({id:'template',ai_generated:false});
   const stats={};for(const role of GENERATED_ROLES){const p=m.parts.find(p=>p.role===role),im=decode(files[p.file]);
     expect([im.width,im.height,im.channels,im.depth]).toEqual([p.rect.width,p.rect.height,4,8]);
     let visible=0,transparent=0;for(let i=3;i<im.data.length;i+=4){if(im.data[i])visible++;else transparent++;}
@@ -93,13 +93,14 @@ test('missing, blank, wrong-size and unlabelled external providers fail instead 
 test('dummy mode is labelled and exposes the same 33-part output contract',async({page})=>{
   await page.goto('/');await generate(page,{provider:'dummy'});await expect(page.locator('#cg-summary')).toContainText('配置確認用');
   const files=unzipSync((await download(page,'#cg-download-zip')).bytes);expect(validateCharacterManifest(json(files,'character_manifest.json')).generator.id).toBe('dummy');
+  expect(Object.keys(files)).toHaveLength(39);expect(files['character.inp']).toBeUndefined();await expect(page.locator('#cg-model-output')).toBeHidden();
 });
 
 test('phone and landscape controls fit, are touch-sized, and retain the preview across mode changes',async({page})=>{
   await page.goto('/');await generate(page);
   for(const size of [{width:320,height:640},{width:390,height:844},{width:844,height:390},{width:1280,height:800}]){
     await page.setViewportSize(size);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    for(const id of ['mode-convert','mode-generate','cg-generate','cg-hair','cg-eyes','cg-background','cg-part','cg-download-zip']){
+    for(const id of ['mode-convert','mode-generate','cg-generate','cg-hair','cg-eyes','cg-background','cg-part','cg-download-zip','cg-download-inp','cg-download-inx']){
       const measured=await page.locator('#'+id).evaluate(e=>({h:e.getBoundingClientRect().height,font:parseFloat(getComputedStyle(e).fontSize)}));
       expect(measured.h,id).toBeGreaterThanOrEqual(48);expect(measured.font,id).toBeGreaterThanOrEqual(16);
     }

@@ -1,5 +1,16 @@
 # 開発ロードマップ
 
+## 33パーツの自動モデリング（2026-10-24、最新）
+
+f107b71の別モードを維持し、独立33PNG→6制御/25bindings→Inochi2D legacy0.8.6のINP/INXを接続した。[設計](docs/PART_FIRST_INOCHI_DESIGN.md)、[公式の保存/再読込・中立比較・残課題・再生成](docs/PART_FIRST_INOCHI_VALIDATION.md)。通常の画像1枚→モデルの処理は変更しない。
+
+1. **今回完了**：左右独立の瞬き、独立した口の開閉、胴体/襟固定で頭の小さいX/Y移動とZ傾き。元PNG/静止metadata維持、モデル付き45項目ZIP、旧39項目も可能。
+2. **検証完了**：同設定の全45項目/ZIP一致、保存済み33PNGから再生成一致、公式26状態→実保存→新プロセス26状態の全viewport一致。ファイル生成とCreator動作は合格、自然さと元PNGとの完全な画素一致は未合格。
+3. **次の品質改善**：低開度のまつ毛/上まぶた、開口の線の切替、首の影、公式中立の境界差。現在のWeb画面は静止PNGで、Inox問題は別課題。
+4. **AIパーツ生成の次段階**：既存provider契約へ色/線/位置/隠れ領域の整合性検査を設計。今回AI自由生成は未実装。外部サービス契約/費用/画像送信が必要な場合は別承認。
+
+Windows/iPhone実機、追跡、ブラウザのInochi runtime、独立した髪物理、顔の立体角度は未完了。Inochi2DをCubism/VTube Studio互換と表示せず、main統合/公開/画像やモデルのGitHub保存を行わない。
+
 ## 新しい優先作業：パーツからキャラ生成（2026-10-24）
 
 オーナーが別モードの設計整理→最小構成の実装を承認。c297aebの画像1枚→Inochi2D経路は保持し、`feature/part-first-character-generation`で進める。[画面/保存形式/ファイル/順序/実行手順](docs/PART_FIRST_CHARACTER_MODE.md)。

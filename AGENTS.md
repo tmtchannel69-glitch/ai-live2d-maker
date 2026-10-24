@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 33パーツのInochi2D自動モデリング（2026-10-24、最新）
+- オーナーがf107b71を基準に、新モードの33PNG→実INP/INXと独立した左右の瞬き/口/小さな頭部動作、公式Creator0.8.6の保存・新プロセス再読込を承認。同じfeature/part-first-character-generationで継続。AIパーツ生成/有料サービス/外部画像送信/公開/main統合は対象外。
+- `shared/generated-character-inochi.js`を新モード専用adapterとして追加。既存の中間ノード/静止配置と、旧生成器のコンテナ/動作キー/格納時premultiply/首の連続変形を再利用。旧5役割/詳細/頭/髪生成器、worker/API、33PNGの描画処理/元PNG/元manifest/静止rigを変更しない。
+- 完全な重なる新PNGを旧観測パーツの排他的所有形式へ渡さない。生成PNGと格納用のpreclip/premultiplyされたテクスチャを分ける。左右は本人、EyeOpenL/Rのraw0も検査。通常口と口内をMouthOpenへ割り当て、目と独立させる。
+- Root→Body→Neck→Head、服/襟/リボンはBody固定、顔/目/口/髪はHead。首の上だけ追従し襟で変形0。HeadX/Yは平面移動、HeadTiltはZ回転で顔の立体角度ではない。Creatorがrootの表示名をRootへ正規化するので、元IDはrootのままnative名をRootにする。既存の厳密な保存比較の条件を弱めない。
+- 元の静止APIは保持し、`model-generator.js`のwrapperでテンプレートの後にモデルを生成。図形は解剖的な成功にせず静止39項目のみ。新ZIPは45項目でINP/INX/実モデルJSON/実rig/レポート/説明を追加。native失敗/中止は前回の結果を保持。Inoxの0/opacity問題を回避する変更は混ぜない。
+- `scripts/character-generation/export.mjs`は既定でモデル付き、`--static-only`で元の静止素材。`model.mjs`は保存済み33PNG+manifestからモデルだけ再生成。`render-inochi.py`は実コンテナの独立診断で公式SDKや自然さの代替にしない。公式GUIは`verify-creator.py`、保存/RGBA/親子保持は既存scriptを再利用。
+- 原画との中立差、ファイル生成、公式動作/保存/新プロセス、自然な見た目を別判定にする。特定SHAの合格を任意の新出力へ流用しない。検証は`docs/PART_FIRST_INOCHI_VALIDATION.md/json`へ。モデル/画面写真/ZIPは新しいGit外フォルダ、古い26MB ZIPは維持する。ソース/設定/手順を作業ごとにコミット・プッシュする。
+
 ## パーツからのキャラクター生成（2026-10-24、最新）
 - オーナーはc297aebを維持した別モードの設計整理→最小実装を承認。作業はfeature/part-first-character-generation。正面/胸上/メイド服/通常顔/女の子1人と指定33役割の独立PNGがMVP。新モードの追加は今回承認済みで、既存の画像1枚→Inochi2Dの経路と作業保存版1〜12を維持する。
 - `src/character-generation/`のテンプレート/生成provider/合成/保存/画面を独立追加。図形は配置確認用、テンプレートは端末内描画と表示する。AI自由生成/外部APIは未接続で、ダミーを実AIの成功と扱わない。生成失敗時に図形で埋めず、33PNGの実サイズ/可視alphaを検査して拒否する。

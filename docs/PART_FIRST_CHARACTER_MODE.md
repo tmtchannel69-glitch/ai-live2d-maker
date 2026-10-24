@@ -1,5 +1,7 @@
 # パーツから作るキャラクター生成モード
 
+**更新:** 33PNG生成後に実INP/INXと動作設定を追加する段階へ進んだ。[自動モデリングの設計](PART_FIRST_INOCHI_DESIGN.md)、[実行方法と検証結果](PART_FIRST_INOCHI_VALIDATION.md)。元の33PNG/manifest/静止rig/中間データは維持し、テンプレートのZIPはモデル用6項目を追加した45項目になる。下記の「未実装」「次の段階」はf107b71の静止MVP時点の記録。現在のCLIで元の静止39項目だけを作る場合は`--static-only`を付ける。
+
 2026-10-24。オーナーが新モードの構成整理と、その後の最小実装を承認。基準c297aeb、`feature/part-first-character-generation`。既存の画像1枚→Inochi2D変換、編集/保存版1〜12、詳細CLIを維持する。
 
 ## 最初の範囲と画面

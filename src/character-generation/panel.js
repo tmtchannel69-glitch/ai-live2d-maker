@@ -1,4 +1,4 @@
-import {generateCharacter} from './generator.js';
+import {generateRiggedCharacter} from './model-generator.js';
 import {createCharacterArchive} from './archive.js';
 import './style.css';
 
@@ -24,7 +24,8 @@ export function createCharacterGenerationMode(){
     <section class="panel cg-preview-panel" aria-labelledby="cg-preview-title"><h2 id="cg-preview-title">完成プレビュー</h2><div class="cg-preview"><p id="cg-empty">33パーツを組み立てた<br>キャラクターを表示します</p><img id="cg-preview-image" alt="パーツから自動で組み立てたメイド服のキャラクター" hidden></div><p id="cg-summary" class="muted"></p></section></div>
     <section class="panel cg-output" id="cg-output" hidden aria-labelledby="cg-output-title"><h2 id="cg-output-title">パーツの確認と保存</h2><p id="cg-saved-settings" class="muted"></p><div class="cg-part-layout"><div><label for="cg-part">確認するパーツ</label><select id="cg-part"></select><p id="cg-part-info" class="muted"></p><button type="button" id="cg-part-download" class="secondary">選んだパーツのPNGを保存</button></div><div class="cg-part-preview"><img id="cg-part-image" alt=""></div></div>
     <div class="cg-downloads"><button type="button" id="cg-download-zip" class="primary">パーツと設定をZIP保存</button><button type="button" id="cg-download-preview" class="secondary">完成PNGを保存</button><button type="button" id="cg-download-recipe" class="secondary">再生成設定を保存</button></div>
-    <p class="muted">ZIPに完成PNG、33パーツのPNG、配置・支点・親子のJSON、Inochi2D接続用の中間データを入れます。動作設定や完成したモデルの出力はこれからです。</p><p class="muted">この素材ZIPは、従来の作業ファイルとは別形式です。画面を閉じる前に保存してください。パーツを用意しただけでは、Cubism・VTube Studio用のモデルにはなりません。</p></section>`;
+    <div id="cg-model-output" hidden><h3>Inochi2Dモデル</h3><p>左右のまばたき・口の開閉・頭だけの小さな移動と傾きを自動設定しました。胴体と襟は固定です。</p><div class="cg-downloads"><button type="button" id="cg-download-inp" class="secondary">Inochi2D INPを保存</button><button type="button" id="cg-download-inx" class="secondary">Creator用 INXを保存</button></div><p class="muted">Inochi Creator 0.8.6用です。モデルは背景透過で、髪の物理演算は含みません。自然な見た目・スマホ実機・Cubism / VTube Studio互換は別の未完了項目です。</p></div>
+    <p id="cg-model-note" class="muted">ZIPに完成PNG、33パーツ、配置・支点・親子のJSONを入れます。テンプレートではInochi2DのINP/INXと動作設定も追加します。配置確認用の図形は静止素材のみです。</p><p class="muted">このZIPは従来の作業ファイルとは別形式です。画面を閉じる前に保存してください。Inochi2DとCubism・VTube Studioは異なる形式です。</p></section>`;
   main.prepend(nav,legacy,section);
   const $=s=>section.querySelector(s);let active=null,result=null,previewUrl=null,partUrl=null,packing=false;
   for(const [id,show] of [['mode-convert',false],['mode-generate',true]])nav.querySelector('#'+id).addEventListener('click',()=>{
@@ -52,6 +53,7 @@ export function createCharacterGenerationMode(){
     $('#cg-preview-image').src=previewUrl;$('#cg-preview-image').hidden=false;$('#cg-empty').hidden=true;$('#cg-output').hidden=false;
     $('#cg-summary').textContent=`33パーツ ／ 768×1024px ／ ${result.manifest.generator.id==='dummy'?'配置確認用の図形':'テンプレート描画'}（AI生成ではありません）`;
     $('#cg-part').replaceChildren(...options);$('#cg-part').value='face_base';selectPart();
+    $('#cg-model-output').hidden=!next.native;
     $('#cg-saved-settings').textContent='表示とダウンロードは、最後に生成が完了した設定のものです。';
     if(!section.hidden)$('#cg-preview-title').scrollIntoView({block:'start',behavior:'auto'});
   }
@@ -60,9 +62,9 @@ export function createCharacterGenerationMode(){
   $('#cg-form').addEventListener('submit',async event=>{
     event.preventDefault();if(active||packing)return;const job=new AbortController();active=job;controls();$('#cg-progress').value=0;$('#cg-status').textContent='独立したパーツを準備しています…';
     try{
-      const next=await generateCharacter({provider:$('#cg-provider').value,hair:$('#cg-hair').value,eyes:$('#cg-eyes').value,background:$('#cg-background').value},
-        {signal:job.signal,onProgress:p=>{if(active===job){$('#cg-progress').value=p.completed;$('#cg-status').textContent=`${p.completed} / ${p.total}：${p.label}を準備しました`;}}});
-      if(active!==job||job.signal.aborted)return;publish(next);$('#cg-status').textContent='33パーツを組み立てました。完成画像とパーツを確認して、ZIPを保存できます。';
+      const next=await generateRiggedCharacter({provider:$('#cg-provider').value,hair:$('#cg-hair').value,eyes:$('#cg-eyes').value,background:$('#cg-background').value},
+        {signal:job.signal,onProgress:p=>{if(active===job){$('#cg-progress').max=p.total;$('#cg-progress').value=p.completed;$('#cg-status').textContent=p.stage==='model'?`Inochi2Dモデルを作成中：${p.label}`:`${p.completed} / 33：${p.label}を準備しました`;}}});
+      if(active!==job||job.signal.aborted)return;publish(next);$('#cg-status').textContent='33パーツを組み立てました。'+(next.native?'Inochi2Dのまばたき・口・頭の動作を設定し、INP/INXをZIPに追加しました。':'配置確認用の図形は静止素材として保存できます。');
     }catch(error){if(active===job)$('#cg-status').textContent=`${error.name==='AbortError'?'生成を中止しました。':`生成できませんでした。${error.message}`} ${result?'前回の完成結果は保持しています。':'設定を確認して、もう一度生成できます。'}`;}
     finally{if(active===job){active=null;controls();}}
   });
@@ -71,6 +73,7 @@ export function createCharacterGenerationMode(){
   $('#cg-part-download').addEventListener('click',()=>{if(result&&!active&&!packing)save(result.assets.get($('#cg-part').value),$('#cg-part').value+'.png');});
   $('#cg-download-preview').addEventListener('click',()=>{if(result&&!active&&!packing)save(result.preview,'character-preview.png');});
   $('#cg-download-recipe').addEventListener('click',()=>{if(result&&!active&&!packing)save(new Blob([JSON.stringify(result.manifest.generator.recipe,null,2)+'\n'],{type:'application/json'}),'generation_recipe.json');});
+  for(const ext of ['inp','inx'])$('#cg-download-'+ext).addEventListener('click',()=>{if(result?.native&&!active&&!packing)save(new Blob([result.native[ext]],{type:'application/octet-stream'}),'character.'+ext);});
   $('#cg-download-zip').addEventListener('click',async()=>{
     if(!result||active||packing)return;packing=true;controls();$('#cg-status').textContent='PNGと設定をZIPにまとめています…';
     try{save(await createCharacterArchive(result),'ai-live2d-generated-character.zip');$('#cg-status').textContent='ZIPの保存を開始しました。端末のダウンロード先を確認してください。';}

@@ -7,9 +7,11 @@ Vite と Vanilla JavaScript で実装しています。
 
 `feature/part-first-character-generation`では、アプリ上部の「パーツから生成」から、正面・胸上・メイド服・通常顔の女の子を作れます。端末内で顔/目/髪/衣服の33PNGを個別に描き、自動で組み立てるテンプレート方式です。完成した一枚絵から切り分ける方式ではありません。AIによる自由生成は未接続です。
 
-髪/瞳/背景を選び、生成後に完成PNGやパーツ単体を確認して、一式ZIPを保存します。ZIPには`preview.png`、`parts/*.png`、`character_manifest.json`、`rig_metadata.json`、`inochi_intermediate.json`、再生成設定を含みます。既存の画像から変換するモードと編集データは切替後も保持します。
+髪/瞳/背景を選び、生成後に完成PNGやパーツ単体を確認して、一式ZIPを保存します。テンプレートでは33PNGからInochi2Dモデルも自動生成します。左右のまばたき、口の開閉、胴体を固定した頭の小さな移動・傾きを設定します。画像アップロードや手動リギングは不要です。配置確認用の図形は静止素材のみです。既存の画像から変換するモードと編集データは切替後も保持します。
 
-[画面・保存仕様・実装ファイル・再生成コマンド・検証](docs/PART_FIRST_CHARACTER_MODE.md)。この出力は静止素材と接続用の中間データです。動作キー/物理/INP出力は未実装で、Cubism/VTube Studioモデルの互換を意味しません。画像や生成物はGitHubへ保存せず、同じコードと設定で再生成する手順を維持します。
+ZIPには完成PNG、33PNG、元の静止manifest/rig/中間データ/設定に加え、`character.inp`/`character.inx`、`inochi_model.json`/`inochi_rig.json`/`inochi_report.json`を含みます。INP/INXの単体保存もできます。モデルはInochi2D **legacy 0.8.6**用の透過出力で、Cubism/VTube Studio形式ではありません。物理演算・追跡・AIパーツ生成は未接続です。
+
+[新しい自動モデリングの設計](docs/PART_FIRST_INOCHI_DESIGN.md)、[実行手順・公式Creator検証・品質の別判定](docs/PART_FIRST_INOCHI_VALIDATION.md)、[元の33パーツ仕様](docs/PART_FIRST_CHARACTER_MODE.md)。画像や生成物はGitHubへ保存せず、同じコードと設定で再生成する手順を維持します。
 
 ## 起動
 

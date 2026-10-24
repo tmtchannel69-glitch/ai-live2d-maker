@@ -1,0 +1,201 @@
+{
+  "format": "ai-live2d-part-first-inochi-validation",
+  "version": 1,
+  "date": "2026-10-24",
+  "branch": "feature/part-first-character-generation",
+  "base_commit": "f107b7193bc5a2395bd406c65c3272d57ba2488a",
+  "generation_source_sha256": "2f44009c514adca6b06a3ed97538f174a65c7aa3b0495be84d060f762a7df575",
+  "fingerprinted_files": [
+    "shared/generated-character.js",
+    "shared/generated-character-inochi.js",
+    "src/character-generation/template.js",
+    "src/character-generation/generator.js",
+    "src/character-generation/model-generator.js",
+    "src/character-generation/archive.js"
+  ],
+  "acceptance": {
+    "file_generation_passed": true,
+    "official_creator_motion_passed": true,
+    "official_creator_save_reload_passed": true,
+    "neutral_exact_pixel_match": false,
+    "natural_finished_quality_passed": false,
+    "ai_parts_connected": false,
+    "cubism_compatible": false,
+    "vtube_studio_tested": false
+  },
+  "input": {
+    "mode": "independently-generated-template-parts",
+    "recipe": {
+      "template": "maid-bust-front-v1",
+      "version": 1,
+      "provider": "template",
+      "hair": "lavender",
+      "eyes": "violet",
+      "background": "transparent"
+    },
+    "uploaded_image_required": false,
+    "manual_rigging_required": false,
+    "external_image_transmission": false
+  },
+  "output": {
+    "archive_entries": 45,
+    "archive_bytes": 6387944,
+    "archive_sha256": "3c78beb7e2f99162454f3ffa93abb88e79353b88506784c70b5c6e1310d98e88",
+    "generated_inp_bytes": 1022647,
+    "generated_inp_sha256": "553001d0735e93a1158b8145d276bfec590038bb34c13f2a42e2bbf655f46e44",
+    "generated_inx_equals_inp": true,
+    "official_saved_inx_bytes": 3806693,
+    "official_saved_inx_sha256": "56c78d58d9872ec768c788910fe792b9ff474a53560728e635611eba009b4dce",
+    "source_pngs_and_preview_unchanged": 34,
+    "source_jsons_unchanged": [
+      "character_manifest.json",
+      "rig_metadata.json",
+      "inochi_intermediate.json",
+      "generation_recipe.json"
+    ],
+    "replay_all_entries_and_archive_identical": true,
+    "browser_node_model_identical": true
+  },
+  "rig": {
+    "profile": "generated-maid-rig-v1",
+    "pinned": {
+      "sdkTag": "v0.8.6",
+      "sdkCommit": "dda3a8f005f808104caa43183ab8753fb989e30f",
+      "creatorTag": "v0.8.6",
+      "creatorCommit": "371e5f4e21117102dbecc82371bfd9a6e2f5df02",
+      "container": "legacy-inp1"
+    },
+    "parts": 33,
+    "textures": 33,
+    "nodes": 41,
+    "vertices": 1259,
+    "triangles": 1872,
+    "decoded_texture_bytes": 7036208,
+    "parameters": [
+      {
+        "name": "EyeOpenL",
+        "min": 0,
+        "max": 1,
+        "default": 1
+      },
+      {
+        "name": "EyeOpenR",
+        "min": 0,
+        "max": 1,
+        "default": 1
+      },
+      {
+        "name": "MouthOpen",
+        "min": 0,
+        "max": 1,
+        "default": 0
+      },
+      {
+        "name": "HeadX",
+        "min": -1,
+        "max": 1,
+        "default": 0
+      },
+      {
+        "name": "HeadY",
+        "min": -1,
+        "max": 1,
+        "default": 0
+      },
+      {
+        "name": "HeadTilt",
+        "min": -1,
+        "max": 1,
+        "default": 0
+      }
+    ]
+  },
+  "official": {
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "environment": "official Linux 0.8.6; Xvfb 1280x960; Mesa software rendering",
+    "before_poses": 26,
+    "fresh_reload_poses": 26,
+    "max_saved_reload_viewport_changed_pixels": 0,
+    "max_fixed_torso_changed_pixels": 0,
+    "fixed_torso_tested_pixels_per_pose": 3780,
+    "stored_rgba_retained": 33,
+    "structure_retention": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 33,
+      "parameters": 6,
+      "bindings": 25,
+      "maximum_numeric_roundtrip_delta": 3.5739133181778016e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    },
+    "eye_mouth_independence_passed": true,
+    "neutral_original_preview_comparison": {
+      "method": "same-camera original assembled PNG rendered by official Creator vs articulated model",
+      "pixels": 659344,
+      "changed_pixels": 40751,
+      "rgb_above_3_pixels": 658,
+      "maximum_channel_difference": 30,
+      "mean_channel_difference": 0.03458740809046568,
+      "exact_pixel_match": false
+    },
+    "windows_iphone_tested": false
+  },
+  "independent_cpu": {
+    "states": 24,
+    "model_sha256": "553001d0735e93a1158b8145d276bfec590038bb34c13f2a42e2bbf655f46e44",
+    "geometry_checks_passed": true,
+    "neck_tested_pixels_per_state": 1680,
+    "fixed_torso_tested_pixels_per_state": 14700,
+    "closed_iris_contributing_pixels": 0,
+    "neutral_comparison": {
+      "background": "white",
+      "changed_pixels": 11150,
+      "rgb_above_3_pixels": 0,
+      "maximum_channel_difference": 3,
+      "mean_channel_difference": 0.008708530002170138
+    },
+    "official_runtime": false
+  },
+  "verification": {
+    "node_tests_passed": 99,
+    "browser_tests_passed": 150,
+    "build_passed": true,
+    "first_browser_attempt": {
+      "passed": 148,
+      "failed": 2,
+      "reason": "Vite full reload while source edits were in progress; final rerun with source fixed passed 150"
+    },
+    "targeted_browser_rerun_passed": 18,
+    "node_version": "24.19.0",
+    "chromium_version": "151.0.7922.173",
+    "legacy_generators_worker_api_modified": false,
+    "input_structure_checks_added": [
+      "moving face assigned to fixed body is rejected",
+      "off-center model origin is rejected"
+    ],
+    "input_guard_change_kept_all_45_entries_and_zip_identical": true
+  },
+  "known_issues": [
+    "Neutral is close but not pixel-exact in official rendering: 658/659344 viewport pixels exceed RGB delta 3, max 30. Filtering/composition causes not fully isolated.",
+    "Closed/low eye opening lash thickness and upper lid boundary need polish.",
+    "Early mouth transition line and neck-shadow follow need polish.",
+    "Browser displays static preview; no Inochi browser runtime, tracking, hair physics, or 3-D yaw/pitch.",
+    "Template only; no arbitrary AI-parts provider or real Windows/iPhone/Safari validation."
+  ],
+  "preservation": {
+    "media_uploaded_to_github": false,
+    "external_upload_or_publication": false,
+    "main_merged": false,
+    "old_26mb_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+    "private_outputs": [
+      "/tmp/part-first-inochi-final-v3",
+      "/tmp/part-first-inochi-quality-v2",
+      "/tmp/part-first-inochi-official-v2",
+      "/tmp/part-first-inochi-official-reloaded-v2",
+      "/tmp/part-first-inochi-roundtrip-v2"
+    ],
+    "private_paths_are_download_urls": false,
+    "cloud_retention_guaranteed": false
+  }
+}

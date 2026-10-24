@@ -1,5 +1,17 @@
 # 開発進捗
 
+## 2026-10-24 33パーツからのInochi2D自動モデリング（最新）
+
+- f107b71/remote一致、未変更、既存テスト84とbuildを確認。オーナーの承認範囲で同じfeature/part-first-character-generationを継続。最初に構成/再利用/影響ファイルを報告し、PART_FIRST_INOCHI_DESIGN.mdへ保存して独立変換を実装した。
+- shared/generated-character-inochi.jsは元の中間ノード/座標/支点/順序と、既存のlegacyコンテナ/キー/premultiply/首の連続変形を再利用。33PNGと完成PNG、manifest/静止rig/中間/recipeは前段と全バイト一致。旧画像分割/5役割/詳細/頭/髪生成器、worker/API、作業形式1〜12は不変。
+- テンプレート生成後に自動で左右EyeOpenL/R、MouthOpen、HeadX/Y/HeadTiltを設定。8グループ33Part/1,259頂点1,872三角形、6パラメータ25bindings。上まつ毛は厚みを保持し、白目の開口で瞳を隠す。服/襟/リボンは固定、首の上端だけ頭へ追従。図形は静止素材のみ、AIは未接続。
+- 生成モデルSHA 553001d0735e93a1158b8145d276bfec590038bb34c13f2a42e2bbf655f46e44。45項目のモデル付きZIPとINP/INX単体保存、静止のみの--static-only、33PNGからのモデル再生成CLIを接続。2回の45項目/ZIP全バイト一致、ブラウザとNodeのINP一致、CRC成功。中止/失敗は前回の素材/モデルを保持。
+- 独立CPUの実INP24状態で折り返し/検査した首のalpha不足/固定胴体変化/反対の目や口への干渉0、閉眼虹彩寄与0。中立と元PNGの差は最大RGB3。公式SDKや自然さの代替判定にはしていない。
+- 未改変公式Creator0.8.6の26状態、実保存、新プロセス26状態の全viewport差0。33格納RGBA、親子/mesh/マスク/6パラメータ25bindings保持、float差最大3.5739133e-6。公式保存INX SHA 56c78d58d9872ec768c788910fe792b9ff474a53560728e635611eba009b4dce。初回はroot→Root正規化を厳密な保持検査が検出し、変換側の表示名だけ公式へ合わせて再検証。検査条件は弱めない。
+- 元の完成PNGも公式で同じカメラ/倍率へ表示して比較。659,344画素中、RGB差3超え658、最大30、平均0.0345874。近い外見だが完全一致ではなく、低開度の線/口の切替/首の影も残り、自然な完成品品質は未合格。
+- Node99/ブラウザ150＝249件とbuild成功。初回のUI全体148成功/2失敗はJS編集中のVite reloadが影響し、対象18件と、ソース固定後の全150件を再実行して成功。新規15単体/3ブラウザと320/390/844/1280幅を確認。Windows/iPhone/Safari実機、AI自由生成、髪物理、追跡、ブラウザInochi runtime、Cubism/VTSは別課題。
+- 再生成コマンド/固定版/モデル指紋/生成と公式と外見の別判定/変更ファイル/比較画像の場所はPART_FIRST_INOCHI_VALIDATION.md/json。PNG/INP/INX/ZIP/公式画面写真は/tmp/part-first-inochi-*へ私用保持しGitへ保存しない。古い26MB ZIPはSHA18bf753f…不変。ソース/設定/手順を同作業ブランチへコミット・プッシュし、main/公開/外部画像送信/新課金は行わない。
+
 ## 2026-10-24 パーツからキャラ生成する別モード（最新）
 
 - オーナーが新モードの画面/保存形式/ファイル/実装順の整理と、その後の最小実装を承認。c297aeb/remote一致、未変更からfeature/part-first-character-generationへ分岐。最初の構成を報告し、docs/PART_FIRST_CHARACTER_MODE.mdへ保存してから実装した。
