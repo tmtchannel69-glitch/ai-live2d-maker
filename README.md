@@ -6,6 +6,8 @@
 
 頭の小さい移動・傾きとまばたきを扱い、胴体は固定です。全身リギング/見えない形の正確な復元/自然な完成品品質は未完成です。出力はInochi2D用で、Cubism/MOC3/VTube Studio用ではありません。[使い方・ローカル起動](docs/DETAILED_INOCHI_APP_MODE.md)、[実画像・公式Creator・テストの検証結果](docs/DETAILED_INOCHI_APP_MODE_VALIDATION.md)。今回はローカルコミットだけで、GitHubへのpush/公開は行いません。
 
+画像欄の「この画像から自動モデルを作る画面へ」から進めます。詳細モードの生成後は、**頭の動き10状態・目元の開閉10状態・分離/補完パーツ**を画面で確認できます。表示は実モデルから既存CPU描画器で作った比較画像で、公式Creatorやブラウザランタイムの動作検証とは区別します。「保存したモデルZIPを開いて確認」なら、元画像も生成サーバーも使わず端末内で開き直せます。古いZIPには比較画像がない場合があります。[操作・保存形式](docs/INOCHI_MODEL_REVIEW.md)、[実画像による確認結果](docs/INOCHI_MODEL_REVIEW_VALIDATION.md)。
+
 ### 詳細モードの準備
 
 Pythonの依存、顔検出/BiRefNetモデル、SAM2とSAM2.1 Tiny重み、Node依存が必要です。不足項目は画面の「ローカル処理の準備状況を確認」に表示します。画像の選択・準備確認・生成でモデルを自動取得しません。既存環境があれば`.venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8000`と、別ターミナルの`npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`で起動できます。WindowsはPythonパスを`.\.venv\Scripts\python.exe`へ置き換えます。重み/依存の一覧とポート競合時の設定は上記手順へ記録しています。クラウドのlocalhostはPC/iPhoneのlocalhostとは異なります。
@@ -81,7 +83,7 @@ STEP 3では9毛束候補の自動支点と小さい独立変形、狭い補完�
   --source /path/to/character.png --output /tmp/new-detailed-parts
 ```
 
-既存AI環境/モデルを使用する独立CLIです。`common/`に元座標とRGBA/mask/補完、`five-part/`に従来出力、`inochi2d/`にモデル、`quality/`に10状態の診断を保存します。実画像1枚で元RGB保持/共通再構成一致、公式Creator0.8.6の保存前後52状態を確認。**完成品質は未合格**で、肌の平滑化と閉じ際の線の警告が残ります。目の細部は共通データで別画像ですが、現在の瞬き出力時だけ目全体へまとめます。独立した視線や髪の揺れ、通常スマホ画面への詳細CLI接続は未実装です。
+既存AI環境/モデルを使用する独立CLIです。`common/`に元座標とRGBA/mask/補完、`five-part/`に従来出力、`inochi2d/`にモデル、`quality/`に10状態の診断を保存します。実画像1枚で元RGB保持/共通再構成一致、公式Creator0.8.6の保存前後52状態を確認。**完成品質は未合格**で、肌の平滑化と閉じ際の線の警告が残ります。目の細部は共通データで別画像ですが、現在の瞬き出力時だけ目全体へまとめます。独立した視線や髪の揺れは未実装です。頭・首・固定胴体の詳細CLIは、上記の自動生成モードへ接続済みです。
 
 品質改善の作業は`feature/inochi-quality-head-motion`に保存しています。肌の補完/先細りの閉眼線/瞳をつぶさない途中状態/首でつなぐ頭部動作を、通常の5役割出力とは別の試験として追加しました。[改善前後・公式Creator検証・制限](docs/INOCHI2D_QUALITY_IMPROVEMENT.md)。通常の画面/APIは引き続き下記の安定した5役割生成を使います。
 

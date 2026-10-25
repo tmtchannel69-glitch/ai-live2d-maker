@@ -1,4 +1,6 @@
 import {readModelArchive} from './inochi-model-download.js';
+import {readModelReview} from './inochi-model-review.js';
+import {createModelReviewPanel} from './inochi-model-review-panel.js';
 const MODES={five:{name:'従来の5パーツ',file:'inochi2d-character.zip'},'detailed-head':{name:'頭・首・胴体を分ける試作',file:'inochi2d-head-neck-body.zip'}};
 
 // This panel only exports an independent model. It never replaces the current
@@ -16,9 +18,18 @@ export function createInochiModelPanel({getState,onBusy}){
     <progress id="inochi-model-progress" aria-label="Inochi2Dモデルを生成中" hidden></progress>
     <p id="inochi-model-status" role="status" aria-live="polite">まずはキャラクター画像を選択してください。</p>
     <details><summary>準備ができていない場合</summary><p>PCのローカルサーバーと画像処理用ライブラリ、顔検出・背景除去のモデルが必要です。詳細モードはSAM2.1の重みも使います。READMEの「詳細モードの準備」に沿って配置してください。この画面からモデルは自動取得しません。</p></details>
-    <div id="inochi-model-result" hidden><h3>生成したモデル</h3><p id="inochi-model-result-kind"></p><p>モデルと生成パーツ・設定・検証レポートをZIPで保存します。元の画像ファイルは含みません。Inochi Creator 0.8.6で見た目と動きを確認してください。</p><button id="inochi-model-download" class="secondary">生成済みのモデルZIPを保存</button></div>`;
+    <button id="inochi-model-open" class="secondary">保存したモデルZIPを開いて確認</button><input id="inochi-model-open-file" type="file" accept=".zip,application/zip" hidden/>
+    <p class="muted">保存済みの画像変換用モデルZIPを端末内で読みます。元画像やサーバーは不要で、画像の送信や再生成は行いません。従来の作業保存ZIPとは別です。</p>
+    <div id="inochi-model-result" hidden><h3>生成したモデル</h3><p id="inochi-model-result-kind"></p><div id="inochi-model-review"></div><p>モデルと生成パーツ・設定・検証レポートをZIPで保存します。元の画像ファイルは含みません。Inochi Creator 0.8.6で見た目と動きを確認してください。</p><button id="inochi-model-download" class="secondary">生成済みのモデルZIPを保存</button></div>`;
   document.querySelector('.workspace').after(section);
   const $=selector=>section.querySelector(selector);
+  section.classList.add('workflow-target');$('#inochi-model-title').setAttribute('tabindex','-1');
+  const entry=document.createElement('div');entry.className='inochi-model-entry';
+  entry.innerHTML='<button id="inochi-model-jump" class="secondary" disabled>この画像から自動モデルを作る画面へ</button><p class="muted">点・枠の指定なしで分離・補完・動きを試作します。移動するだけでは画像を送信しません。</p>';
+  const continuation=document.querySelector('.upload-panel .workflow-continue');
+  if(continuation)continuation.before(entry);else document.querySelector('.upload-panel').append(entry);
+  entry.querySelector('button').addEventListener('click',()=>{section.scrollIntoView({block:'start'});$('#inochi-model-title').focus({preventScroll:true});});
+  const reviewPanel=createModelReviewPanel($('#inochi-model-review'));
   let source=getState().file,active=null,result=null,retry=false;
   const endpoint=(name,mode)=>`/api/inochi2d/${name}${mode==='five'?'':'?mode='+encodeURIComponent(mode)}`;
   function modeInfo(){
@@ -30,6 +41,8 @@ export function createInochiModelPanel({getState,onBusy}){
     $('#inochi-model-start').disabled=!state.file || state.locked || Boolean(active);
     $('#inochi-model-mode').disabled=state.locked||Boolean(active);
     $('#inochi-model-check').disabled=state.locked||Boolean(active);
+    $('#inochi-model-open').disabled=state.locked||Boolean(active);
+    entry.querySelector('button').disabled=!state.file||state.locked||Boolean(active);
     $('#inochi-model-start').textContent=retry?'もう一度Inochi2Dモデルを生成':'画像からInochi2Dモデルを生成';
     $('#inochi-model-cancel').hidden=!active;
     $('#inochi-model-progress').hidden=!active;
@@ -38,11 +51,11 @@ export function createInochiModelPanel({getState,onBusy}){
     $('#inochi-model-download').disabled=Boolean(active) || state.locked;
     section.setAttribute('aria-busy',String(Boolean(active)));
   }
-  function clearResult(){if(result)URL.revokeObjectURL(result.url);result=null;retry=false;}
+  function clearResult(){reviewPanel.clear();if(result)URL.revokeObjectURL(result.url);result=null;retry=false;}
   function cancel(clear=false){
-    const job=active;active=null;job?.control.abort();
+    const job=active;active=null;job?.control.abort();reviewPanel.stop();
     if(clear){clearResult();$('#inochi-model-status').textContent='';}
-    else if(job){retry=true;$('#inochi-model-status').textContent='生成を中止しました。現在の作業は保持しています。サーバー側の処理が終了するまで、再試行を待つ場合があります。';}
+    else if(job){retry=true;$('#inochi-model-status').textContent=job.importing?'モデルZIPの読み込みを中止しました。現在の作業と前回のモデルは保持しています。':'生成を中止しました。現在の作業は保持しています。サーバー側の処理が終了するまで、再試行を待つ場合があります。';}
     if(job)onBusy(false);
     controls();
   }
@@ -66,7 +79,7 @@ export function createInochiModelPanel({getState,onBusy}){
   async function start(checkOnly=false){
     const state=getState();if(active || state.locked || (!checkOnly&&!state.file))return;
     const job={file:state.file,mode:$('#inochi-model-mode').value,checkOnly,control:new AbortController()};active=job;retry=false;
-    onBusy(true);controls();$('#inochi-model-status').textContent='自動生成の準備を確認しています…';
+    reviewPanel.stop();onBusy(true);controls();$('#inochi-model-status').textContent='自動生成の準備を確認しています…';
     const current=()=>active===job && getState().file===job.file && !job.control.signal.aborted;
     try{
       const readiness=await fetch(endpoint('status',job.mode),{signal:job.control.signal,cache:'no-store'});
@@ -81,7 +94,10 @@ export function createInochiModelPanel({getState,onBusy}){
       if(!response.ok)throw new Error(await responseError(response,'Inochi2Dモデルの生成に失敗しました。'));
       if(response.headers.get('Content-Type')?.split(';')[0].trim()!=='application/zip')throw new Error('モデルの応答形式が正しくありません。');
       const output=await readModelArchive(response,{signal:job.control.signal});if(!current())return;
+      $('#inochi-model-status').textContent='生成したモデルと比較画像を端末内で確認しています…';
+      const review=await readModelReview(output,{signal:job.control.signal,expectedMode:job.mode,requirePipeline:true});if(!current())return;
       clearResult();result={url:URL.createObjectURL(output),mode:job.mode};
+      reviewPanel.set(review);
       $('#inochi-model-status').textContent=`Inochi2Dモデルを生成しました。${job.mode==='detailed-head'?'頭の動きだけの試作で、胴体は固定です。':''}ZIP内の検証レポートを確認し、Inochi Creator 0.8.6で開いてください。この画像の自然な表情や、公式Creatorでの動作を自動的に確認済みとは判定していません。`;
     }catch(error){
       if(current()){
@@ -93,10 +109,24 @@ export function createInochiModelPanel({getState,onBusy}){
       if(active===job){active=null;onBusy(false);controls();}
     }
   }
+  async function openArchive(file){
+    if(!file||active||getState().locked)return;
+    const job={file:getState().file,importing:true,control:new AbortController()};active=job;
+    const current=()=>active===job&&getState().file===job.file&&!job.control.signal.aborted;
+    reviewPanel.stop();onBusy(true);controls();$('#inochi-model-status').textContent='モデルZIPを端末内で読み込んでいます。画像は送信しません…';
+    try{
+      const review=await readModelReview(file,{signal:job.control.signal,requirePipeline:true});if(!current())return;
+      clearResult();result={url:URL.createObjectURL(file),mode:review.mode};reviewPanel.set(review);
+      $('#inochi-model-status').textContent='保存したモデルZIPを開きました。サーバーへの送信・モデルの再生成は行っていません。公式Creatorの動作と自然な見た目は別途確認が必要です。';
+    }catch(error){if(current())$('#inochi-model-status').textContent=`${error.message} 現在の作業と前回のモデルは保持しています。`;}
+    finally{if(active===job){active=null;onBusy(false);controls();}}
+  }
   $('#inochi-model-start').addEventListener('click',()=>start());
   $('#inochi-model-check').addEventListener('click',()=>start(true));
   $('#inochi-model-mode').addEventListener('change',()=>{cancel();modeInfo();retry=false;$('#inochi-model-status').textContent='選んだモードの準備を確認できます。生成ボタンを押すまで画像は送信しません。';controls();});
   $('#inochi-model-cancel').addEventListener('click',()=>cancel());
   $('#inochi-model-download').addEventListener('click',download);
+  $('#inochi-model-open').addEventListener('click',()=>$('#inochi-model-open-file').click());
+  $('#inochi-model-open-file').addEventListener('change',event=>{const file=event.target.files[0];event.target.value='';openArchive(file);});
   modeInfo();controls();return {update,cancel:()=>cancel()};
 }

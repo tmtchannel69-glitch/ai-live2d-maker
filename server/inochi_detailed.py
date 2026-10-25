@@ -13,6 +13,7 @@ import sys
 import zipfile
 
 from server.inochi_worker import PreparationFailure, decode_image
+from server.inochi_review import create_review
 
 ROOT = Path(__file__).resolve().parents[1]
 MODE = 'detailed-head'
@@ -73,12 +74,14 @@ def package_trial(trial, directory):
                 if path.is_absolute() or '..' in path.parts or str(path) != name or path.suffix != '.png' or '\\' in name:
                     raise PreparationFailure(422, '生成パーツの保存先が正しくありません。')
                 entries['common/' + name] = trial / 'common' / name
-    pipeline = {'format': 'ai-live2d-maker-detailed-head-app-pipeline', 'version': 1, 'mode': MODE,
+    entries.update(create_review(trial, directory, graph))
+    pipeline = {'format': 'ai-live2d-maker-detailed-head-app-pipeline', 'version': 2, 'mode': MODE,
                 'scope': 'independent-head-motion-with-fixed-body', 'automaticPreparation': True,
                 'manualPointsOrRigging': False, 'parts': len(graph['parts']), 'creatorVersion': '0.8.6',
                 'officialCreatorTested': False, 'appearanceQualityVerified': False,
                 'live2dCompatible': False, 'vtubeStudioTested': False,
-                'containsUploadedOriginalFile': False, 'containsOnePieceReconstruction': False,
+                'containsUploadedOriginalFile': False, 'containsPreparationReconstruction': False,
+                'containsModelRenderedComparisons': True, 'reviewManifest': 'review/review.json',
                 'externalImageRequests': False, 'automaticDownloads': False,
                 'generator': 'scripts/parts/rig.py --stage head (existing CLI)',
                 'limitations': ['Head motion only; the body is fixed. Not full-body rigging.',
@@ -93,6 +96,9 @@ def package_trial(trial, directory):
         'Generation and CPU checks do not certify this model in the official Creator.\n'
         'This is Inochi2D legacy 0.8.6, not Live2D Cubism/MOC3 or VTube Studio.\n'
         'The original upload and one-piece reconstruction are excluded.\n'
+        'review/ contains bounded model-rendered comparisons from the existing CPU diagnostics.\n'
+        'These are discrete images, not an official Creator or browser runtime.\n'
+        'Reopen this ZIP using the model ZIP review button in the app; no image upload is needed.\n'
         'Generated layers and their masks remain in common/. This is not an app recovery ZIP.\n', encoding='utf-8')
     entries.update({'generation-report.json': directory / 'generation-report.json', 'README.txt': directory / 'README.txt'})
     total = 0

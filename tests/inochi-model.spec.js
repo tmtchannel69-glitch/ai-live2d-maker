@@ -3,9 +3,9 @@ import {unzipSync,zipSync,strToU8} from 'fflate';
 
 test.use({hasTouch:true,isMobile:true});
 const output=Buffer.from(zipSync({
-  'character.inp':strToU8('transport fixture, not a runtime model'),
-  'character.inx':strToU8('transport fixture, not a runtime model'),
-  'INOCHI2D_BUILD_REPORT.json':strToU8(JSON.stringify({transportFixture:true,creatorTested:false})),
+  'model.inp':strToU8('TRNSRTS\0transport fixture, not a runtime model'),
+  'model.inx':strToU8('TRNSRTS\0transport fixture, not a runtime model'),
+  'generation-report.json':strToU8(JSON.stringify({format:'ai-live2d-maker-inochi2d-image-pipeline',version:1,transportFixture:true,officialCreatorTested:false})),
 },{level:0}));
 async function ready(page,status={configured:true,busy:false,creatorVersion:'0.8.6',experimental:true}){
   await page.route('**/api/inochi2d/status',route=>route.fulfill({json:status}));

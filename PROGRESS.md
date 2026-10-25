@@ -1,5 +1,17 @@
 # 開発進捗
 
+## 2026-10-25 自動モデルの結果確認と保存ZIPの再読込（最新）
+
+- 27a9404/未変更から同じfeature/external-part-side-by-side-reviewで継続。ある程度使えるまでローカル実装/検証を進める指示に沿い、push/公開/main統合/外部画像API/課金/重み取得をせず、ローカルcommitで保存する。
+- 画像欄に自動モデル画面への入口を追加。点/枠指定の画面を通らず進めるが、入口自体では送信しない。既存のfive/head CLI/最小writer/リギングのアルゴリズムを変更せず、結果の確認経路を拡張。
+- server/inochi_review.pyが既存CPU診断の頭10姿勢/両目開閉10状態を最大640pxへ縮小。画面はスライダー/前後/画像の連続表示、共通38項目の分離/補完PNG/元座標/親/順を表示。公式ランタイム/連続リギング/見た目の合格とは別と明記した。
+- 保存済みのモデルZIPを元画像/APIなしに端末内で開き直せる。事前索引/分割した実展開量/パス/重複/モード/モデルSHA/PNG寸法/座標を検査。失敗・中止・遅延完了では元の作業/前モデル/画像を保持し、URLと連続表示も片付ける。
+- 最終実画像APIは約109.15秒。準備時POST0、busy後中止/解放/再試行、既存作業ZIPの全entry不変、表示した20枚とZIPの全バイト一致、新ページの元画像なし再読込/API0を確認。別の同画像試験とmodel/共通106PNG/比較20PNGも全バイト一致。
+- 最終ZIP140項目/10,431,731bytes/展開21,277,523bytes/CRC成功。原JPEG/準備再構成を除外し、モデル描画の全体比較画像は含めるため、generation-report版2のcontainsPreparationReconstruction:falseとcontainsModelRenderedComparisons:trueで区別した。旧版1のZIPも読める。
+- INP/INX a759efab…は前回公式Creator0.8.6で26状態→保存→新プロセス26状態を確認した実物と同一。今回はGUIを再実行せず、過去の同一バイトの証拠を参照する。生成時のofficial/appearance flagsはfalse、見た目は引き続き未合格。
+- 最終Node176/Python99/全ブラウザ173件/build成功。旧fiveの実ZIPも読込成功。Linux Chromiumの320/390幅/タッチ設定で、Windows/iPhone/Safari実機ではない。既存Starlette/httpx警告1件。
+- 操作/構成/再現はdocs/INOCHI_MODEL_REVIEW.md、実測/限界は同VALIDATION.md/json。実物は/tmp/model-review-live-finalほかGit外だけ。古い26MB ZIPは18bf753f…不変。次は追加画像の失敗分析と、閉眼肌/線・首/襟/髪の境界の改善。Cubism/VTS/Inoxの問題を混同しない。
+
 ## 2026-10-25 詳細頭・首・胴体のアプリ接続とローカル実証（最新）
 
 - オーナーが途中確認で止めず調査/実装/ローカル検証/修正を進め、ローカルcommitだけ保存することを明示。今回はpush/main統合/公開、外部画像API/有料API/契約、画像/モデルのGit追加、重み自動取得を禁止。

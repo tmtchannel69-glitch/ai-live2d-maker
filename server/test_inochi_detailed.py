@@ -65,12 +65,20 @@ def trial_fixture(tmp_path):
              'blink-quality/quality-report.json': b'{}', 'provenance.json': b'{}',
              'common/observed/head.png': b'part fixture', 'common/unlisted-source-copy.png': b'original upload bytes',
              'neutral-reconstruction.png': b'one-piece image',
-             'common/parts.json': json.dumps({'parts': [{'observed': {'rgba': 'observed/head.png'}, 'completion': {}}]}).encode(),
+             'common/parts.json': json.dumps({'source': {'width': 16, 'height': 16}, 'parts': [{'observed': {'rgba': 'observed/head.png'}, 'completion': {}}]}).encode(),
              'trial-report.json': json.dumps({'file_generation_passed': True, 'automatic_head_diagnostic_passed': True}).encode()}
     for name, data in files.items():
         p = trial / name
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(data)
+    blink = {'source_roi': [0, 0, 16, 16], 'frames': [{'opening': n / 9} for n in range(10)]}
+    poses = ['neutral', 'shift_left', 'shift_right', 'tilt_left', 'tilt_right',
+             'combined_left', 'combined_right', 'opposed_left', 'opposed_right', 'neutral_return']
+    head = {'poses': [{'pose': name, 'head_x': 0, 'head_tilt': 0} for name in poses]}
+    (trial / 'blink-quality/quality-report.json').write_text(json.dumps(blink))
+    (trial / 'head-quality/head-quality-report.json').write_text(json.dumps(head))
+    for name in [f'blink-quality/blink_{n:02d}.png' for n in range(10)] + [f'head-quality/after-{p}.png' for p in poses]:
+        Image.new('RGBA', (16, 16), (30, 40, 50, 128)).save(trial / name)
     (tmp_path / 'source-image').write_bytes(b'original upload bytes')
     return trial
 
@@ -87,6 +95,37 @@ def test_packaging_only_declared_generated_files_never_source_or_reconstruction(
         assert report['officialCreatorTested'] is False and report['appearanceQualityVerified'] is False
         assert report['scope'] == 'independent-head-motion-with-fixed-body'
         assert report['containsUploadedOriginalFile'] is False
+        assert report['version'] == 2 and report['containsPreparationReconstruction'] is False
+        assert report['containsModelRenderedComparisons'] is True
+        review = json.loads(z.read('review/review.json'))
+        assert [v['id'] for v in review['views']] == ['head', 'blink']
+        assert all(len(v['frames']) == 10 for v in review['views'])
+        assert review['official_creator_tested'] is False and review['appearance_quality_passed'] is False
+        assert z.read('model.inp') == (trial / 'head/model.inp').read_bytes()
+        assert len([n for n in z.namelist() if n.startswith('review/') and n.endswith('.png')]) == 20
+
+
+def test_review_rejects_missing_or_unexpected_pose_instead_of_substituting(tmp_path):
+    trial = trial_fixture(tmp_path)
+    report = trial / 'head-quality/head-quality-report.json'
+    data = json.loads(report.read_text())
+    data['poses'][0]['pose'] = '../../source-image'
+    report.write_text(json.dumps(data))
+    with pytest.raises(PreparationFailure, match='比較状態'):
+        detailed.package_trial(trial, tmp_path)
+    assert not (tmp_path / 'model.zip').exists()
+
+
+def test_review_thumbnail_preserves_alpha_and_never_copies_original(tmp_path):
+    from server.inochi_review import create_review
+    trial = trial_fixture(tmp_path)
+    for path in (trial / 'head-quality').glob('*.png'):
+        Image.new('RGBA', (960, 1280), (20, 40, 60, 128)).save(path)
+    graph = json.loads((trial / 'common/parts.json').read_text())
+    entries = create_review(trial, tmp_path, graph)
+    assert len(entries) == 21
+    with Image.open(entries['review/head-00.png']) as image:
+        assert image.size == (480, 640) and image.getextrema()[3] == (128, 128)
 
 
 @pytest.mark.parametrize('limit', ['bytes', 'files', 'symlink'])

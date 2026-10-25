@@ -1,0 +1,110 @@
+import {Unzip,UnzipInflate,unzipSync,strFromU8} from 'fflate';
+import {MAX_MODEL_ARCHIVE_BYTES as MAX_BYTES} from './inochi-model-download.js';
+
+const MIB=1024*1024,FORMAT='ai-live2d-maker-model-review';
+const fail=message=>{throw new Error(message||'モデルZIPの確認情報が正しくありません。');};
+const need=(value,message)=>{if(!value)fail(message);};
+const abort=signal=>{if(signal?.aborted)throw new DOMException('読み込みを中止しました。','AbortError');};
+const safe=name=>typeof name==='string'&&name.length<=180&&/^[a-zA-Z0-9_./-]+$/.test(name)&&!name.startsWith('/')&&name.split('/').every(p=>p&&p!=='.'&&p!=='..'&&p!=='__proto__');
+
+// Inspect central metadata before streaming. Small compressed chunks also bound
+// temporary inflate buffers when local/central sizes are forged or understated.
+// No ZIP entry is ever written to the filesystem or interpreted as HTML/code.
+export async function readReviewEntries(blob,{signal,maxBytes=MAX_BYTES}={}){
+  need(blob instanceof Blob&&blob.size>22&&blob.size<=maxBytes,'モデルZIPは80 MiB以下にしてください。');abort(signal);
+  const bytes=new Uint8Array(await blob.arrayBuffer());abort(signal);
+  const index=new Map();let declared=0;
+  try{
+    unzipSync(bytes,{filter:e=>{
+      need(safe(e.name)&&!index.has(e.name)&&index.size<256,'モデルZIPの項目数や保存先が正しくありません。');
+      need([0,8].includes(e.compression)&&Number.isSafeInteger(e.originalSize)&&e.originalSize>=0&&Number.isSafeInteger(e.size)&&e.size>=0&&e.size<=bytes.length);
+      declared+=e.originalSize;need(declared<=maxBytes,'展開後のモデルZIPが80 MiBを超えています。');index.set(e.name,e);return false;
+    }});
+    need(index.size>0);
+    const entries=new Map(),pending=new Map();let expanded=0,problem;
+    const zip=new Unzip(file=>{
+      const expected=index.get(file.name);
+      need(expected&&!pending.has(file.name)&&file.compression===expected.compression);
+      need(file.originalSize===undefined||file.originalSize===expected.originalSize);
+      const state={chunks:[],size:0,done:false};pending.set(file.name,state);
+      file.ondata=(error,chunk,final)=>{
+        if(problem)return;
+        if(error){problem=error;return;}
+        state.size+=chunk.length;expanded+=chunk.length;
+        if(state.size>expected.originalSize||expanded>maxBytes){problem=new Error('モデルZIPの展開サイズが申告値または上限を超えています。');return;}
+        state.chunks.push(chunk);
+        if(final){
+          if(state.size!==expected.originalSize){problem=new Error('モデルZIPの内容が途中で切れています。');return;}
+          const data=new Uint8Array(state.size);let offset=0;
+          for(const c of state.chunks){data.set(c,offset);offset+=c.length;}
+          state.chunks=[];state.done=true;entries.set(file.name,data);
+        }
+      };
+      file.start();
+    });
+    zip.register(UnzipInflate);
+    for(let start=0;start<bytes.length;start+=4096){
+      abort(signal);zip.push(bytes.subarray(start,start+4096),start+4096>=bytes.length);if(problem)throw problem;
+      if(start%(128*1024)===0)await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    need(entries.size===index.size&&[...pending.values()].every(s=>s.done),'モデルZIPの内容が不足しています。');
+    return entries;
+  }catch(error){abort(signal);throw new Error(`モデルZIPを読み込めません。${error.message}`);}
+}
+
+function json(entries,name){
+  const bytes=entries.get(name);need(bytes&&bytes.length<=MIB,`${name}が不足しているか大きすぎます。`);
+  try{return JSON.parse(strFromU8(bytes));}catch{fail(`${name}を読み込めません。`);}
+}
+function png(entries,name,size){
+  need(safe(name)&&name.endsWith('.png'));const b=entries.get(name);need(b?.length>=33&&b.length<=8*MIB,'確認用PNGが不足しているか大きすぎます。');
+  const v=new DataView(b.buffer,b.byteOffset,b.byteLength);
+  need([137,80,78,71,13,10,26,10].every((n,i)=>b[i]===n)&&v.getUint32(8)===13&&strFromU8(b.subarray(12,16))==='IHDR');
+  need(v.getUint32(16)===size[0]&&v.getUint32(20)===size[1]&&b[24]===8&&[2,6].includes(b[25]),'確認用PNGと配置情報のサイズが一致しません。');
+}
+const sizeOK=(size,maxEdge,maxPixels)=>Array.isArray(size)&&size.length===2&&size.every(v=>Number.isInteger(v)&&v>0&&v<=maxEdge)&&size[0]*size[1]<=maxPixels;
+const short=value=>typeof value==='string'&&value.length>0&&value.length<=120;
+const nativeSignature=b=>b?.length>=8&&[84,82,78,83,82,84,83,0].every((n,i)=>b[i]===n);
+
+export async function readModelReview(blob,{signal,expectedMode,requirePipeline=false}={}){
+  const entries=await readReviewEntries(blob,{signal});abort(signal);
+  const pipeline=entries.has('generation-report.json')?json(entries,'generation-report.json'):null;
+  const known=pipeline?.format==='ai-live2d-maker-detailed-head-app-pipeline'?'detailed-head':pipeline?.format==='ai-live2d-maker-inochi2d-image-pipeline'?'five':null;
+  if(known)need([1,2].includes(pipeline.version),'このモデルZIPの版には対応していません。');
+  if(requirePipeline)need(known&&nativeSignature(entries.get('model.inp')),'このアプリで生成した画像変換用モデルZIPを選んでください。作業保存ZIPや33パーツ生成ZIPとは別です。');
+  if(known&&expectedMode)need(known===expectedMode,'生成結果のモードが要求と一致しません。');
+  const mode=known||expectedMode;
+  need(mode==='five'||mode==='detailed-head');
+  if(!entries.has('review/review.json')){
+    need(!pipeline?.reviewManifest,'比較画像の確認情報が不足しています。');
+    return {available:false,mode,entries,pipeline};
+  }
+  const review=json(entries,'review/review.json');
+  need(known==='detailed-head'&&review.format===FORMAT&&review.version===1&&review.mode===mode&&review.renderer==='independent-cpu-serialized-model');
+  need(nativeSignature(entries.get('model.inp'))&&sizeOK(review.source_size,4096,16_000_000));
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',entries.get('model.inp')));
+  need([...digest].map(n=>n.toString(16).padStart(2,'0')).join('')===review.model_sha256,'比較画像の対象モデルが一致しません。');abort(signal);
+  need(Array.isArray(review.views)&&review.views.length===2);
+  const names=new Set();
+  for(const view of review.views){
+    need(['head','blink'].includes(view.id)&&!names.has(view.id)&&sizeOK(view.size,640,640*640));names.add(view.id);
+    const roi=view.source_roi;need(Array.isArray(roi)&&roi.length===4&&roi.every(Number.isInteger)&&roi[0]>=0&&roi[1]>=0&&roi[2]>roi[0]&&roi[3]>roi[1]&&roi[2]<=review.source_size[0]&&roi[3]<=review.source_size[1]);
+    need(Array.isArray(view.frames)&&view.frames.length===10);
+    const framePaths=new Set();
+    for(const frame of view.frames){
+      need(typeof frame.file==='string'&&frame.file.startsWith(`review/${view.id}-`)&&!framePaths.has(frame.file)&&short(frame.state));framePaths.add(frame.file);
+      const keys=view.id==='blink'?['EyeOpenL','EyeOpenR']:['HeadX','HeadTilt'];
+      need(frame.parameters&&Object.keys(frame.parameters).length===2&&keys.every(k=>Number.isFinite(frame.parameters[k])&&frame.parameters[k]>= (view.id==='blink'?0:-1)&&frame.parameters[k]<=1));
+      png(entries,frame.file,view.size);
+    }
+  }
+  const graph=json(entries,'common/parts.json');
+  need(graph.source?.width===review.source_size[0]&&graph.source?.height===review.source_size[1]&&Array.isArray(graph.parts)&&graph.parts.length>0&&graph.parts.length<=100);
+  const ids=new Set();
+  for(const part of graph.parts){
+    need(short(part.id)&&!ids.has(part.id)&&short(part.role)&&short(part.parent)&&[null,'l','r'].includes(part.side)&&Number.isFinite(part.order));ids.add(part.id);
+    const box=part.source_box_xywh;need(Array.isArray(box)&&box.length===4&&box.every(Number.isInteger)&&box[0]>=0&&box[1]>=0&&sizeOK(box.slice(2),4096,16_000_000)&&box[0]+box[2]<=review.source_size[0]&&box[1]+box[3]<=review.source_size[1]);
+    for(const plane of ['observed','completion'])if(part[plane]?.rgba){need(safe(part[plane].rgba));png(entries,'common/'+part[plane].rgba,box.slice(2));}
+  }
+  return {available:true,mode,entries,pipeline,review,parts:graph.parts};
+}

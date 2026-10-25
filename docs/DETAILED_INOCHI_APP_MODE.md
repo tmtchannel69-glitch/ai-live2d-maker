@@ -14,7 +14,7 @@
 2. 「画像1枚から動くモデルを作る」のモードを「頭・首・胴体を分ける（実験）」へ変更する。
 3. 「ローカル処理の準備状況を確認」で、必要なプログラム/重みの配置を確認する。この操作は画像なしでも使え、画像は送らない。
 4. 生成ボタンを押すと、準備をもう一度確認した後にだけ、このアプリのローカルAPIへ元画像を送って一時処理する。
-5. 完了後、`inochi2d-head-neck-body.zip`を保存する。ZIPの`model.inp`/`model.inx`をInochi Creator0.8.6で開く。
+5. 完了後は画面で頭の動き/目元の開閉の比較と分離/補完パーツを確認し、`inochi2d-head-neck-body.zip`を保存する。ZIPの`model.inp`/`model.inx`をInochi Creator0.8.6で開く。次回は保存したモデルZIPを端末内で開き直せる。[結果確認の使い方・制限](INOCHI_MODEL_REVIEW.md)。
 
 確認できたのは1枚の提供画像による**頭部中心の試作**。左右のまばたき、小さなHeadXの平面移動、HeadTiltのZ傾きを使う。胴体は固定。全身のリギング、顔の立体的な角度X/Y、口の動き、髪の物理や前後関係の正解、見えない形の正確な復元は完成していない。髪候補は頭に追従する範囲で、独立して自然に揺れる毛束の完成とはしない。
 
@@ -72,7 +72,7 @@ PowerShellの2つ目は`$env:AI_LIVE2D_API_PORT='8010'; npm run dev -- --host 12
 | 生成モデルZIP | 圧縮後/展開後とも80MiB、最大256項目 |
 | ブラウザ受信 | 最大80MiB。Content-Lengthなし/過少申告でもストリームを途中で停止 |
 
-ZIPは最終graphが参照する生成PNG/マスクだけを採用する。元JPEG、`source-image`、一枚の再構成画像、未参照ファイル、CLI比較用PNGは含めない。モデル/共通parts/配置/補完根拠/診断JSON/provenance/説明書を含む。従来の**作業保存ZIP**は元画像を含む既存の再開形式で、ここでいう生成モデルZIPとは用途が異なる。
+ZIPは最終graphが参照する生成PNG/マスクを採用する。元JPEG、`source-image`、準備時の一枚再構成、未参照ファイル、元サイズのCLI比較用PNGは含めない。モデル/共通parts/配置/補完根拠/診断JSON/provenance/説明書に加え、現在は`review/`へ実モデルから描いた最大640pxの比較画像20枚と確認情報を含む。生成レポート版2で元アップロード/準備再構成の除外とモデル描画画像の収録を別に記録する。従来の**作業保存ZIP**は元画像を含む既存の再開形式で、ここでいう生成モデルZIPとは用途が異なる。
 
 ファイル生成のレポートは`officialCreatorTested:false`/`appearanceQualityVerified:false`を維持する。特定のモデルSHAを公式Creatorで確認した結果は、別の[実画像検証記録](DETAILED_INOCHI_APP_MODE_VALIDATION.md)に保存し、他画像へ合格を流用しない。
 

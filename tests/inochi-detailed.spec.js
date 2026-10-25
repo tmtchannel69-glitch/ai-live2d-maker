@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {zipSync,strToU8} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-const fixture=Buffer.from(zipSync({'model.inp':strToU8('transport fixture, not a runtime model'),'generation-report.json':strToU8('{"officialCreatorTested":false}')},{level:0}));
+const fixture=Buffer.from(zipSync({'model.inp':strToU8('TRNSRTS\0transport fixture, not a runtime model'),'generation-report.json':strToU8(JSON.stringify({format:'ai-live2d-maker-detailed-head-app-pipeline',version:1,mode:'detailed-head',officialCreatorTested:false}))},{level:0}));
 const statusPattern=/\/api\/inochi2d\/status(?:\?.*)?$/;
 const generatePattern=/\/api\/inochi2d\/generate(?:\?.*)?$/;
 async function selectImage(page){

@@ -1,0 +1,103 @@
+{
+  "format": "ai-live2d-maker-model-review-validation",
+  "version": 1,
+  "date": "2026-10-25",
+  "branch": "feature/external-part-side-by-side-review",
+  "resume_commit": "27a9404",
+  "save_policy": "Local commit only; no push, main merge, publication or external image API.",
+  "build_passed": true,
+  "tests": {
+    "node_passed": 176,
+    "python_passed": 99,
+    "browser_passed": 173,
+    "python_warning": "Existing Starlette/httpx deprecation warning."
+  },
+  "live_browser_api": {
+    "format": "ai-live2d-detailed-head-live-app-check",
+    "version": 2,
+    "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "local_url": "http://127.0.0.1:5180",
+    "actual_image_posts": 2,
+    "cancelled_posts": 1,
+    "completed_posts": 1,
+    "readiness_sent_images": false,
+    "backend_busy_observed_before_cancel": true,
+    "cancel_released_backend_lock": true,
+    "existing_work_entries_unchanged": true,
+    "archive_entries": 140,
+    "archive_bytes": 10431731,
+    "archive_sha256": "955308196b6418f3b04646e3aeeb7692001485c4de56f8c95d00e238863eba1e",
+    "model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "source_file_in_archive": false,
+    "external_hosts_requested": 0,
+    "completed_generation_seconds": 109.147818362,
+    "total_review_seconds": 114.63170497899999,
+    "model_review_frames_checked": 20,
+    "model_review_frame_bytes_match_archive": true,
+    "model_review_parts": 38,
+    "saved_zip_reopened_without_source": true,
+    "reopen_api_calls": 0,
+    "file_generation_passed": true,
+    "official_creator_tested": false,
+    "appearance_quality_passed": false
+  },
+  "archive": {
+    "crc_passed": true,
+    "compressed_bytes": 10431731,
+    "expanded_bytes": 21277523,
+    "entries": 140,
+    "inp_inx_identical": true,
+    "original_file_included": false,
+    "preparation_reconstruction_included": false,
+    "model_rendered_comparisons_included": true,
+    "generation_report_version": 2,
+    "review_version": 1,
+    "views": [
+      {
+        "id": "head",
+        "size": [
+          480,
+          640
+        ],
+        "frames": 10
+      },
+      {
+        "id": "blink",
+        "size": [
+          376,
+          130
+        ],
+        "frames": 10
+      }
+    ]
+  },
+  "stable_generators_changed": false,
+  "model_matches_previous_officially_verified_bytes": true,
+  "official_creator": {
+    "rerun_this_iteration": false,
+    "version": "0.8.6",
+    "matching_model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "prior_evidence": "docs/DETAILED_INOCHI_APP_MODE_VALIDATION.md",
+    "prior_checks": "26 poses, actual save, new process 26 poses; matching viewports and stored textures/structure.",
+    "generated_official_flags_left_false": true
+  },
+  "repeatability": {
+    "real_image_api_generations_compared": 2,
+    "common_pngs_byte_identical": 106,
+    "review_pngs_byte_identical": 20,
+    "model_bytes_identical": true
+  },
+  "legacy_five_archive_reopened_without_invented_preview": true,
+  "appearance_quality_passed": false,
+  "not_verified": [
+    "Other input images / general success rate",
+    "Naturalness, closed-eye skin/line and hair/collar seams",
+    "iPhone/Windows/Safari hardware",
+    "Full-body rig, 3D face turns, mouth, independent hair physics",
+    "Inox2D browser defects or Cubism/MOC3/VTube Studio compatibility"
+  ],
+  "old_private_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+  "private_artifacts": "/tmp/model-review-live-final",
+  "private_paths_are_download_urls": false,
+  "images_or_models_in_git": false
+}

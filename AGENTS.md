@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 詳細モデルの画面確認と端末内再読込（2026-10-25、最新）
+- 27a9404/未変更から同じfeature/external-part-side-by-side-reviewで継続。オーナーはある程度使えるまでの調査/実装/ローカル検証を承認。前段の禁止（push/公開/main統合/外部画像API/課金/重み自動取得/画像・モデルのGit追加）は継続し、保存はローカルcommitだけ。
+- server/inochi_review.pyは既存head CLIのCPU診断PNG20枚を固定リストで読み、RGBAのまま最大640pxへ縮小してreview/へ。旧five/rig CLI/最小writer/メッシュ/モデルバイトを変更しない。共通38項目とnativeの描画ノード数を混同しない。
+- generation-reportは版2。元アップロード/準備再構成を含まないがモデルから描いた全体比較画像は含むため、containsPreparationReconstruction:falseとcontainsModelRenderedComparisons:trueで区別。旧containsOnePieceReconstructionの曖昧な名称を新規出力に使わない。旧版1も読める。
+- src/inochi-model-review.jsは圧縮/展開80MiB/256項目、事前索引と小さいchunkの実展開量、パス/重複/中止/モード/モデル指紋/PNG寸法/元座標を検査。結果が検査を通った後でだけ既存結果を置換。ローカルZIP読込は元画像/APIなしで使い、失敗/中止/遅延完了で前のモデルと作業を壊さない。作業ZIP/33パーツZIPとは別入口。
+- 画面は離散的な頭10姿勢と両目同時の開閉10状態、分離/補完を表示する。公式Creatorの画面、Inox2Dの動作、連続リギング再生、左右独立操作、見た目の品質合格とは呼ばない。検査値はROI内の候補だけ。file/official/appearanceを別表示し、特定モデルの過去Creator検証を新出力全般へ流用しない。
+- 画像選択欄の入口は画面移動だけでPOSTしない。連続表示は明示操作後の画像切替で、非表示/新処理/元画像変更時に停止し、使わないBlob URLを解放する。48px操作/16px入力/320px幅を維持。
+- 操作・再現・制限はdocs/INOCHI_MODEL_REVIEW.md、実測は同VALIDATION.md/json。verify-app.mjsが実画像生成/中止/再試行、20表示のZIPバイト一致、元画像なし再読込/API0を検査する。実物は/tmp/model-review-*だけで、古い26MB ZIPは変更しない。
+
 ## 詳細な頭・首・胴体のアプリ接続（2026-10-25、最新）
 - オーナーが途中の確認で止めずローカルの調査/実装/検証/修正を進めることを承認。今回の保存は作業ブランチへのローカルcommitだけ。push/main統合/公開、画像・モデルのGit追加、外部画像API/有料API/新有料契約、モデル重みの自動取得は行わない。前段のpush指示より今回の禁止を優先する。
 - 指定0966e2e/DETAILED_INOCHI_APP_MODE.mdはこの環境に未存在。対象branchを読み取り取得しても44b74d9までで、0966の差分確認ができたと報告しない。未変更を確認して44b74d9からfeature/external-part-side-by-side-reviewをローカル復元し、不足した詳細接続を再構成。別環境の未公開コミットを置き換えたものではない。
