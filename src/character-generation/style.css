@@ -37,3 +37,8 @@
 #cg-single-canvas{display:block;width:100%;height:auto;aspect-ratio:3/4}
 #cg-single-status,#cg-single-summary{overflow-wrap:anywhere;line-height:1.7}
 #cg-single-download{width:100%;min-height:48px}
+/* Single-image foreground-masking sandbox, clearly separated from rig generation. */
+#cg-single-make-mask{display:block;width:100%;margin:14px 0;min-height:48px}
+#cg-single-mask-output{margin:18px 0;padding:14px;border:1px solid #5b506e;border-radius:12px}
+#cg-single-mask-output h3{margin-top:0}
+#cg-single-mask-summary{overflow-wrap:anywhere;line-height:1.7}

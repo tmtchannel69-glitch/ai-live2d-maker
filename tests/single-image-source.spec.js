@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {encode} from 'fast-png';
+import {encode,decode} from 'fast-png';
 import {unzipSync,strFromU8} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
 
@@ -71,4 +71,68 @@ test('no template character needs to be generated before one portrait audit',asy
   await expect(page.locator('#cg-single-status')).toContainText('検査が完了');
   await expect(page.locator('#cg-output')).toBeHidden();
   await expect(page.locator('#cg-single-summary')).toContainText('モデル生成なし');
+});
+function coloredPortrait({transparent=false,uniform=false,halfTransparent=false}={}){
+  const w=200,h=300,data=new Uint8Array(w*h*4);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const pos=(y*w+x)*4;
+    const inside=!uniform&&x>=50&&x<150&&y>=60&&y<240;
+    const color=inside?[70,65,175,halfTransparent?128:255]:[255,255,255,transparent?0:255];
+    data.set(color,pos);
+  }
+  return Buffer.from(encode({width:w,height:h,data,channels:4,depth:8}));
+}
+test('single flat-background portrait yields a mask and real RGBA cutout, not 33 layers',async({page})=>{
+  await setup(page);
+  await page.locator('#cg-single-file').setInputFiles({
+    name:'single-flat.png',mimeType:'image/png',buffer:coloredPortrait()
+  });
+  await expect(page.locator('#cg-single-status')).toContainText('検査が完了');
+  await page.locator('#cg-single-make-mask').click();
+  await expect(page.locator('#cg-single-mask-output')).toBeVisible({timeout:30000});
+  await expect(page.locator('#cg-single-mask-summary')).toContainText('分離済みの人体パーツ 0枚');
+  const archive=unzipSync(await download(page,'#cg-single-download'));
+  expect(Object.keys(archive).sort()).toEqual([
+    'README.txt','foreground_cutout.png','foreground_mask.png','normalized_reference.png','source_audit.json'
+  ].sort());
+  const report=JSON.parse(strFromU8(archive['source_audit.json']));
+  expect(report.foreground_mask_result).toMatchObject({
+    method:'flat-background-flood',foreground_mask_generated:true,
+    independent_parts_generated:0,anatomical_segmentation_performed:false,
+    hidden_surfaces_recovered:0,rigging_performed:false,ai_generation_performed:false
+  });
+  const cutout=decode(archive['foreground_cutout.png']);
+  const mask=decode(archive['foreground_mask.png']);
+  expect([cutout.width,cutout.height,cutout.channels]).toEqual([768,1024,4]);
+  expect([mask.width,mask.height,mask.channels]).toEqual([768,1024,4]);
+  expect(cutout.data[(100*768+100)*4+3]).toBe(0);
+  expect(cutout.data[(500*768+380)*4+3]).toBe(255);
+  expect(mask.data[(100*768+100)*4+3]).toBe(0);
+  expect(mask.data[(500*768+380)*4+3]).toBe(255);
+});
+test('transparent source uses alpha and rejects ambiguous uniform background without fake output',async({page})=>{
+  await setup(page);
+  await page.locator('#cg-single-file').setInputFiles({
+    name:'transparent.png',mimeType:'image/png',buffer:coloredPortrait({transparent:true,halfTransparent:true})
+  });
+  await expect(page.locator('#cg-single-status')).toContainText('検査が完了');
+  await page.locator('#cg-single-make-mask').click();
+  await expect(page.locator('#cg-single-mask-output')).toBeVisible({timeout:30000});
+  const archive=unzipSync(await download(page,'#cg-single-download'));
+  const report=JSON.parse(strFromU8(archive['source_audit.json']));
+  expect(report.foreground_mask_result.method).toBe('existing-alpha');
+  const reference=decode(archive['normalized_reference.png']);
+  const cutout=decode(archive['foreground_cutout.png']);
+  const center=(500*768+380)*4+3;
+  expect(reference.data[center]).toBe(128);
+  expect(cutout.data[center]).toBe(reference.data[center]);
+  await page.locator('#cg-single-file').setInputFiles({
+    name:'uniform.png',mimeType:'image/png',buffer:coloredPortrait({uniform:true})
+  });
+  await expect(page.locator('#cg-single-status')).toContainText('検査が完了');
+  await page.locator('#cg-single-make-mask').click();
+  await expect(page.locator('#cg-single-status')).toContainText('安全に前景を切り出せませんでした');
+  await expect(page.locator('#cg-single-mask-output')).toBeHidden();
+  const clean=unzipSync(await download(page,'#cg-single-download'));
+  expect(Object.keys(clean).sort()).toEqual(['README.txt','normalized_reference.png','source_audit.json']);
 });
