@@ -65,6 +65,7 @@ function png(entries,name,size){
 const sizeOK=(size,maxEdge,maxPixels)=>Array.isArray(size)&&size.length===2&&size.every(v=>Number.isInteger(v)&&v>0&&v<=maxEdge)&&size[0]*size[1]<=maxPixels;
 const short=value=>typeof value==='string'&&value.length>0&&value.length<=120;
 const nativeSignature=b=>b?.length>=8&&[84,82,78,83,82,84,83,0].every((n,i)=>b[i]===n);
+const sha=async bytes=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
 
 export async function readModelReview(blob,{signal,expectedMode,requirePipeline=false}={}){
   const entries=await readReviewEntries(blob,{signal});abort(signal);
@@ -80,23 +81,28 @@ export async function readModelReview(blob,{signal,expectedMode,requirePipeline=
     return {available:false,mode,entries,pipeline};
   }
   const review=json(entries,'review/review.json');
-  need(known==='detailed-head'&&review.format===FORMAT&&review.version===1&&review.mode===mode&&review.renderer==='independent-cpu-serialized-model');
+  need(known==='detailed-head'&&review.format===FORMAT&&[1,2].includes(review.version)&&review.mode===mode&&review.renderer==='independent-cpu-serialized-model');
   need(nativeSignature(entries.get('model.inp'))&&sizeOK(review.source_size,4096,16_000_000));
-  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',entries.get('model.inp')));
-  need([...digest].map(n=>n.toString(16).padStart(2,'0')).join('')===review.model_sha256,'比較画像の対象モデルが一致しません。');abort(signal);
+  need(await sha(entries.get('model.inp'))===review.model_sha256,'比較画像の対象モデルが一致しません。');abort(signal);
   need(Array.isArray(review.views)&&review.views.length===2);
   const names=new Set();
   for(const view of review.views){
     need(['head','blink'].includes(view.id)&&!names.has(view.id)&&sizeOK(view.size,640,640*640));names.add(view.id);
     const roi=view.source_roi;need(Array.isArray(roi)&&roi.length===4&&roi.every(Number.isInteger)&&roi[0]>=0&&roi[1]>=0&&roi[2]>roi[0]&&roi[3]>roi[1]&&roi[2]<=review.source_size[0]&&roi[3]<=review.source_size[1]);
     need(Array.isArray(view.frames)&&view.frames.length===10);
-    const framePaths=new Set();
+    const framePaths=new Set(),beforePaths=new Set();
     for(const frame of view.frames){
       need(typeof frame.file==='string'&&frame.file.startsWith(`review/${view.id}-`)&&!framePaths.has(frame.file)&&short(frame.state));framePaths.add(frame.file);
       const keys=view.id==='blink'?['EyeOpenL','EyeOpenR']:['HeadX','HeadTilt'];
       need(frame.parameters&&Object.keys(frame.parameters).length===2&&keys.every(k=>Number.isFinite(frame.parameters[k])&&frame.parameters[k]>= (view.id==='blink'?0:-1)&&frame.parameters[k]<=1));
       png(entries,frame.file,view.size);
+      if(frame.before_file!==undefined){
+        need(review.version===2&&view.id==='blink'&&typeof frame.before_file==='string'&&frame.before_file.startsWith('review/blink-before-')&&!beforePaths.has(frame.before_file));beforePaths.add(frame.before_file);
+        need(frame.before_diagnostics?.opening===frame.parameters.EyeOpenL,'改善前後の目の開度が一致しません。');
+        png(entries,frame.before_file,view.size);
+      }
     }
+    need(beforePaths.size===0||beforePaths.size===10,'改善前後の比較画像が不足しています。');
   }
   const graph=json(entries,'common/parts.json');
   need(graph.source?.width===review.source_size[0]&&graph.source?.height===review.source_size[1]&&Array.isArray(graph.parts)&&graph.parts.length>0&&graph.parts.length<=100);
@@ -106,5 +112,23 @@ export async function readModelReview(blob,{signal,expectedMode,requirePipeline=
     const box=part.source_box_xywh;need(Array.isArray(box)&&box.length===4&&box.every(Number.isInteger)&&box[0]>=0&&box[1]>=0&&sizeOK(box.slice(2),4096,16_000_000)&&box[0]+box[2]<=review.source_size[0]&&box[1]+box[3]<=review.source_size[1]);
     for(const plane of ['observed','completion'])if(part[plane]?.rgba){need(safe(part[plane].rgba));png(entries,'common/'+part[plane].rgba,box.slice(2));}
   }
-  return {available:true,mode,entries,pipeline,review,parts:graph.parts};
+  let skinBoundary=null;
+  const compared=review.views.find(v=>v.id==='blink').frames.every(f=>f.before_file);
+  if(review.skin_boundary_correction){
+    need(review.version===2&&compared&&review.skin_boundary_correction.report_file==='skin-boundary-report.json');
+    skinBoundary=json(entries,'skin-boundary-report.json');
+    need(skinBoundary.format==='ai-live2d-maker-skin-boundary-correction'&&skinBoundary.version===1&&skinBoundary.profile==='screened-skin-boundary-v1');
+    need(sizeOK(skinBoundary.source_size,4096,16_000_000)&&skinBoundary.source_size.every((v,i)=>v===review.source_size[i]));
+    need(/^[a-f0-9]{64}$/.test(skinBoundary.before_model_sha256)&&skinBoundary.before_model_sha256===review.skin_boundary_correction.before_model_sha256&&skinBoundary.after_model_sha256===review.model_sha256,'肌の比較情報とモデルが一致しません。');
+    const underpaint=graph.parts.find(p=>p.id==='eye_skin_underpaint');need(underpaint?.completion?.rgba);
+    png(entries,'skin-boundary-before.png',review.source_size);
+    need(await sha(entries.get('skin-boundary-before.png'))===skinBoundary.before_png_sha256&&await sha(entries.get('common/'+underpaint.completion.rgba))===skinBoundary.after_png_sha256,'改善前後の肌画像が確認情報と一致しません。');abort(signal);
+    for(const side of ['l','r']){
+      const r=skinBoundary.eyes?.[side];need(r&&typeof r.applied==='boolean'&&short(r.status));
+      if(r.applied)for(const phase of ['before','after']){
+        const m=r[phase];need(m&&Number.isSafeInteger(m.pairs)&&m.pairs>=12&&Number.isFinite(m.mean_absolute_rgb_difference)&&m.mean_absolute_rgb_difference>=0&&m.mean_absolute_rgb_difference<=255);
+      }
+    }
+  }else need(!compared,'改善前後の確認情報が不足しています。');
+  return {available:true,mode,entries,pipeline,review,parts:graph.parts,skinBoundary};
 }

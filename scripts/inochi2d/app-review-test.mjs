@@ -64,3 +64,21 @@ test('cancellation interrupts a local archive read',async()=>{
   const control=new AbortController();control.abort();
   await assert.rejects(readModelReview(blob(reviewFixture().zip()),{signal:control.signal}),{name:'AbortError'});
 });
+test('version 2 comparison reads ten before images and binds the skin report to the current model/assets',async()=>{
+  const f=reviewFixture({withBoundary:true}),r=await read(f);
+  assert.equal(r.review.version,2);assert.equal(r.review.views.find(v=>v.id==='blink').frames.filter(f=>f.before_file).length,10);
+  assert.equal(r.skinBoundary.eyes.l.after.mean_absolute_rgb_difference,2.2);assert.equal(r.parts.length,2);
+});
+test('incomplete or mismatched before images, values, fingerprints and metrics are refused atomically',async()=>{
+  for(const problem of ['missing','opening','skin-hash','model-hash','metric','missing-report']){
+    const f=reviewFixture({withBoundary:true});
+    if(problem==='missing')delete f.files['review/blink-before-00.png'];
+    if(problem==='opening')f.review.views[1].frames[0].before_diagnostics.opening=.5;
+    if(problem==='skin-hash')f.boundary.before_png_sha256='0'.repeat(64);
+    if(problem==='model-hash')f.boundary.after_model_sha256='0'.repeat(64);
+    if(problem==='metric')f.boundary.eyes.l.after.mean_absolute_rgb_difference=-1;
+    f.files['review/review.json']=strToU8(JSON.stringify(f.review));f.files['skin-boundary-report.json']=strToU8(JSON.stringify(f.boundary));
+    if(problem==='missing-report')delete f.files['skin-boundary-report.json'];
+    await assert.rejects(read(f),undefined,problem);
+  }
+});

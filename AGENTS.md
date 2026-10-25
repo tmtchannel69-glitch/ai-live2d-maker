@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 閉眼肌の境界色の調整（2026-10-25、最新）
+- 721d9f1/未変更から同じ開発branchで継続。オーナーの「続けて」に従い、元の5役割/通常の詳細生成を保持して品質改善を進める。ローカルcommitのみ、push/公開/main統合/外部画像API/課金/重み自動取得/画像・モデルのGit追加は禁止のまま。
+- server/skin_boundary.pyは既存eye_skin_underpaintのRGBへのscreened harmonic補正だけ。観測PNG/所有/mask/alpha/座標/mesh/動作は変えない。screen=.04/各RGB±12/1眼131072画素/CG250回、支持12組未満/上限/改善なしは明示skipで元の実補完を保持。非収束は停止。skipを補正成功やダミー成功にしない。
+- rig.pyに任意の--skin-boundary-correctionを追加。省略すれば旧生成を維持し、アプリの詳細workerだけがflagを付ける。旧five、準備器、parts/head/blinkのwriterは変更しない。skin-boundary-before.mjsは既存head loaderのbuilder再利用で旧肌PNGだけを戻し、同形の前モデルを出す。
+- 新reportは肌PNG/モデルSHA、本人左右の有効境界/色差/適用理由、従来閾値の肌ぼけ候補。review版2は同じ開度のbefore_file/before_diagnosticsを追加し、全20状態＋補正前目元10枚を表示。元の推定肌PNGもZIPへ入るが原アップロードは除外。旧review版1/上限/中止/既存作業保持を維持する。
+- 色差約20%減は提供1枚の有効な境界だけの指標。肌ぼけ/形/毛先/髪・襟の境界/他画像への一般化の合格ではない。全体の再補間、まぶたノード追加、目元から髪への所有変更は根拠不足で不採用。sourceの観測や判定閾値を変えて改善を作らない。
+- 新nativeのSHAは旧版と変わるため公式Creatorの新モデル検証を別に行い、file/official/appearanceを区別する。格納27texture slotsと28Part（描画用）の違いに注意。生成器の重複除去前report countとcontainer実数を混同しない。Cubism/VTS/Inoxの問題は別のまま。
+- 設計/旧新版再生成はdocs/SKIN_BOUNDARY_CORRECTION.md、実測は同VALIDATION.md/json。compare-skin-boundary.pyは実containerの同形/alpha/10開度を比較し、verify-app.mjsは実API/中止/再試行/30表示/ZIP/APIなし再読込を確認。実物は/tmp/skin-boundary-*だけに保存し、過去の26MB ZIP/前回のモデルZIPを変更しない。
+
 ## 詳細モデルの画面確認と端末内再読込（2026-10-25、最新）
 - 27a9404/未変更から同じfeature/external-part-side-by-side-reviewで継続。オーナーはある程度使えるまでの調査/実装/ローカル検証を承認。前段の禁止（push/公開/main統合/外部画像API/課金/重み自動取得/画像・モデルのGit追加）は継続し、保存はローカルcommitだけ。
 - server/inochi_review.pyは既存head CLIのCPU診断PNG20枚を固定リストで読み、RGBAのまま最大640pxへ縮小してreview/へ。旧five/rig CLI/最小writer/メッシュ/モデルバイトを変更しない。共通38項目とnativeの描画ノード数を混同しない。

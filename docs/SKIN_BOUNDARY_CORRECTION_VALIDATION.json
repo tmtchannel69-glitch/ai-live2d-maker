@@ -1,0 +1,238 @@
+{
+  "format": "ai-live2d-maker-skin-boundary-validation",
+  "version": 1,
+  "date": "2026-10-25",
+  "branch": "feature/external-part-side-by-side-review",
+  "resume_commit": "721d9f1",
+  "save_policy": "Local commit only; no push/main merge/publication/external image API/paid services/model downloads.",
+  "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+  "source_size": [
+    960,
+    1280
+  ],
+  "tests": {
+    "node_passed": 178,
+    "python_passed": 109,
+    "browser_passed": 174,
+    "build_passed": true,
+    "python_warning": "Existing Starlette/httpx deprecation warning."
+  },
+  "skin_boundary": {
+    "format": "ai-live2d-maker-skin-boundary-correction",
+    "version": 1,
+    "profile": "screened-skin-boundary-v1",
+    "source_size": [
+      960,
+      1280
+    ],
+    "eyes": {
+      "l": {
+        "profile": "screened-skin-boundary-v1",
+        "target_pixels": 6533,
+        "applied": true,
+        "observed_rgba_changed": false,
+        "completion_alpha_changed": false,
+        "hidden_detail_recovered": false,
+        "appearance_quality_passed": false,
+        "status": "measured-boundary-improvement",
+        "source_roi": [
+          440,
+          311,
+          740,
+          580
+        ],
+        "before": {
+          "pairs": 608,
+          "mean_absolute_rgb_difference": 2.843201754385965,
+          "p95_rgb_difference": 6.666666666666667
+        },
+        "after": {
+          "pairs": 608,
+          "mean_absolute_rgb_difference": 2.2746710526315788,
+          "p95_rgb_difference": 5.666666666666667
+        },
+        "changed_pixels": 1487,
+        "screening": 0.04,
+        "maximum_allowed_rgb_offset": 12.0,
+        "maximum_solver_offset": 11.656437566922003,
+        "clamped_channels": 0,
+        "solver_converged": true,
+        "texture_note": "Smooth offset only; no added noise or new texture."
+      },
+      "r": {
+        "profile": "screened-skin-boundary-v1",
+        "target_pixels": 6741,
+        "applied": true,
+        "observed_rgba_changed": false,
+        "completion_alpha_changed": false,
+        "hidden_detail_recovered": false,
+        "appearance_quality_passed": false,
+        "status": "measured-boundary-improvement",
+        "source_roi": [
+          212,
+          317,
+          512,
+          585
+        ],
+        "before": {
+          "pairs": 688,
+          "mean_absolute_rgb_difference": 2.5959302325581395,
+          "p95_rgb_difference": 6.666666666666667
+        },
+        "after": {
+          "pairs": 688,
+          "mean_absolute_rgb_difference": 2.0847868217054266,
+          "p95_rgb_difference": 5.666666666666667
+        },
+        "changed_pixels": 1687,
+        "screening": 0.04,
+        "maximum_allowed_rgb_offset": 12.0,
+        "maximum_solver_offset": 9.016081524612195,
+        "clamped_channels": 0,
+        "solver_converged": true,
+        "texture_note": "Smooth offset only; no added noise or new texture."
+      }
+    },
+    "before_png_sha256": "0b0b544f6cd416120aebc3458504b3e04d3f7dc111b0128a906abeebe163fb93",
+    "after_png_sha256": "681eb84a10d8417484d30426301166ea2b07099aaa1ab5b4e8d323196da7078b",
+    "skin_detail": {
+      "before": {
+        "status": "measured",
+        "generated_laplacian_variance": 4.771784344895622,
+        "reference_laplacian_variance": 141.73137144809684,
+        "detail_ratio": 0.03366780618956395,
+        "possible_blur": true,
+        "hidden_ground_truth_available": false,
+        "appearance_quality_passed": false
+      },
+      "after": {
+        "status": "measured",
+        "generated_laplacian_variance": 4.831867844941499,
+        "reference_laplacian_variance": 141.73137144809684,
+        "detail_ratio": 0.034091731389976475,
+        "possible_blur": true,
+        "hidden_ground_truth_available": false,
+        "appearance_quality_passed": false
+      }
+    },
+    "observed_rgba_changed": false,
+    "completion_mask_or_alpha_changed": false,
+    "manual_prompts": false,
+    "external_image_requests": false,
+    "official_creator_tested": false,
+    "appearance_quality_passed": false,
+    "before_model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "after_model_sha256": "fe06546691d62e9ddc9b70855dd4088b42e69936ccf071e146f4efe6185eaf02"
+  },
+  "full_neutral_changed_pixels": 0,
+  "changed_common_pngs": [
+    "completion/eye_skin_underpaint.png"
+  ],
+  "native_comparison": {
+    "model_structure_mesh_bindings_identical": true,
+    "stored_alpha_identical": true,
+    "changed_texture_slots": [
+      {
+        "slot": 0,
+        "changed_pixels": 3174,
+        "maximum_channel_delta": 12
+      }
+    ],
+    "stored_texture_slots": 27,
+    "drawables": 28,
+    "blink_frames_compared": 10,
+    "blink_transparent_hole_max": 0,
+    "closed_iris_residual_max": 0
+  },
+  "archive": {
+    "compressed_bytes": 11128464,
+    "expanded_bytes": 21989483,
+    "entries": 152,
+    "crc_passed": true,
+    "inp_inx_identical": true,
+    "original_source_included": false,
+    "generated_before_skin_png_included": true
+  },
+  "live_browser_api": {
+    "format": "ai-live2d-detailed-head-live-app-check",
+    "version": 3,
+    "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "local_url": "http://127.0.0.1:5180",
+    "actual_image_posts": 2,
+    "cancelled_posts": 1,
+    "completed_posts": 1,
+    "readiness_sent_images": false,
+    "backend_busy_observed_before_cancel": true,
+    "cancel_released_backend_lock": true,
+    "existing_work_entries_unchanged": true,
+    "archive_entries": 152,
+    "archive_bytes": 11128464,
+    "archive_sha256": "9a27d0eb256bb6d4a54ed552aec9e684fa1e6f0b736be8be6198db2ff0b8a1a6",
+    "model_sha256": "fe06546691d62e9ddc9b70855dd4088b42e69936ccf071e146f4efe6185eaf02",
+    "source_file_in_archive": false,
+    "external_hosts_requested": 0,
+    "completed_generation_seconds": 211.065118105,
+    "total_review_seconds": 222.214516696,
+    "model_review_frames_checked": 20,
+    "model_review_frame_bytes_match_archive": true,
+    "model_review_parts": 38,
+    "before_skin_comparison_frames_checked": 10,
+    "skin_boundary_profile": "screened-skin-boundary-v1",
+    "skin_boundary_applied": {
+      "l": true,
+      "r": true
+    },
+    "saved_zip_reopened_without_source": true,
+    "reopen_api_calls": 0,
+    "file_generation_passed": true,
+    "official_creator_tested": false,
+    "appearance_quality_passed": false
+  },
+  "official_creator": {
+    "version": "0.8.6",
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "model_sha256": "fe06546691d62e9ddc9b70855dd4088b42e69936ccf071e146f4efe6185eaf02",
+    "poses_before_save": 26,
+    "poses_after_save_new_process": 26,
+    "real_save_observed": true,
+    "creator_saved_sha256": "2c955ea06c89841da7130aed17b20adf7edf9d38888ea5ef0caf55dffe83f924",
+    "saved_bytes": 5144797,
+    "previous_process_pixel_identity_passed": true,
+    "maximum_reload_viewport_changed_pixels": 0,
+    "maximum_fixed_torso_roi_changed_pixels": 0,
+    "neck_skin_pixels_tested": 5690,
+    "maximum_neck_background_candidates": 0,
+    "stored_rgba_retained": true,
+    "structure_retention": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 28,
+      "parameters": 4,
+      "bindings": 22,
+      "maximum_numeric_roundtrip_delta": 9.707469416753156e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    },
+    "official_before_after_matched_openings": 10,
+    "generated_flags_left_false": true
+  },
+  "appearance_quality_passed": false,
+  "not_verified": [
+    "Other source images/general success rate",
+    "Natural skin, blur, hair/eyelid ownership and hair/collar seams",
+    "True hidden shapes or hair order",
+    "iPhone/Windows/Safari hardware",
+    "Full-body/3D face turns/mouth/hair physics in this mode",
+    "Cubism/MOC3/VTube Studio; Inox2D browser defects"
+  ],
+  "private_artifacts": {
+    "trial": "/tmp/skin-boundary-cli-final",
+    "app": "/tmp/skin-boundary-live-final",
+    "creator": "/tmp/skin-boundary-creator-final",
+    "cpu_comparison": "/tmp/skin-boundary-comparison-final",
+    "official_comparison": "/tmp/skin-boundary-official-comparison"
+  },
+  "private_paths_are_download_urls": false,
+  "old_26mb_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+  "prior_model_zip_sha256": "955308196b6418f3b04646e3aeeb7692001485c4de56f8c95d00e238863eba1e"
+}

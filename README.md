@@ -8,6 +8,8 @@
 
 画像欄の「この画像から自動モデルを作る画面へ」から進めます。詳細モードの生成後は、**頭の動き10状態・目元の開閉10状態・分離/補完パーツ**を画面で確認できます。表示は実モデルから既存CPU描画器で作った比較画像で、公式Creatorやブラウザランタイムの動作検証とは区別します。「保存したモデルZIPを開いて確認」なら、元画像も生成サーバーも使わず端末内で開き直せます。古いZIPには比較画像がない場合があります。[操作・保存形式](docs/INOCHI_MODEL_REVIEW.md)、[実画像による確認結果](docs/INOCHI_MODEL_REVIEW_VALIDATION.md)。
 
+詳細モードでは、推定肌の境界付近だけを周囲の肌色へ近づける補正を追加しました。目元の同じ10開度で「補正前／補正後」を切り替えられます。提供1枚で境界色差は約20%減りましたが、**ぼけ・自然な完成品質は未解決**です。元の観測PNG/透明度/メッシュ/動作設定と従来5パーツは保持しています。[仕様・従来版と新方式の再生成](docs/SKIN_BOUNDARY_CORRECTION.md)、[比較と検証](docs/SKIN_BOUNDARY_CORRECTION_VALIDATION.md)。
+
 ### 詳細モードの準備
 
 Pythonの依存、顔検出/BiRefNetモデル、SAM2とSAM2.1 Tiny重み、Node依存が必要です。不足項目は画面の「ローカル処理の準備状況を確認」に表示します。画像の選択・準備確認・生成でモデルを自動取得しません。既存環境があれば`.venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8000`と、別ターミナルの`npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`で起動できます。WindowsはPythonパスを`.\.venv\Scripts\python.exe`へ置き換えます。重み/依存の一覧とポート競合時の設定は上記手順へ記録しています。クラウドのlocalhostはPC/iPhoneのlocalhostとは異なります。

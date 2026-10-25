@@ -9,6 +9,7 @@ export function createModelReviewPanel(container){
       <p class="inochi-format-note">生成モデルから描画した比較画像です。公式Creatorの画面や、ブラウザでモデルを動かす機能ではありません。</p>
       <dl class="inochi-review-verdict"><div><dt>ファイル生成</dt><dd>モデルを受け取り済み</dd></div><div><dt>公式Creatorの動作</dt><dd>この結果では自動検証しません</dd></div><div><dt>自然な見た目</dt><dd>未合格・目視確認が必要</dd></div></dl>
       <label for="inochi-review-view">確認する動き</label><select id="inochi-review-view"><option value="head">頭の移動・傾き（胴体固定）</option><option value="blink">目元の開閉10状態（両目同時）</option></select>
+      <label for="inochi-review-variant" id="inochi-review-variant-label" hidden>肌の境界調整の前後</label><select id="inochi-review-variant" hidden><option value="after">補正後のモデルから描画</option><option value="before">補正前の比較画像</option></select><p id="inochi-review-skin-summary" hidden></p>
       <figure class="inochi-review-frame"><img id="inochi-review-image" alt=""/><figcaption id="inochi-review-caption"></figcaption></figure>
       <label for="inochi-review-frame">比較する状態 <span id="inochi-review-position"></span></label><input id="inochi-review-frame" type="range" min="0" max="9" step="1" value="0"/>
       <div class="inochi-review-buttons"><button id="inochi-review-prev" class="secondary">前の状態</button><button id="inochi-review-next" class="secondary">次の状態</button><button id="inochi-review-play" class="secondary">比較画像を順に表示</button></div>
@@ -37,11 +38,14 @@ export function createModelReviewPanel(container){
   function showFrame(){
     if(!data?.available)return;
     const view=frame(),i=Number($('#inochi-review-frame').value),f=view.frames[i];
+    const compared=view.id==='blink'&&view.frames.every(f=>f.before_file),isBefore=compared&&$('#inochi-review-variant').value==='before';
+    $('#inochi-review-variant').hidden=!compared;$('#inochi-review-variant-label').hidden=!compared;
     const label=view.id==='blink'?`両目の開度 ${f.parameters.EyeOpenL.toFixed(3)}`:(POSES[f.state]||f.state);
-    $('#inochi-review-caption').textContent=label;$('#inochi-review-position').textContent=`${i+1} / ${view.frames.length}`;
-    image('frame',data.entries.get(f.file),`${view.id==='blink'?'目元':'頭と固定した胴体'}：${label}`);
-    const n=key=>Number.isSafeInteger(f.diagnostics?.[key])?f.diagnostics[key]:'未検査';
-    $('#inochi-review-metrics').textContent=view.id==='blink'?`透明な穴の候補: ${n('transparent_hole_pixels')}画素 ／ 虹彩の残像候補: ${n('closed_iris_residual_pixels')}画素 ／ 二重線の候補: ${n('central_iris_double_lash_columns')}列`:`首の内側の穴の候補: ${n('neck_bridge_transparent_pixels')}画素 ／ 固定胴体の変化: ${n('fixed_torso_changed_pixels')}画素`;
+    const caption=(compared?(isBefore?'補正前・':'補正後・'):'')+label;
+    $('#inochi-review-caption').textContent=caption;$('#inochi-review-position').textContent=`${i+1} / ${view.frames.length}`;
+    image('frame',data.entries.get(isBefore?f.before_file:f.file),`${view.id==='blink'?'目元':'頭と固定した胴体'}：${caption}`);
+    const diagnostic=isBefore?f.before_diagnostics:f.diagnostics,n=key=>Number.isSafeInteger(diagnostic?.[key])?diagnostic[key]:'未検査';
+    $('#inochi-review-metrics').textContent=view.id==='blink'?`透明な穴の候補: ${n('transparent_hole_pixels')}画素 ／ 虹彩の残像候補: ${n('closed_iris_residual_pixels')}画素 ／ 二重線の候補: ${n('central_iris_double_lash_columns')}列`:`首の検査範囲内の穴の候補: ${n('neck_bridge_transparent_pixels')}画素 ／ 胴体の検査範囲の変化: ${n('fixed_torso_changed_pixels')}画素`;
   }
   function showPart(){
     if(!data?.available||!$('#inochi-review-parts').open)return;
@@ -56,6 +60,7 @@ export function createModelReviewPanel(container){
     for(const id of ['#inochi-review-image','#inochi-review-part-image'])$(id).removeAttribute('src');
     $('#inochi-review-content').hidden=true;$('#inochi-review-unavailable').hidden=true;$('#inochi-review-error').textContent='';$('#inochi-review-part').replaceChildren();
     $('#inochi-review-parts').open=false;
+    $('#inochi-review-skin-summary').hidden=true;$('#inochi-review-variant').hidden=true;$('#inochi-review-variant-label').hidden=true;
   }
   function set(next){
     clear();data=next;$('#inochi-review-unavailable').hidden=next.available;$('#inochi-review-content').hidden=!next.available;
@@ -63,9 +68,17 @@ export function createModelReviewPanel(container){
     for(const [i,p] of next.parts.entries()){
       const option=document.createElement('option');option.value=String(i);option.textContent=`${ROLES[p.role]||p.role}${p.side==='l'?'（本人左）':p.side==='r'?'（本人右）':''} — ${p.id}`;$('#inochi-review-part').append(option);
     }
-    $('#inochi-review-view').value='head';$('#inochi-review-frame').value='0';$('#inochi-review-plane').value='observed';showFrame();
+    $('#inochi-review-view').value='head';$('#inochi-review-frame').value='0';$('#inochi-review-plane').value='observed';$('#inochi-review-variant').value='after';
+    if(next.skinBoundary){
+      const text=['l','r'].map(s=>{const r=next.skinBoundary.eyes[s];return `本人${s==='l'?'左':'右'}: ${r.applied?`${r.before.mean_absolute_rgb_difference.toFixed(2)} → ${r.after.mean_absolute_rgb_difference.toFixed(2)}`:'調整を適用せず元の補完を保持'}`;});
+      const blur=next.skinBoundary.skin_detail?.after?.possible_blur===true?'ぼけの候補は残っています。':'';
+      $('#inochi-review-skin-summary').textContent=`肌と補完の境界の色差（0〜255・小さいほど近い）：${text.join(' ／ ')}。${blur}対象境界だけの検査で、肌のぼけ・形・自然さの合格ではありません。`;
+      $('#inochi-review-skin-summary').hidden=false;
+    }
+    showFrame();
   }
-  $('#inochi-review-view').addEventListener('change',()=>{stop();$('#inochi-review-frame').value='0';showFrame();});
+  $('#inochi-review-view').addEventListener('change',()=>{stop();$('#inochi-review-frame').value='0';$('#inochi-review-variant').value='after';showFrame();});
+  $('#inochi-review-variant').addEventListener('change',()=>{stop();showFrame();});
   $('#inochi-review-frame').addEventListener('input',()=>{stop();showFrame();});
   for(const [id,delta] of [['prev',-1],['next',1]])$('#inochi-review-'+id).addEventListener('click',()=>{stop();$('#inochi-review-frame').value=String((Number($('#inochi-review-frame').value)+delta+10)%10);showFrame();});
   $('#inochi-review-play').addEventListener('click',()=>{

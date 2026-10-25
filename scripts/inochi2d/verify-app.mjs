@@ -68,6 +68,7 @@ try{
   assert.ok(Object.keys(files).every(n=>!n.endsWith('.jpg')&&!n.includes('source-image')&&!n.includes('reconstruction')));
   assert.ok(Object.values(files).every(b=>sha(b)!==sha(source)));
   const pipeline=JSON.parse(strFromU8(files['generation-report.json']));assert.equal(pipeline.mode,'detailed-head');assert.equal(pipeline.officialCreatorTested,false);
+  assert.equal(pipeline.skinBoundaryCorrectionRequested,true);
   assert.equal(pipeline.containsUploadedOriginalFile,false);assert.equal(external,0);
   const review=JSON.parse(strFromU8(files['review/review.json']));assert.equal(review.renderer,'independent-cpu-serialized-model');
   assert.equal(review.model_sha256,sha(files['model.inp']));assert.equal(review.official_creator_tested,false);assert.equal(review.appearance_quality_passed,false);
@@ -78,10 +79,19 @@ try{
       const bytes=await (await fetch(image.src)).arrayBuffer();return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
     });assert.equal(digest,sha(files[frame.file]));
   }
+  let beforeFramesChecked=0;
   for(const view of review.views){
     await page.locator('#inochi-review-view').selectOption(view.id);
     for(const frame of view.frames){await checkImage(frame);await page.locator('#inochi-review-next').click();}
+    if(view.id==='blink'&&view.frames.every(f=>f.before_file)){
+      await page.locator('#inochi-review-variant').selectOption('before');
+      for(const frame of view.frames){await checkImage({file:frame.before_file});await page.locator('#inochi-review-next').click();beforeFramesChecked++;}
+      await page.locator('#inochi-review-variant').selectOption('after');
+    }
   }
+  assert.equal(beforeFramesChecked,10);
+  const skin=JSON.parse(strFromU8(files['skin-boundary-report.json']));
+  for(const r of Object.values(skin.eyes))if(r.applied)assert.ok(r.after.mean_absolute_rgb_difference<r.before.mean_absolute_rgb_difference);
   await page.locator('#inochi-review-parts summary').click();assert.equal(await page.locator('#inochi-review-part option').count(),38);
   await page.locator('#inochi-review-part').selectOption({label:'頭の表面 — head_surface'});
   await page.locator('#inochi-review-part-image').evaluate(image=>image.decode());
@@ -98,12 +108,14 @@ try{
   await reopened.locator('#inochi-review-image').evaluate(image=>image.decode());assert.equal(reopenApiCalls,0);
   assert.equal(await reopened.locator('#inochi-model-start').isDisabled(),true);assert.equal(requests.length,2);
   await reopened.close();
-  const report={format:'ai-live2d-detailed-head-live-app-check',version:2,source_sha256:sha(source),local_url:url.origin,
+  const report={format:'ai-live2d-detailed-head-live-app-check',version:3,source_sha256:sha(source),local_url:url.origin,
     actual_image_posts:requests.length,cancelled_posts:1,completed_posts:1,readiness_sent_images:false,
     backend_busy_observed_before_cancel:true,cancel_released_backend_lock:true,existing_work_entries_unchanged:true,archive_entries:Object.keys(files).length,
     archive_bytes:bytes.length,archive_sha256:sha(bytes),model_sha256:sha(files['model.inp']),source_file_in_archive:false,
     external_hosts_requested:external,completed_generation_seconds:generationSeconds,total_review_seconds:(performance.now()-started)/1000,
     model_review_frames_checked:20,model_review_frame_bytes_match_archive:true,model_review_parts:38,
+    before_skin_comparison_frames_checked:beforeFramesChecked,skin_boundary_profile:skin.profile,
+    skin_boundary_applied:Object.fromEntries(Object.entries(skin.eyes).map(([s,r])=>[s,r.applied])),
     saved_zip_reopened_without_source:true,reopen_api_calls:reopenApiCalls,
     file_generation_passed:true,official_creator_tested:false,appearance_quality_passed:false};
   await writeFile(join(output,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));

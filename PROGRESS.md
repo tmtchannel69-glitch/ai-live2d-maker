@@ -1,5 +1,18 @@
 # 開発進捗
 
+## 2026-10-25 閉眼肌の境界色の限定補正（最新）
+
+- 721d9f1/未変更から同じfeature/external-part-side-by-side-reviewで継続。ローカル実装/検証/commitだけで保存し、push/公開/main統合/外部画像API/課金/重み取得/画像モデルのGit追加は行わない。
+- server/skin_boundary.pyを独立後処理として追加。元の推定肌へscreened harmonicの滑らかなRGB補正だけを加え、観測PNG/所有/mask/alpha/座標/mesh/動作を保持。CG上限/支持不足/非改善を明示し、skipでは元の実補完を保持、非収束は停止。従来の5パーツ/writer/基本準備器は不変。
+- rig.py --skin-boundary-correctionは任意で、app詳細workerが選ぶ。flagなしで旧版を再現。既存head loaderのbuilderを再利用して元の肌だけを戻し、同形の補正前モデルと10開度も生成する。
+- 提供1枚で境界色差は本人左2.8432→2.2747、右2.5959→2.0848（約20%減）。3,174画素/最大RGB差12のみ変更。通常描画の変更0、共通106PNG中の変更は推定肌1枚。肌ぼけ比.03367→.03409は双方警告trueのままで完成品質は未合格。
+- review版2のbefore_file/before_diagnosticsとskin-boundary-report、推定肌before PNGを追加。画面で同じ開度の前後を切替え、本人左右の色差と残存するぼけ候補を表示。旧review1/APIなし再読込/サイズ制限/中止/失敗時の既存作業保持は維持。
+- 新INP/INX fe065466…はCLI/実APIで一致、前モデルa759efab…も再現。モデル構造/geometry/bindings/全alphaは一致、格納27texture slotのうちslot0だけ3,174画素/最大12差。28描画Partと格納前report28texture/格納後27を区別する。
+- 新モデルを公式Creator0.8.6で26状態→実保存→正常終了→新プロセス26状態検証。全viewport差0、RGBA/親子/mesh/mask/4params22bindings保持。float差最大9.70747e-6。保存INX2c955ea0…、5,144,797bytes。公式の同じ表示値10開度と12共通姿勢の前後画像も私用保存。
+- 実APIは約211.07秒（全テスト/GUI並行）、152項目/11,128,464bytes/展開21,989,483bytes/CRC成功。元JPEGなし、生成前POST0、busy後中止/解放/再試行、既存作業ZIP全entry保持、30表示とZIP一致、元画像なしの新ページ再読込/API0を確認。
+- Node178/Python109/全ブラウザ174件/build成功。Python既存警告1件。iPhone/Windows/Safari実機や一般成功率ではない。肌全体の再補間/まぶたノード/髪への所有変更は根拠不足で不採用。線や髪際の点/境界、ぼけ、真の隠れ面は残る。
+- docs/SKIN_BOUNDARY_CORRECTION.mdとVALIDATION.md/jsonへ方式/旧新版再生成/比較/試験/限界を保存。実物は/tmp/skin-boundary-*、古い26MB ZIPと前回モデルZIPは不変。次はぼけと目元/髪/まぶたの所属の根拠、追加画像での失敗分析を優先。Cubism/VTS/Inox問題は混同しない。
+
 ## 2026-10-25 自動モデルの結果確認と保存ZIPの再読込（最新）
 
 - 27a9404/未変更から同じfeature/external-part-side-by-side-reviewで継続。ある程度使えるまでローカル実装/検証を進める指示に沿い、push/公開/main統合/外部画像API/課金/重み取得をせず、ローカルcommitで保存する。

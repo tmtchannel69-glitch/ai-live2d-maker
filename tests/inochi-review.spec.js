@@ -88,3 +88,19 @@ test('cancelling an archive read cannot replace the previous result after a late
   await expect(page.locator('#inochi-model-status')).toContainText('読み込みを中止');
   await expect(page.locator('#inochi-review-image')).toHaveAttribute('src',previous);await expect(page.locator('#inochi-model-download')).toBeEnabled();
 });
+
+test('skin comparison switches before/after at the same opening and keeps unsupported head comparison hidden',async({page})=>{
+  await page.goto('/');await open(page,reviewFixture({withBoundary:true}).zip());await displayed(page);
+  await expect(page.locator('#inochi-review-skin-summary')).toContainText('2.80 → 2.20');
+  await expect(page.locator('#inochi-review-variant')).toBeHidden();
+  await page.locator('#inochi-review-view').selectOption('blink');await page.locator('#inochi-review-next').tap();
+  await expect(page.locator('#inochi-review-caption')).toContainText('補正後・両目の開度 0.111');
+  const after=await page.locator('#inochi-review-image').getAttribute('src');
+  await page.locator('#inochi-review-variant').selectOption('before');await expect(page.locator('#inochi-review-caption')).toContainText('補正前・両目の開度 0.111');
+  expect(await page.locator('#inochi-review-image').getAttribute('src')).not.toBe(after);await expect(page.locator('#inochi-review-position')).toHaveText('2 / 10');
+  await page.locator('#inochi-review-view').selectOption('head');await expect(page.locator('#inochi-review-variant')).toBeHidden();
+  await page.locator('#inochi-review-view').selectOption('blink');await expect(page.locator('#inochi-review-variant')).toHaveValue('after');
+  await page.setViewportSize({width:320,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.locator('#inochi-review-variant').evaluate(e=>e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+});

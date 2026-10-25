@@ -8,6 +8,7 @@
 2. 「頭・首・胴体を分ける（実験）」を選ぶ。画像なしの準備確認で、不足ライブラリ・重みを調べられる。自動ダウンロードは行わない。
 3. 生成ボタンを押すと、このPC/クラウド環境内のローカルAPIで自動処理する。第三者の画像APIを使わず、点・枠・手動リギングを必要としない。
 4. 完了すると通常状態を表示する。「確認する動き」で、胴体を固定した頭の移動・傾き10状態、目元の開閉10状態を切り替える。スライダー/前/次/「比較画像を順に表示」で確認する。
+   新しい詳細結果では、目元の同じ開度で「肌の境界調整の前後」も切り替えられる。肌の色差/ぼけ候補を別に表示する。[補正の範囲と再生成](SKIN_BOUNDARY_CORRECTION.md)。
 5. 「分離したパーツと補完領域を確認」を開く。役割と本人左右、元画像の位置、親、重なり順、分離画像/補完画像を確認できる。補完がない場合はその旨を示し、ダミーを置かない。
 6. 「生成済みのモデルZIPを保存」でモデル/生成パーツ/設定/レポート/比較画像をまとめて保存する。`model.inp`または`model.inx`を公式Inochi Creator0.8.6で開く。
 
@@ -29,8 +30,8 @@
 
 | ファイル | 役割 |
 | --- | --- |
-| `server/inochi_review.py` | 既存CLIの20枚を固定リストで読み、RGBAを保って縮小。モデルや生成アルゴリズムは変更しない |
-| `server/inochi_detailed.py` | モデルZIPへ比較用21項目を追加。モデル/パーツの既存allowlistと上限を維持 |
+| `server/inochi_review.py` | 頭10枚/目元10枚、補正時は前の目元10枚も固定リストで読み、RGBAを保って縮小。描画・生成のアルゴリズムを変えない |
+| `server/inochi_detailed.py` | 比較画像/レポートをモデルZIPへ追加。モデル/パーツの既存allowlistと上限を維持 |
 | `src/inochi-model-review.js` | ZIPの事前索引検査、分割した展開、中止、モデル指紋/比較情報/PNG寸法/配置の確認 |
 | `src/inochi-model-review-panel.js` | 動きの比較、検査候補の表示、パーツ/補完の確認、画像URLの解放 |
 | `src/inochi-model-panel.js` | 画像欄からの入口、生成結果の検査後反映、端末内ZIPの開き直し |
@@ -39,6 +40,8 @@
 新しい詳細ZIPの`generation-report.json`は版2。`containsUploadedOriginalFile:false`、`containsPreparationReconstruction:false`、`containsModelRenderedComparisons:true`と`reviewManifest:review/review.json`を記録する。旧版1も読める。旧`containsOnePieceReconstruction`の曖昧な表現は新しい版では使わない。**元のアップロード画像と準備時の一枚再構成は含めないが、モデルから描画した全体比較画像は含む**。
 
 `review/review.json`は`ai-live2d-maker-model-review`版1。`renderer`、対象`model.inp`のSHA256、元のサイズ、head/blinkの表示サイズ/ROI、20フレームのファイル/パラメータ/診断を記録。パーツの役割・位置・親・順・分離/補完PNGは既存`common/parts.json`をそのまま使う。画像を元座標から書き換えず、確認用画像だけを縮小する。
+
+現在は肌境界の前後比較がある場合だけreview版2を使う。目元の10frameに`before_file`/`before_diagnostics`と、境界調整レポートへの参照を追加する。旧版1も読める。全20状態に補正前目元10枚を加えた30枚で、頭部の前後比較を自動で追加したとはしない。
 
 読み込み上限は圧縮後/展開後80MiB・256項目。中央索引を展開前に調べ、危険なパス/重複/未知圧縮方式/過大なサイズを拒否する。4KiB単位の圧縮データを展開して実際の出力も申告値/上限と照合し、128KiBごとに画面へ制御を返して中止可能にする。PNGは最大8MiB、パーツは元入力と同じ各辺4096/16M画素まで。モデル指紋は整合性検査であり、出典の認証ではない。PNGはブラウザに表示し、ZIPのコードを実行したり端末へ自動展開したりしない。
 

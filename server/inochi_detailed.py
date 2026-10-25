@@ -36,6 +36,7 @@ def check_configuration():
         checks.append({'id': package, 'label': label, 'ready': importlib.util.find_spec(package) is not None})
     for name in ['scripts/parts/rig.py', 'scripts/inochi2d/head-rig.mjs', 'scripts/inochi2d/parts-adapter.mjs',
                  'scripts/inochi2d/render-head.py', 'scripts/inochi2d/render-diagnostic.py',
+                 'server/skin_boundary.py', 'scripts/inochi2d/skin-boundary-before.mjs',
                  'node_modules/fast-png/package.json', 'node_modules/fflate/package.json']:
         checks.append({'id': name, 'label': name, 'ready': (ROOT / name).is_file()})
     missing = [c['label'] for c in checks if not c['ready']]
@@ -75,6 +76,9 @@ def package_trial(trial, directory):
                     raise PreparationFailure(422, '生成パーツの保存先が正しくありません。')
                 entries['common/' + name] = trial / 'common' / name
     entries.update(create_review(trial, directory, graph))
+    if (trial / 'skin-boundary-report.json').is_file():
+        entries.update({'skin-boundary-report.json': trial / 'skin-boundary-report.json',
+                        'skin-boundary-before.png': trial / 'skin-boundary-before.png'})
     pipeline = {'format': 'ai-live2d-maker-detailed-head-app-pipeline', 'version': 2, 'mode': MODE,
                 'scope': 'independent-head-motion-with-fixed-body', 'automaticPreparation': True,
                 'manualPointsOrRigging': False, 'parts': len(graph['parts']), 'creatorVersion': '0.8.6',
@@ -82,6 +86,7 @@ def package_trial(trial, directory):
                 'live2dCompatible': False, 'vtubeStudioTested': False,
                 'containsUploadedOriginalFile': False, 'containsPreparationReconstruction': False,
                 'containsModelRenderedComparisons': True, 'reviewManifest': 'review/review.json',
+                'skinBoundaryCorrectionRequested': (trial / 'skin-boundary-report.json').is_file(),
                 'externalImageRequests': False, 'automaticDownloads': False,
                 'generator': 'scripts/parts/rig.py --stage head (existing CLI)',
                 'limitations': ['Head motion only; the body is fixed. Not full-body rigging.',
@@ -130,7 +135,7 @@ def generate(source, directory):
         pass
     trial, errors = directory / 'trial', directory / 'detailed-error.json'
     result = subprocess.run([sys.executable, str(ROOT / 'scripts/parts/rig.py'), '--source', str(source),
-                             '--output', str(trial), '--stage', 'head', '--error-report', str(errors)],
+                             '--output', str(trial), '--stage', 'head', '--skin-boundary-correction', '--error-report', str(errors)],
                             cwd=ROOT, timeout=CLI_TIMEOUT_SECONDS,
                             env={**os.environ, 'HF_HUB_OFFLINE': '1', 'TRANSFORMERS_OFFLINE': '1'})
     if result.returncode:

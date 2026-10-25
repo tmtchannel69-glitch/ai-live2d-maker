@@ -72,6 +72,13 @@ def generate(args):
         prepared=prepare_character_parts(image,blink_profile='contour-lid-v2')
         extended=extend_head_structure(image,prepared)
     graph,assets=extended['graph'],extended['assets']
+    skin_report=None
+    if getattr(args,'skin_boundary_correction',False):
+        from server.skin_boundary import refine_eye_skin,PROFILE
+        graph,assets,before_png,skin_report=refine_eye_skin(graph,assets,prepared['five']['diagnostics']['face_box_xywh'])
+        (output/'skin-boundary-before.png').write_bytes(before_png)
+        proof['skin_boundary_profile']=PROFILE
+        (output/'provenance.json').write_text(json.dumps(proof,indent=2))
     common=output/'common';common.mkdir()
     for path,data in assets.items():
         target=common/path;target.parent.mkdir(exist_ok=True);target.write_bytes(data)
@@ -91,6 +98,12 @@ def generate(args):
     command('node',ROOT/'scripts/inochi2d/parts-adapter.mjs',manifest,baseline/'model')
     target=output/'head';target.mkdir()
     command('node',ROOT/'scripts/inochi2d/head-rig.mjs',manifest,target/'model')
+    if skin_report is not None:
+        before=output/'skin-before';before.mkdir()
+        command('node',ROOT/'scripts/inochi2d/skin-boundary-before.mjs',manifest,output/'skin-boundary-before.png',before/'model')
+        skin_report.update(before_model_sha256=sha(before/'model.inp'),after_model_sha256=sha(target/'model.inp'))
+        (output/'skin-boundary-report.json').write_text(json.dumps(skin_report,ensure_ascii=False,indent=2))
+        manifest.write_text(json.dumps(graph,ensure_ascii=False,indent=2),encoding='utf-8')
     (target/'preparation-report.json').write_text(json.dumps(prepared['five']['diagnostics'],indent=2))
     report={'format':'ai-live2d-maker-independent-head-trial','version':1,
         'source_sha256':proof['input_sha256'],'head_preparation':extended['head_report'],
@@ -105,6 +118,9 @@ def generate(args):
                 '--common',manifest,'--output',output/'blink-quality')
         command(sys.executable,ROOT/'scripts/inochi2d/render-head.py','--model',target/'model.inp',
                 '--baseline',baseline/'model.inp','--common',manifest,'--output',output/'head-quality',timeout=240)
+        if skin_report is not None:
+            command(sys.executable,ROOT/'scripts/inochi2d/render-diagnostic.py','--model',output/'skin-before/model.inp',
+                    '--common',manifest,'--output',output/'skin-before-blink')
     except Exception as error:
         report.update(automatic_head_diagnostic_passed=False,diagnostic_failure=str(error)[:500],elapsed_seconds=round(time.monotonic()-started,3))
         (output/'trial-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
@@ -140,6 +156,7 @@ if __name__=='__main__':
     parser.add_argument('--source',required=True);parser.add_argument('--output',required=True)
     parser.add_argument('--stage',choices=['head','hair'],default='head',help='hair adds independent bounded strands and a separate native-physics candidate; verified head output is retained.')
     parser.add_argument('--error-report',help='Optional bounded app error JSON beside the new private output directory. No algorithm changes.')
+    parser.add_argument('--skin-boundary-correction',action='store_true',help='Opt-in bounded skin color correction, before model and ten before/after blink diagnostics. Omit for the exact legacy rig.')
     args=parser.parse_args()
     if args.error_report:
         error_path=Path(args.error_report).resolve();destination=Path(args.output).resolve()

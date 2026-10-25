@@ -1,6 +1,7 @@
 """Local adapter/resource tests. Synthetic packaging is not Creator evidence."""
 import asyncio
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -126,6 +127,36 @@ def test_review_thumbnail_preserves_alpha_and_never_copies_original(tmp_path):
     assert len(entries) == 21
     with Image.open(entries['review/head-00.png']) as image:
         assert image.size == (480, 640) and image.getextrema()[3] == (128, 128)
+
+
+@pytest.mark.parametrize('problem', [None, 'opening', 'model-hash', 'missing-image'])
+def test_optional_skin_comparison_is_complete_and_bound_to_the_actual_model(tmp_path, problem):
+    trial = trial_fixture(tmp_path)
+    (trial / 'skin-before').mkdir(); (trial / 'skin-before-blink').mkdir()
+    model = (trial / 'head/model.inp').read_bytes()
+    (trial / 'skin-before/model.inp').write_bytes(model)
+    (trial / 'skin-boundary-before.png').write_bytes((trial / 'blink-quality/blink_00.png').read_bytes())
+    before = json.loads((trial / 'blink-quality/quality-report.json').read_text())
+    for n in range(10):
+        (trial / f'skin-before-blink/blink_{n:02d}.png').write_bytes((trial / f'blink-quality/blink_{n:02d}.png').read_bytes())
+    report = {'format': 'ai-live2d-maker-skin-boundary-correction', 'version': 1,
+              'before_model_sha256': hashlib.sha256(model).hexdigest(), 'after_model_sha256': hashlib.sha256(model).hexdigest()}
+    if problem == 'opening': before['frames'][0]['opening'] = .3
+    elif problem == 'model-hash': report['before_model_sha256'] = '0'*64
+    elif problem == 'missing-image': (trial / 'skin-before-blink/blink_03.png').unlink()
+    (trial / 'skin-before-blink/quality-report.json').write_text(json.dumps(before))
+    (trial / 'skin-boundary-report.json').write_text(json.dumps(report))
+    if problem is not None:
+        with pytest.raises(PreparationFailure): detailed.package_trial(trial, tmp_path)
+        assert not (tmp_path / 'model.zip').exists()
+    else:
+        detailed.package_trial(trial, tmp_path)
+        with zipfile.ZipFile(tmp_path / 'model.zip') as z:
+            r = json.loads(z.read('review/review.json'))
+            assert r['version'] == 2 and 'skin-boundary-report.json' in z.namelist()
+            assert len([n for n in z.namelist() if n.startswith('review/') and n.endswith('.png')]) == 30
+            assert all(f['before_file'] for f in r['views'][1]['frames'])
+            assert z.read('model.inp') == model
 
 
 @pytest.mark.parametrize('limit', ['bytes', 'files', 'symlink'])
