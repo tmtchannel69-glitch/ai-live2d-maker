@@ -6,7 +6,7 @@ function png(width=128,height=192,color=[40,100,200,255]) {
   return Buffer.from(encode({width,height,data,channels:4,depth:8}));
 }
 async function setup(page) {
-  await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();
+  await page.goto('/?mode=convert');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();
 }
 async function asset(page,role='eye_closed_l',bytes=png(16,12,[220,30,60,255])) {
   await page.locator('#asset-role').selectOption(role);await page.locator('#asset-file').setInputFiles({name:`${role}.png`,mimeType:'image/png',buffer:bytes});await expect(page.locator('#asset-status')).toContainText('素材を読み込みました');await expect(page.locator('#asset-apply')).toBeEnabled();

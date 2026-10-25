@@ -11,7 +11,7 @@ async function download(page,id){
 const json=(files,name)=>JSON.parse(strFromU8(files[name]));
 
 test('one click creates actual INP/INX from 33 PNGs without an upload, with matching browser and Node output',async({page})=>{
-  await page.goto('/');let apis=0;await page.route('**/api/**',r=>{apis++;return r.abort();});await page.locator('#mode-generate').click();
+  await page.goto('/?mode=convert');let apis=0;await page.route('**/api/**',r=>{apis++;return r.abort();});await page.locator('#mode-generate').click();
   await page.locator('#cg-generate').click();await expect(page.locator('#cg-status')).toContainText('INP/INX');await expect(page.locator('#cg-model-output')).toBeVisible();
   const archive=unzipSync((await download(page,'cg-download-zip')).bytes),manifest=json(archive,'character_manifest.json');
   const inp=await download(page,'cg-download-inp'),inx=await download(page,'cg-download-inx');
@@ -25,7 +25,7 @@ test('one click creates actual INP/INX from 33 PNGs without an upload, with matc
 });
 
 test('cancel during native encoding discards only the new job and leaves static generation usable',async({page})=>{
-  await page.goto('/');const observed=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const observed=await page.evaluate(async()=>{
     const {generateRiggedCharacter}=await import('/src/character-generation/model-generator.js');
     const {generateCharacter}=await import('/src/character-generation/generator.js');
     const controller=new AbortController();let hit=false,error=null;
@@ -35,7 +35,7 @@ test('cancel during native encoding discards only the new job and leaves static 
 });
 
 test('UI cancellation at the modeling stage retains the previous downloadable model and supports retry',async({page})=>{
-  await page.goto('/');await page.locator('#mode-generate').click();await page.locator('#cg-generate').click();await expect(page.locator('#cg-status')).toContainText('INP/INX');
+  await page.goto('/?mode=convert');await page.locator('#mode-generate').click();await page.locator('#cg-generate').click();await expect(page.locator('#cg-status')).toContainText('INP/INX');
   const before=await download(page,'cg-download-inp');
   await page.evaluate(()=>{
     const status=document.querySelector('#cg-status');window.nativeCancelObserver=new MutationObserver(()=>{

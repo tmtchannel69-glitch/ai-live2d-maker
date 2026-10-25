@@ -10,7 +10,7 @@ async function download(page,selector){
   return Buffer.concat(chunks);
 }
 async function setup(page){
-  await page.goto('/');await page.locator('#mode-generate').click();
+  await page.goto('/?mode=convert');await page.locator('#mode-generate').click();
   await page.locator('#cg-provider').selectOption('design-local');
   await page.locator('#cg-generate').click();
   await expect(page.locator('#cg-status')).toContainText('INP/INX',{timeout:90000});

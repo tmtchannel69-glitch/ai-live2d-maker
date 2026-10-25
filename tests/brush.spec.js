@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { unzipSync } from 'fflate';
 
 async function setup(page) {
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const images = await page.evaluate(() => {
     const c=document.createElement('canvas');c.width=c.height=200;const ctx=c.getContext('2d');
     ctx.fillStyle='#8040c0';ctx.fillRect(0,0,200,200);
@@ -102,7 +102,7 @@ test('PNG export failure retains draft and old result; closing rejects late expo
 });
 
 test('bounded brush history keeps earlier edits after the last undoable action',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const result=await page.evaluate(async()=>{
     const {createBrushMask}=await import('/src/brush-mask.js');const c=document.createElement('canvas');c.width=c.height=256;
     const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,256,256);const state=createBrushMask(c);

@@ -4,7 +4,7 @@ initializeCanvas(()=>{throw new Error('Use raw image data');},(width,height)=>({
 
 test('actual local SAM returns a full-size transparent PNG through the browser', async ({ page }) => {
   test.setTimeout(120000);
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const base64 = await page.evaluate(() => {
     const canvas = document.createElement('canvas'); canvas.width=256; canvas.height=384;
     const context=canvas.getContext('2d'); context.fillStyle='white';context.fillRect(0,0,256,384);

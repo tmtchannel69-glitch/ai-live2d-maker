@@ -20,7 +20,7 @@ function rewrite(bytes,change){const entries=unzipSync(bytes),metadata=JSON.pars
 
 test('project restores corrected pixels, prompts, stale provenance and selection after reload without AI requests',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));let requests=0;
-  await page.goto('/');const png=await upload(page);await page.locator('#processing-mode').selectOption('ai');
+  await page.goto('/?mode=convert');const png=await upload(page);await page.locator('#processing-mode').selectOption('ai');
   for(const id of ['body','eyes'])await page.locator(`input[value=${id}]`).uncheck();
   await page.locator('#edit-prompts').click();await page.getByText('数値で指定（キーボード操作）').click();
   await point(page,'point');await point(page,'box','10','10');await point(page,'exclude','70','70');
@@ -51,7 +51,7 @@ test('project restores corrected pixels, prompts, stale provenance and selection
 });
 
 test('unfinished project and demo results can be saved and resumed',async({page})=>{
-  await page.goto('/');await upload(page);await page.locator('#processing-mode').selectOption('ai');
+  await page.goto('/?mode=convert');await upload(page);await page.locator('#processing-mode').selectOption('ai');
   await page.locator('#edit-prompts').click();await page.getByText('数値で指定（キーボード操作）').click();await point(page,'exclude');await page.locator('#close-prompts').click();
   const draft=await downloadBytes(page,'#save-project');await page.locator('#reset').click();await importFile(page,draft);await expect(page.locator('#project-status')).toContainText('作業を再開');await expect(page.locator('#separate')).toBeDisabled();await expect(page.locator('.result-card')).toHaveCount(0);
   await page.locator('#edit-prompts').click();await expect(page.locator('#prompt-dialog svg circle')).toHaveCount(1);await page.locator('#close-prompts').click();
@@ -62,7 +62,7 @@ test('unfinished project and demo results can be saved and resumed',async({page}
 });
 
 test('invalid, oversized and mismatched project inputs preserve current results',async({page})=>{
-  await page.goto('/');await upload(page);await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(4);
+  await page.goto('/?mode=convert');await upload(page);await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(4);
   const project=await downloadBytes(page,'#save-project'),source=await page.locator('#source-preview').getAttribute('src'),hair=await page.locator('[data-part=hair] img').getAttribute('src');
   const cases=[Buffer.from('not zip'),rewrite(project,m=>{m.version=99;}),rewrite(project,m=>{m.source.width=99;}),rewrite(project,m=>{m.prompts.hair={points:[{x:2,y:.5,label:1}]};}),rewrite(project,(m,e)=>{delete e['parts/hair.png'];}),rewrite(project,(m,e)=>{e['../unexpected']=strToU8('bad');}),rewrite(project,m=>{m.parts[0].id='unexpected';}),rewrite(project,(m,e)=>{e['parts/hair.png']=strToU8('broken PNG');}),rewrite(project,m=>{m.mode='ai';for(const p of m.parts)p.ai=true;}),rewrite(project,m=>{m.selected=['hair','hair'];}),rewrite(project,m=>{m.source.name='<img src=x onerror=alert(1)>/x';}),rewrite(project,m=>{m.prompts=JSON.parse('{"__proto__":{}}');})];
   for(const bytes of cases){await importFile(page,bytes);await expect(page.locator('#project-status')).toContainText('読み込みに失敗');expect(await page.locator('#source-preview').getAttribute('src')).toBe(source);expect(await page.locator('[data-part=hair] img').getAttribute('src')).toBe(hair);await expect(page.locator('#save-project')).toBeEnabled();}
@@ -71,7 +71,7 @@ test('invalid, oversized and mismatched project inputs preserve current results'
 });
 
 test('reset discards delayed import and export failures keep the editable work',async({page})=>{
-  await page.goto('/');await upload(page);const project=await downloadBytes(page,'#save-project');
+  await page.goto('/?mode=convert');await upload(page);const project=await downloadBytes(page,'#save-project');
   await page.evaluate(()=>{window.originalArrayBuffer=Blob.prototype.arrayBuffer;Blob.prototype.arrayBuffer=async function(){const data=await window.originalArrayBuffer.call(this);await new Promise(r=>setTimeout(r,300));return data;};});
   await importFile(page,project);await expect(page.locator('#project-status')).toContainText('確認しています');await page.locator('#reset').click();await page.waitForTimeout(500);
   await expect(page.locator('#source-preview')).not.toBeVisible();await expect(page.locator('#project-status')).toBeEmpty();await expect(page.locator('#open-project')).toBeEnabled();

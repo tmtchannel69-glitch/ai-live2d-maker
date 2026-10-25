@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
-async function setup(page){await page.goto('/');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=300;const ctx=c.getContext('2d');ctx.fillStyle='purple';ctx.fillRect(20,30,150,200);return c.toDataURL().split(',')[1];});await page.locator('#file').setInputFiles({name:'private-source.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await expect(page.locator('#source-preview')).toBeVisible();return png;}
+async function setup(page){await page.goto('/?mode=convert');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=300;const ctx=c.getContext('2d');ctx.fillStyle='purple';ctx.fillRect(20,30,150,200);return c.toDataURL().split(',')[1];});await page.locator('#file').setInputFiles({name:'private-source.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await expect(page.locator('#source-preview')).toBeVisible();return png;}
 async function download(page,selector){const pending=page.waitForEvent('download');await page.locator(selector).click();const d=await pending,chunks=[];for await(const chunk of await d.createReadStream())chunks.push(chunk);return {name:d.suggestedFilename(),bytes:Buffer.concat(chunks)};}
 async function point(page,id,x='50'){await page.locator('#prompt-part').selectOption(id);await page.locator('#coordinate-form input[name=x]').fill(x);await page.locator('#coordinate-form input[name=y]').fill('50');await page.getByRole('button',{name:'数値を反映'}).click();}
 async function review(page,id,boundary,fill,note=''){await page.locator(`[data-review=${id}] button`).click();await page.locator('#review-boundary').selectOption(boundary);await page.locator('#review-fill').selectOption(fill);await page.locator('#review-note').fill(note);await page.locator('#close-review').click();}
@@ -28,7 +28,7 @@ test('production materials preserve corrected PNGs and record selected missing a
 });
 
 test('report-only and demo archives distinguish unfinished materials and cannot restore a project',async({page})=>{
-  await page.goto('/');await expect(page.locator('#download-materials')).toBeDisabled();await setup(page);for(const id of ['face','body','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();
+  await page.goto('/?mode=convert');await expect(page.locator('#download-materials')).toBeDisabled();await setup(page);for(const id of ['face','body','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();
   const report=unzipSync((await download(page,'#download-materials')).bytes);expect(Object.keys(report).sort()).toEqual(['CHECKLIST.txt','README.txt','manifest.json']);expect(manifest(report).summary).toMatchObject({selected:1,exported:0,missing:1});expect(manifest(report).parts[0].issues).toContain('missing_result');
   await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(1);const demo=await download(page,'#download-materials'),entries=unzipSync(demo.bytes),part=manifest(entries).parts[0];expect(part.kind).toBe('demo');expect(part.origin).toBeNull();expect(part.alignment).toBe('cropped-demo');expect(part.issues).toContain('demo_result');
   expect(Buffer.from(entries['parts/hair.png'])).toEqual((await download(page,'[data-part=hair] a')).bytes);

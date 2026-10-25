@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-async function setup(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
+async function setup(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
 async function save(page){const event=page.waitForEvent('download');await page.locator('#save-project').click();const d=await event,chunks=[];for await(const c of await d.createReadStream())chunks.push(c);return unzipSync(Buffer.concat(chunks));}
 const pixels=page=>page.locator('#inspector-canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(0,0,c.width,c.height).data));
 test('temporary hiding and source-only comparison render real pixels while preserving saved material and note state',async({page})=>{

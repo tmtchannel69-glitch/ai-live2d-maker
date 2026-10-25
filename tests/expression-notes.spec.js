@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,zipSync,strFromU8,strToU8} from 'fflate';
 test.use({isMobile:true,hasTouch:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
 async function open(page,role='mouth_inside'){await page.locator('#scene-inspect').click();await page.locator('#inspector-role').selectOption(role);}
 async function download(page,id){const event=page.waitForEvent('download');await page.locator(id).focus();await page.locator(id).press('Enter');const chunks=[];for await(const c of await(await event).createReadStream())chunks.push(c);return Buffer.concat(chunks);}
 const json=(e,path='project.json')=>JSON.parse(strFromU8(e[path]));

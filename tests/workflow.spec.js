@@ -9,7 +9,7 @@ async function upload(page) {
 }
 test('mobile upload, selected parts, PNG download and reset', async ({ page }) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   await expect(page.getByRole('button', { name: /パーツを分離/ })).toBeDisabled();
   await upload(page);
   await expect(page.locator('#source-preview')).toBeVisible();
@@ -36,7 +36,7 @@ test('mobile upload, selected parts, PNG download and reset', async ({ page }) =
   expect(errors).toEqual([]);
 });
 test('invalid files and empty selection cannot run', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   await page.locator('#file').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('broken') });
   await expect(page.locator('#status')).toContainText('読み込めません');
   await page.locator('#file').setInputFiles({ name: 'document.txt', mimeType: 'text/plain', buffer: Buffer.from('text') });
@@ -47,7 +47,7 @@ test('invalid files and empty selection cannot run', async ({ page }) => {
 });
 test('desktop layout displays four downloadable parts', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto('/'); await upload(page);
+  await page.goto('/?mode=convert'); await upload(page);
   await page.getByRole('button', { name: /パーツを分離/ }).click();
   await expect(page.locator('.result-card')).toHaveCount(4);
   await expect(page.locator('.result-card img').first()).toBeVisible();
@@ -56,7 +56,7 @@ test('desktop layout displays four downloadable parts', async ({ page }) => {
 
 test('ZIP contents, progress, enlarged preview and keyboard close', async ({ page }) => {
   const { unzipSync } = await import('fflate');
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   await expect(page.locator('.steps [aria-current="step"]')).toContainText('画像を選択');
   await upload(page);
   await expect(page.locator('.steps [aria-current="step"]')).toContainText('パーツを分離');
@@ -87,7 +87,7 @@ test('ZIP contents, progress, enlarged preview and keyboard close', async ({ pag
 });
 
 test('oversized image is rejected and previous results are retained', async ({ page }) => {
-  await page.goto('/'); await upload(page);
+  await page.goto('/?mode=convert'); await upload(page);
   await page.getByRole('button', { name: /パーツを分離/ }).click();
   await expect(page.locator('.result-card')).toHaveCount(4);
   const base64 = await page.evaluate(() => {
@@ -101,7 +101,7 @@ test('oversized image is rejected and previous results are retained', async ({ p
 });
 
 test('separation failure can be retried and ZIP failure keeps PNG links', async ({ page }) => {
-  await page.goto('/'); await upload(page);
+  await page.goto('/?mode=convert'); await upload(page);
   await page.evaluate(() => {
     window.originalToBlob = HTMLCanvasElement.prototype.toBlob;
     HTMLCanvasElement.prototype.toBlob = function (callback) { callback(null); };
@@ -123,7 +123,7 @@ test('separation failure can be retried and ZIP failure keeps PNG links', async 
 });
 
 test('reset cancels in-flight separation without stale results', async ({ page }) => {
-  await page.goto('/'); await upload(page);
+  await page.goto('/?mode=convert'); await upload(page);
   await page.evaluate(() => {
     const original = HTMLCanvasElement.prototype.toBlob;
     HTMLCanvasElement.prototype.toBlob = function (...args) { const canvas = this; setTimeout(() => original.apply(canvas, args), 200); };
@@ -139,7 +139,7 @@ test('reset cancels in-flight separation without stale results', async ({ page }
 });
 
 test('AI prompt editor supports taps, boxes and numeric entry; missing model is explained', async ({ page }) => {
-  await page.goto('/'); await upload(page);
+  await page.goto('/?mode=convert'); await upload(page);
   await page.locator('#processing-mode').selectOption('ai');
   for (const id of ['face','body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
   await expect(page.getByRole('button', { name: /AI でパーツを分離/ })).toBeDisabled();
@@ -179,7 +179,7 @@ async function numericPoint(page, kind = 'point', x = '25', y = '30') {
   await page.getByRole('button', { name: '数値を反映' }).click();
 }
 test('multipoint history is per part, negative-only is gated and point count is bounded', async ({ page }) => {
-  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  await page.goto('/?mode=convert'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
   await page.locator('#edit-prompts').click(); await page.getByText('数値で指定（キーボード操作）').click();
   await numericPoint(page, 'exclude'); await expect(page.locator('#separate-one')).toBeDisabled();
   await numericPoint(page); await expect(page.locator('#separate-one')).toBeEnabled();
@@ -196,7 +196,7 @@ test('multipoint history is per part, negative-only is gated and point count is 
 });
 
 test('single-part correction preserves other parts and failed runs retain download results', async ({ page }) => {
-  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  await page.goto('/?mode=convert'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
   for (const id of ['body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
   await page.locator('#edit-prompts').click(); await page.getByText('数値で指定（キーボード操作）').click();
   await numericPoint(page); await page.locator('#prompt-part').selectOption('face'); await numericPoint(page);
@@ -233,7 +233,7 @@ test('single-part correction preserves other parts and failed runs retain downlo
 });
 
 test('reset during an AI request discards its late response and clears prompt history', async ({ page }) => {
-  await page.goto('/'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
+  await page.goto('/?mode=convert'); await upload(page); await page.locator('#processing-mode').selectOption('ai');
   for(const id of ['face','body','eyes']) await page.locator(`input[value="${id}"]`).uncheck();
   await page.locator('#edit-prompts').click(); await page.locator('svg').click({position:{x:50,y:50}}); await page.locator('#close-prompts').click();
   let release; const gate=new Promise(resolve=>{release=resolve;}); let completed;

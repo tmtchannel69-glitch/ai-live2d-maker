@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
 test.use({isMobile:true,hasTouch:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#deform-touch')).toBeEnabled();await page.locator('#scene-role').selectOption('mouth_inside');await page.locator('#deform-key').selectOption('open');await page.locator('#scene-mouth').fill('1');await page.locator('#scene-turn').fill('0.4');}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#deform-touch')).toBeEnabled();await page.locator('#scene-role').selectOption('mouth_inside');await page.locator('#deform-key').selectOption('open');await page.locator('#scene-mouth').fill('1');await page.locator('#scene-turn').fill('0.4');}
 async function open(page){await page.locator('#deform-touch').click();await page.locator('#touch-composite summary').tap();await expect(page.locator('#touch-composite-status')).toContainText('下書き：');}
 async function hash(page,selector){return page.locator(selector).evaluate(async c=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',c.getContext('2d').getImageData(0,0,c.width,c.height).data))).join(','));}
 async function save(page){const pending=page.waitForEvent('download');await page.locator('#save-project').focus();await page.locator('#save-project').press('Enter');const chunks=[];for await(const c of await(await pending).createReadStream())chunks.push(c);const entries=unzipSync(Buffer.concat(chunks));return {entries,state:JSON.parse(strFromU8(entries['project.json']))};}

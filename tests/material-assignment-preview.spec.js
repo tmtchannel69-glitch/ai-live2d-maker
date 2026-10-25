@@ -3,7 +3,7 @@ import {encode} from 'fast-png';
 const data=new Uint8Array(100*150*4);data.set([210,30,80,255],(30*100+20)*4);
 const png=Buffer.from(encode({width:100,height:150,data,channels:4,depth:8}));
 test('copy chooser shows real pixels, target and preparation guidance without importing until requested',async({page})=>{
-  await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png});
+  await page.goto('/?mode=convert');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png});
   await page.locator('#processing-mode').selectOption('ai');for(const id of ['face','body','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();
   await page.locator('#edit-prompts').click();await page.locator('#prompt-dialog svg').click({position:{x:50,y:50}});await page.locator('#close-prompts').click();
   await page.route('**/api/separate',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({parts:[{id:'hair',png:png.toString('base64')}]})}));await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(1);
@@ -18,7 +18,7 @@ test('copy chooser shows real pixels, target and preparation guidance without im
   await page.locator('.asset-result-import summary').click();await expect(page.locator('#asset-result-preview-status')).toContainText('100 × 150');await page.locator('#reset').click();await expect.poll(()=>page.locator('#asset-result-canvas').evaluate(c=>c.width)).toBe(1);
 });
 test('bounded result preview releases stale decodes and recovers after invalid PNG',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const result=await page.evaluate(async()=>{
     const {createMaterialAssignmentPreview}=await import('/src/material-assignment-preview.js');
     const details=document.createElement('details'),canvas=document.createElement('canvas'),status=document.createElement('p');details.open=true;

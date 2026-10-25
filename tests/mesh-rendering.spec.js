@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('opaque and translucent meshes have no internal alpha seams or doubled color',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const samples=await page.evaluate(async()=>{
     const {drawDeformed,GRID}=await import('/src/expression-deform.js');
     const result=[];
@@ -21,7 +21,7 @@ test('opaque and translucent meshes have no internal alpha seams or doubled colo
 });
 
 test('fractional deformations preserve alpha under parent transforms, clipping and layer reuse',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const result=await page.evaluate(async()=>{
     const {drawDeformed,GRID}=await import('/src/expression-deform.js');
     const bitmap=document.createElement('canvas');bitmap.width=128;bitmap.height=128;const source=bitmap.getContext('2d');source.fillStyle='rgba(180,60,100,.5)';source.fillRect(0,0,128,128);
@@ -45,7 +45,7 @@ test('fractional deformations preserve alpha under parent transforms, clipping a
 });
 
 test('identity mapping retains textured pixels and transparent holes across mesh edges',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const result=await page.evaluate(async()=>{
     const {drawDeformed,GRID}=await import('/src/expression-deform.js');
     const bitmap=document.createElement('canvas');bitmap.width=128;bitmap.height=128;const source=bitmap.getContext('2d');

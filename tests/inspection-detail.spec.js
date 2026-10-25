@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();await page.locator('#scene-inspect').click();}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();await page.locator('#scene-inspect').click();}
 async function save(page){const event=page.waitForEvent('download');await page.locator('#save-project').click();const chunks=[];for await(const c of await(await event).createReadStream())chunks.push(c);return unzipSync(Buffer.concat(chunks));}
 const pixels=page=>page.locator('#inspector-canvas').evaluate(async c=>{const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let area=0;for(let i=3;i<data.length;i+=4)if(data[i]>0)area++;const digest=await crypto.subtle.digest('SHA-256',data);return {area,hash:Array.from(new Uint8Array(digest))};});
 
 test('detail rereads original fine lines, preserves view center and raw saved work, then releases textures',async({page})=>{
-  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/');
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/?mode=convert');
   const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=768;c.height=1024;const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,768,1024);ctx.fillStyle='black';for(let n=0;n<24;n++)ctx.fillRect(300+n*4,480,2,80);return c.toDataURL().split(',')[1];});
   const image={name:'lines.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')};await page.locator('#file').setInputFiles(image);await page.locator('#asset-role').selectOption('face_base');await page.locator('#asset-file').setInputFiles(image);await expect(page.locator('#scene-inspect')).toBeEnabled();const before=await save(page);
   await page.locator('#scene-inspect').click();await page.locator('#inspector-focus').click();
@@ -35,7 +35,7 @@ test('cancelled or closed decoding is released and cannot replace a reopened ord
 });
 
 test('detail budgets fifteen full canvases and thin textures, and closes partial failed reads',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const result=await page.evaluate(async()=>{
     const {detailPlan,DETAIL_PIXEL_BUDGET,loadInspectionDetail}=await import('/src/inspection-detail.js');
     const assets=Array.from({length:15},(_,i)=>({role:String(i),width:i%3===0?4096:2048,height:i%3===0?1:4096,placement:{x:0,y:0,width:1,height:1}}));

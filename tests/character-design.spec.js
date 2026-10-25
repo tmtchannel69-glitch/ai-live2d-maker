@@ -7,7 +7,7 @@ test.use({hasTouch:true,isMobile:true});
 const j=(f,n)=>JSON.parse(strFromU8(f[n]));
 async function download(page,id){const e=page.waitForEvent('download');await page.locator('#'+id).click();const d=await e,b=[];for await(const c of await d.createReadStream())b.push(c);return Buffer.concat(b);}
 async function generate(page){await page.locator('#cg-generate').click();await expect(page.locator('#cg-status')).toContainText('INP/INX');}
-async function open(page){await page.goto('/');await page.locator('#mode-generate').click();await page.locator('#cg-provider').selectOption('design-local');}
+async function open(page){await page.goto('/?mode=convert');await page.locator('#mode-generate').click();await page.locator('#cg-provider').selectOption('design-local');}
 
 test('seven design features produce actual independent PNGs, model and design contract with honest local provenance',async({page})=>{
   await open(page);let sent=0;await page.route('**/api/**',r=>{sent++;return r.abort();});
@@ -41,7 +41,7 @@ test('downloaded design PNGs reconstruct the preview using an independent consum
 });
 
 test('three local designs vary anatomy, retain all roles, and have independent eyes/mouth and fixed body',async({page})=>{
-  await page.goto('/');const result=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const result=await page.evaluate(async()=>{
     const {generateDesignedCharacter}=await import('/src/character-generation/design-generator.js');
     const settings=[{}, {features:{hair:{style:'bob',color:'#b17654'},eyes:{shape:'almond'},outfit:{style:'cafe-maid'},mood:'bright'}},{features:{face:{shape:'oval'},eyes:{shape:'slanted'},mood:'cool'}}],out=[];
     for(const s of settings){const r=await generateDesignedCharacter(s),nodes=[];const visit=n=>{nodes.push(n);for(const c of n.children)visit(c);};visit(r.native.model.nodes);const byId=new Map(nodes.map(n=>[n.uuid,n]));
@@ -72,7 +72,7 @@ test('AI providers remain disconnected, never fall back to template, and phone d
 });
 
 test('opaque background tiles are refused by both the asset gate and native adapter',async({page})=>{
-  await page.goto('/');const result=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const result=await page.evaluate(async()=>{
     const {generateDesignedCharacter}=await import('/src/character-generation/design-generator.js'),{validateAsset}=await import('/src/character-generation/generator.js'),{buildDesignedInochi}=await import('/shared/generated-character-inochi.js');
     const character=await generateDesignedCharacter(),p=character.manifest.parts.find(p=>p.role==='face_base'),c=document.createElement('canvas');c.width=p.rect.width;c.height=p.rect.height;c.getContext('2d').fillRect(0,0,c.width,c.height);const opaque=await new Promise(r=>c.toBlob(r));
     const errors=[];try{await validateAsset(p,opaque,null,{requireTransparency:true});}catch(e){errors.push(e.message);}

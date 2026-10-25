@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
 
 async function setup(page) {
-  await page.goto('/');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=192;c.getContext('2d').fillRect(0,0,128,192);return c.toDataURL().split(',')[1];});
+  await page.goto('/?mode=convert');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=192;c.getContext('2d').fillRect(0,0,128,192);return c.toDataURL().split(',')[1];});
   await page.locator('#file').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await expect(page.locator('#source-preview')).toBeVisible();return png;
 }
 async function download(page,selector) {

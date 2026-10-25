@@ -11,7 +11,7 @@ async function selectImage(page){
 const configured={mode:'detailed-head',configured:true,busy:false};
 
 test('readiness works without a source and missing SAM never causes an image POST',async({page})=>{
-  await page.goto('/');let checks=0,sends=0;
+  await page.goto('/?mode=convert');let checks=0,sends=0;
   await page.route(statusPattern,route=>{checks++;expect(route.request().method()).toBe('GET');expect(route.request().postData()).toBe(null);return route.fulfill({json:{...configured,configured:false,reason:'SAM2.1の重みが未配置です。自動取得は行いません。'}});});
   await page.route(generatePattern,route=>{sends++;return route.abort();});
   await page.locator('#inochi-model-mode').selectOption('detailed-head');
@@ -21,7 +21,7 @@ test('readiness works without a source and missing SAM never causes an image POS
 });
 
 test('an old server cannot silently process the detailed request as five parts',async({page})=>{
-  await page.goto('/');await selectImage(page);let sends=0;
+  await page.goto('/?mode=convert');await selectImage(page);let sends=0;
   await page.route(statusPattern,route=>route.fulfill({json:{configured:true,busy:false}}));
   await page.route(generatePattern,route=>{sends++;return route.abort();});
   await page.locator('#inochi-model-mode').selectOption('detailed-head');await page.locator('#inochi-model-start').click();
@@ -29,7 +29,7 @@ test('an old server cannot silently process the detailed request as five parts',
 });
 
 test('mode-tagged model download and previous result survive failed retries and cancellation',async({page})=>{
-  await page.goto('/');await selectImage(page);await page.locator('#inochi-model-mode').selectOption('detailed-head');
+  await page.goto('/?mode=convert');await selectImage(page);await page.locator('#inochi-model-mode').selectOption('detailed-head');
   await page.route(statusPattern,route=>route.fulfill({json:configured}));
   await page.route(generatePattern,route=>{expect(new URL(route.request().url()).searchParams.get('mode')).toBe('detailed-head');return route.fulfill({contentType:'application/zip',body:fixture});});
   await page.locator('#inochi-model-start').click();await expect(page.locator('#inochi-model-status')).toContainText('胴体は固定');
@@ -46,7 +46,7 @@ test('mode-tagged model download and previous result survive failed retries and 
 });
 
 test('phone controls stay usable at 320 and 390 widths',async({page})=>{
-  await page.goto('/');await page.locator('#inochi-model-mode').selectOption('detailed-head');
+  await page.goto('/?mode=convert');await page.locator('#inochi-model-mode').selectOption('detailed-head');
   for(const width of [320,390]){
     await page.setViewportSize({width,height:844});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

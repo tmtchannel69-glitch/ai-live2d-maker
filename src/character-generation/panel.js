@@ -4,6 +4,7 @@ import {createCharacterArchive} from './archive.js';
 import {createExternalPartPanel} from './external-part-panel.js';
 import {createExternalBatchPanel} from './external-part-batch-panel.js';
 import {createSingleImageAuditPanel} from './single-image-audit-panel.js';
+import {createCharacterMaker} from '../character-maker/panel.js';
 import './style.css';
 
 function save(blob,name){
@@ -18,7 +19,7 @@ export function createCharacterGenerationMode(){
   // project blobs, DOM identities and the existing save format stay intact.
   for(const node of [...main.children])if(node!==footer)legacy.append(node);
   const nav=document.createElement('nav');nav.className='creation-mode-switch';nav.setAttribute('aria-label','制作モード');
-  nav.innerHTML='<button type="button" class="secondary" id="mode-convert" aria-pressed="true" aria-controls="image-conversion-mode">画像1枚から変換</button><button type="button" class="secondary" id="mode-generate" aria-label="パーツからキャラ生成" aria-pressed="false" aria-controls="character-generation-mode">パーツから生成</button>';
+  nav.innerHTML='<button type="button" class="secondary" id="mode-maker" aria-pressed="true" aria-controls="character-maker-mode">キャラクター制作</button><button type="button" class="secondary" id="mode-generate" aria-label="パーツからキャラ生成" aria-pressed="false" aria-controls="character-generation-mode">従来のパーツ生成</button><button type="button" class="secondary" id="mode-convert" aria-pressed="false" aria-controls="image-conversion-mode">画像1枚から変換</button>';
   const section=document.createElement('section');section.id='character-generation-mode';section.hidden=true;section.setAttribute('aria-labelledby','cg-heading');
   section.innerHTML=`<div class="cg-intro"><span class="eyebrow">PARTS FIRST / TEMPLATE</span><h1 id="cg-heading" tabindex="-1">パーツから、<span>キャラクターを作る。</span></h1><p>顔・目・髪・服を別々に描いて、自動で組み立てます。</p><p class="cg-scope">正面 ／ 胸から上 ／ メイド服 ／ 通常顔</p></div>
     <div class="cg-workspace"><section class="panel cg-settings" aria-labelledby="cg-settings-title"><h2 id="cg-settings-title">Live2D向けキャラ生成</h2><p>まずはテンプレート方式です。AIによる自由生成は未接続です。画像のアップロードや外部送信はありません。</p>
@@ -39,13 +40,16 @@ export function createCharacterGenerationMode(){
     <div id="cg-model-output" hidden><h3>Inochi2Dモデル</h3><p>左右のまばたき・口の開閉・頭だけの小さな移動と傾きを自動設定しました。胴体と襟は固定です。</p><div class="cg-downloads"><button type="button" id="cg-download-inp" class="secondary">Inochi2D INPを保存</button><button type="button" id="cg-download-inx" class="secondary">Creator用 INXを保存</button></div><p class="muted">Inochi Creator 0.8.6用です。モデルは背景透過で、髪の物理演算は含みません。自然な見た目・スマホ実機・Cubism / VTube Studio互換は別の未完了項目です。</p></div>
     <div id="cg-design-output" hidden><h3>共通デザインの保存</h3><p>デザインと配置図をZIPへ追加しました。AI向けの依頼仕様も保存できます。これは端末にJSONを保存する操作で、AIへの送信・生成は行いません。</p><button type="button" class="secondary" id="cg-download-ai-request">AI向け依頼仕様を端末に保存</button></div>
     <p id="cg-model-note" class="muted">ZIPに完成PNG、33パーツ、配置・支点・親子のJSONを入れます。テンプレートではInochi2DのINP/INXと動作設定も追加します。配置確認用の図形は静止素材のみです。</p><p class="muted">このZIPは従来の作業ファイルとは別形式です。画面を閉じる前に保存してください。Inochi2DとCubism・VTube Studioは異なる形式です。</p></section>`;
-  main.prepend(nav,legacy,section);
+  const maker=createCharacterMaker();
+  main.prepend(nav,maker.element,legacy,section);
   const $=s=>section.querySelector(s);let active=null,result=null,previewUrl=null,partUrl=null,packing=false,externalBusy=false,externalPartPanel=null,batchPartPanel=null;
-  for(const [id,show] of [['mode-convert',false],['mode-generate',true]])nav.querySelector('#'+id).addEventListener('click',()=>{
-    legacy.hidden=show;section.hidden=!show;
-    nav.querySelector('#mode-convert').setAttribute('aria-pressed',String(!show));nav.querySelector('#mode-generate').setAttribute('aria-pressed',String(show));
-    const title=show?$('#cg-heading'):legacy.querySelector('h1');title.setAttribute('tabindex','-1');title.focus({preventScroll:true});
-  });
+  function switchMode(mode,focus=true){
+    for(const [key,element] of [['maker',maker.element],['convert',legacy],['generate',section]]){element.hidden=mode!==key;nav.querySelector('#mode-'+key).setAttribute('aria-pressed',String(mode===key));}
+    maker.setVisible(mode==='maker');
+    if(focus){const title=(mode==='maker'?maker.element:mode==='convert'?legacy:section).querySelector('h1');title.setAttribute('tabindex','-1');title.focus({preventScroll:true});}
+  }
+  for(const mode of ['maker','convert','generate'])nav.querySelector('#mode-'+mode).addEventListener('click',()=>switchMode(mode));
+  const initial=new URL(location.href).searchParams.get('mode');switchMode(['maker','convert','generate'].includes(initial)?initial:'maker',false);
   function controls(){
     const locked=Boolean(active)||packing||externalBusy;
     for(const e of section.querySelectorAll('select,input,button'))e.disabled=locked;

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
 async function save(page){const event=page.waitForEvent('download');await page.locator('#save-project').click();const d=await event,chunks=[];for await(const c of await d.createReadStream())chunks.push(c);return unzipSync(Buffer.concat(chunks));}
 async function inspect(page){await page.locator('#scene-inspect').click();await expect(page.locator('#expression-inspector')).toBeVisible();}
 test('repair routes select correct asset and retain preview pose without changing any saved entry',async({page})=>{

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();}
 async function open(page){await page.locator('#scene-inspect').click();await page.locator('#inspector-role').selectOption('mouth_inside');}
 async function saved(page){const event=page.waitForEvent('download');await page.locator('#save-project').focus();await page.locator('#save-project').press('Enter');const chunks=[];for await(const c of await(await event).createReadStream())chunks.push(c);return unzipSync(Buffer.concat(chunks));}
 async function value(page,id,n){await page.locator(`#inspector-${id}`).evaluate((e,n)=>{e.value=String(n);e.dispatchEvent(new Event('input',{bubbles:true}));},n);}

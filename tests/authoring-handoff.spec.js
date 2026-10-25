@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {unzipSync,strFromU8} from 'fflate';
 test.use({hasTouch:true,isMobile:true});
-async function sample(page){await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#project-status')).toContainText('サンプルを開きました');}
+async function sample(page){await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#project-status')).toContainText('サンプルを開きました');}
 async function download(page,selector){const event=page.waitForEvent('download');await page.locator(selector).focus();await page.locator(selector).press('Enter');const d=await event,chunks=[];for await(const c of await d.createReadStream())chunks.push(c);return {name:d.suggestedFilename(),bytes:Buffer.concat(chunks)};}
 const json=(entries,name)=>JSON.parse(strFromU8(entries[name]));
 test('handoff preserves all expression PNGs and effective motion settings without original image or model claims',async({page})=>{
@@ -26,7 +26,7 @@ test('failed and cancelled exports preserve work and release processing locks',a
 });
 
 test('export rejects oversized images before reading them and rejects invalid settings',async({page})=>{
-  await page.goto('/');const checks=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const checks=await page.evaluate(async()=>{
     const {createAuthoringHandoff}=await import('/src/authoring-handoff.js');let reads=0;const blob=new Blob([new Uint8Array(10*1024*1024+1)]);blob.arrayBuffer=async()=>{reads++;throw new Error('must not read');};
     const c=document.createElement('canvas');c.width=10;c.height=10;const file=await new Promise(r=>c.toBlob(r));
     let oversized,invalid;try{await createAuthoringHandoff({file,assets:[{role:'face_base',blob}]});}catch(e){oversized=e.message;}
@@ -36,7 +36,7 @@ test('export rejects oversized images before reading them and rejects invalid se
 });
 
 test('AI output retains source alignment and correction bytes while stale review status is downgraded',async({page})=>{
-  await page.goto('/');const output=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const output=await page.evaluate(async()=>{
     const {createAuthoringHandoff}=await import('/src/authoring-handoff.js');const {promptSignature}=await import('/src/prompt-state.js');
     const c=document.createElement('canvas');c.width=100;c.height=150;c.getContext('2d').fillRect(10,20,30,40);const blob=await new Promise(r=>c.toBlob(r));
     const result={id:'eye_l',ai:true,manual:true,blob,signature:promptSignature({})};

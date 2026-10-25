@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {zipSync,unzipSync,strFromU8,strToU8} from 'fflate';
-async function setup(page){await page.goto('/');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=300;c.getContext('2d').fillRect(0,0,200,300);return c.toDataURL().split(',')[1];});await page.locator('#file').setInputFiles({name:'image.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await expect(page.locator('#source-preview')).toBeVisible();return png;}
+async function setup(page){await page.goto('/?mode=convert');const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=300;c.getContext('2d').fillRect(0,0,200,300);return c.toDataURL().split(',')[1];});await page.locator('#file').setInputFiles({name:'image.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await expect(page.locator('#source-preview')).toBeVisible();return png;}
 async function save(page){const pending=page.waitForEvent('download');await page.locator('#save-project').click();const chunks=[];for await(const c of await(await pending).createReadStream())chunks.push(c);return Buffer.concat(chunks);}
 async function open(page,id='hair'){await page.locator(`[data-review=${id}] button`).click();}
 async function point(page){await page.getByText('数値で指定（キーボード操作）').click();await page.locator('#coordinate-form input[name=x]').fill('50');await page.locator('#coordinate-form input[name=y]').fill('50');await page.getByRole('button',{name:'数値を反映'}).click();}

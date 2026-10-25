@@ -57,3 +57,66 @@ STEP1検証：変更前の全Node178件/build成功。両branchを保持した�
 | `assembly_quality.json` | 構造と画素検査。完成品質/公式動作の自動合格はfalse |
 
 再開時はPNG/指紋/履歴/基準を検査し、PNGから合成とリグを再計算する。ZIP内のモデルを任意のランタイムへ実行しない。旧テンプレート/デザイン指定の33パーツZIPも読み込める。画像1枚からの作業/詳細モデルZIPは旧画面の別入口を使う。
+
+## 画面の使い方（STEP3〜4）
+
+1. アプリの最初に「キャラクター制作」が開く。髪型/色・目の形/色を選び「ベースを組み立てる」。自作の端末内描画でありAI生成ではない。
+2. 前髪/目/衣装の別テンプレートを順番に試す。交換を重ねても他のパーツは残る。「ひとつ前の交換に戻す」と、指定範囲だけ基準へ戻す操作がある。
+3. 外部素材は折りたたみ欄を開き「共通参考画像と配置ガイドを保存」。共通デザイン/参考画像/33役割の寸法・位置・支点・親・順と依頼条件を端末へ保存する。ChatGPTへの自動送信はしない。無関係な33回生成やシート1枚を独立パーツの成功にしない。
+4. PNG複数か部品ZIPを選択し、照合結果を見て「確認して交換」。選んだだけでは交換しない。適合しない場合は役割・理由・必要寸法を表示し、前の制作を保持する。
+5. 左右別の瞬き/口/頭X/Y/傾き/呼吸のスライダーで確認する。本人左目は画面右。共通の動作名/範囲を維持し、実際の白目/まつ毛PNGから目曲線/meshのbindingを再計算する。手動リギングは不要。
+6. 「瞬きと呼吸を再生」は明示操作で開始し、停止/モード変更/タブ非表示/新処理で止めて元のposeへ戻る。保存は通常姿勢の完成PNGと、操作していたposeの制作プロジェクトを区別する。
+7. 制作ZIP/完成PNG/個別PNG/INP/INXを端末へ保存。次回は「制作を再開」で制作ZIPを開く。基準PNGも含むので再開後も元に戻せる。一時undoは画面内10回だけで、再開後は空になる。
+
+新モードは`src/character-maker/`に分離。旧2モードはDOM/状態/操作と旧保存形式を保持し、上部から往復できる。直接開く場合は`?mode=maker`（既定）/`?mode=generate`（従来パーツ）/`?mode=convert`（画像変換）。既存ブラウザ試験は入口だけ`?mode=convert`へ変更して、画像変換の既存検査内容を残している。
+
+### 動作とプレビューの範囲
+
+`shared/modular-character-rig.js`は既存の6制御生成器をそのまま呼び、独立したprofile `modular-character-rig-v1`で小さな胴体Breath制御を追加する。元のv1/v2出力器、5パーツ/詳細画像処理は変更しない。旧6制御の出力に呼吸を混入させない。
+
+- EyeOpenL/R、MouthOpenは独立。HeadX/Yは小さな平面移動、HeadTiltはZ回転。頭の制御では胴体/襟を固定し、首は既存の連続変形を再利用する。顔の立体角度ではない。
+- Breathは胴体グループへごく小さな拡大/上下変化を加え、子の首/頭も同じ変換へ追従する。軸点0/.5/1。公式GUIでShift操作が端へ吸着する問題を見つけ、中間キーを追加した。自動のネイティブ呼吸automationではなく、共通制御を提供する。
+- `preview.js`は**実際に格納したモデルJSON/PNGとbinding**を評価する限定Canvas描画器。Normal/1D線形/既知のmask/meshを扱い、他の任意INP/INP2を開く公式SDKではない。Inox2Dの0/opacity不具合には変更を加えない。
+- 共通の7制御と、役割別の位置/支点/階層、素材から再測定する固有の変形情報を分ける。今の基準配置を外れた大幅な髪型・衣装や物理設定の自動推定は後段。
+
+## PC/クラウドでの復元と再生成
+
+```sh
+git clone --branch feature/modular-character-maker https://github.com/tmtchannel69-glitch/ai-live2d-maker.git
+cd ai-live2d-maker
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+端末自身のブラウザで`http://localhost:5173`を開く。新モードはSAM/Python/重み/APIキーなしに利用できる。クラウドのlocalhostとPC/iPhoneのlocalhostは別物。公開URLの作成は今回の範囲外で、iPhone実機/Safariは未検証。
+
+別ターミナルから自作テンプレートの基準→前髪→目→衣装の累積4段階と、動作画面・制作ZIP再開を再生成できる。
+
+```sh
+# Playwright Chromiumが既にある環境。システムChromeなら実在するパスを指定。
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium node scripts/character-maker/trial.mjs --url http://127.0.0.1:5173 --output /tmp/NEW-private-maker-trial
+node --test scripts/character-maker/test.mjs scripts/inochi2d/app-review-test.mjs
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npx playwright test tests/modular-character-maker.spec.js --workers=1
+npm run build
+```
+
+Windows PowerShellは環境変数を`$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='C:\\...\\chrome.exe'`のように別行で指定する。パスを未指定ならPlaywrightの既存ブラウザを使う。ブラウザ未導入なら`npx playwright install chromium`が必要で、これは画像処理モデル重みとは別の開発依存。自動取得はスクリプトへ入れていない。
+
+`trial.mjs`はGit外の**新規ディレクトリ**だけに保存し、既存データを上書きせず、local origin以外とAPIを遮断する。base/bangs/eyes/outfitにはproject.zip/PNG/manifest/INP/INX/動作画面と実測が入る。元画像は不要。外部PNGの再現にはその素材をオーナー自身で保管するか、制作ZIP（基準/現在PNGを含む）を保持する必要がある。クラウドの/tmpの存続は保証されない。
+
+既存Python依存と固定公式バイナリがあるLinux環境では、CPU/公式GUI検証も再実行できる。Creator監査は固定1280×960の既存レイアウト/通常通知の終了を必要とし、通常のアプリ利用には不要。
+
+```sh
+.venv/bin/python scripts/character-generation/render-inochi.py --input /tmp/NEW-private-maker-trial/outfit --output /tmp/NEW-private-cpu
+.venv/bin/python scripts/character-generation/creator-trial.py --input /tmp/NEW-private-maker-trial --output /tmp/NEW-private-official --creator /path/to/pinned-0.8.6/inochi-creator --runtime /path/to/private-runtime --xdotool /path/to/xdotool --display :96 --names base,outfit --include-breath
+```
+
+公式Creator0.8.6 LinuxバイナリSHA256は`2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc`。SDK/形式の固定は旧生成器の`GENERATED_INOCHI_PIN`を再利用する。新しい外部ライブラリ/API/有料契約/他社素材は追加していない。GUI用レイアウトや依存は[既存手順](INOCHI2D_CREATOR_CHECK.md)を参照。
+
+## 未完成と次の優先課題
+
+- 本物のChatGPT生成独立PNGは未提供。実AIのデザイン一致・高品質・権利/出典・隠れた面・異なる画風での成功率は未評価。
+- 現在は基準の正面/胸上/メイド服の33構造へ適合する交換。任意の服・長さ/形状を完全自動で再認識する機能は未完成。自動推測で違う役割に割り当てない。
+- 低開度のまぶた/まつ毛の線、開口の切り替え、首影、公式描画と合成PNGの表示差をSTEP5で優先。構造検査だけで完成品質へ昇格させない。
+- 髪/服の物理、視線/表情/会話反応、実iPhone/Safari、公式ブラウザランタイムは後段。Cubism/MOC3/VTube Studio互換とは表示しない。
+- 直接AI APIの接続は既存の未送信準備を再利用できるが、最新のサービス/モデル/料金/ライセンス/送信する参照/最大費用と承認が必要。今回の送信/課金は0。

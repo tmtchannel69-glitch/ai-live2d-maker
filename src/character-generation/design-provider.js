@@ -24,6 +24,9 @@ function svgForDesign(p,plan){
   const q=p.rect,transform=p.generation.reference_transform;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${q.width}" height="${q.height}" viewBox="${q.x} ${q.y} ${q.width} ${q.height}"><g transform="matrix(${transform.join(' ')})">${inner}</g></svg>`;
 }
+// Reuse the same independently drawn artwork in the modular maker. The
+// existing provider, manifest and output bytes are otherwise unchanged.
+export const designedPartSvg=svgForDesign;
 
 export const localDesignProvider=Object.freeze({id:'local-design-v1',ai_generated:false,external:false,
   async generateCharacter(plan,{signal,onProgress=()=>{}}={}){

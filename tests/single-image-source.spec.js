@@ -12,7 +12,7 @@ const portrait=(w=200,h=300)=>{
   return Buffer.from(encode({width:w,height:h,data,channels:4,depth:8}));
 };
 async function setup(page){
-  await page.goto('/');await page.locator('#mode-generate').click();
+  await page.goto('/?mode=convert');await page.locator('#mode-generate').click();
   await expect(page.locator('#cg-single-portrait')).toBeVisible();
 }
 async function download(page,id){

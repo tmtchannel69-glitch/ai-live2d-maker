@@ -9,7 +9,7 @@ async function displayed(page){await expect(page.locator('#inochi-model-status')
 
 test('locally reopens model review without a source image, API requests, or changes to existing work',async({page})=>{
   let apiCalls=0;await page.route('**/api/**',route=>{apiCalls++;return route.abort();});
-  await page.goto('/');await open(page);await displayed(page);expect(apiCalls).toBe(0);
+  await page.goto('/?mode=convert');await open(page);await displayed(page);expect(apiCalls).toBe(0);
   await expect(page.locator('#inochi-review-caption')).toHaveText('通常');await expect(page.locator('#inochi-review-position')).toHaveText('1 / 10');
   await expect(page.locator('#inochi-review-content')).toContainText('公式Creatorの画面や');
   await expect(page.locator('.inochi-review-verdict')).toContainText('未合格');
@@ -26,7 +26,7 @@ test('locally reopens model review without a source image, API requests, or chan
 });
 
 test('invalid imported ZIP preserves the previous model, images, and editing source',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   const bytes=reviewFixture().files['common/observed/head_surface.png'];
   await page.locator('#file').setInputFiles({name:'existing.png',mimeType:'image/png',buffer:Buffer.from(bytes)});
   await open(page);await displayed(page);
@@ -44,7 +44,7 @@ test('preview URLs are released when changing frames or selecting a new image',a
     window.reviewRevoked=[];const original=URL.revokeObjectURL.bind(URL);
     URL.revokeObjectURL=url=>{window.reviewRevoked.push(url);original(url);};
   });
-  await page.goto('/');await open(page);await displayed(page);
+  await page.goto('/?mode=convert');await open(page);await displayed(page);
   const first=await page.locator('#inochi-review-image').getAttribute('src');
   await page.locator('#inochi-review-next').click();expect(await page.evaluate(url=>reviewRevoked.includes(url),first)).toBe(true);
   const second=await page.locator('#inochi-review-image').getAttribute('src');
@@ -55,7 +55,7 @@ test('preview URLs are released when changing frames or selecting a new image',a
 });
 
 test('review stays inside phone widths with touch-sized controls',async({page})=>{
-  await page.goto('/');await open(page);await displayed(page);await page.locator('#inochi-review-parts summary').click();
+  await page.goto('/?mode=convert');await open(page);await displayed(page);await page.locator('#inochi-review-parts summary').click();
   for(const width of [320,390]){
     await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     for(const id of ['#inochi-model-open','#inochi-review-view','#inochi-review-frame','#inochi-review-prev','#inochi-review-next','#inochi-review-play','#inochi-review-part','#inochi-review-plane']){
@@ -67,7 +67,7 @@ test('review stays inside phone widths with touch-sized controls',async({page})=
 
 test('the upload shortcut reaches automatic generation without any image request or manual prompts',async({page})=>{
   let requests=0;await page.route('**/api/**',route=>{requests++;return route.abort();});
-  await page.goto('/');await expect(page.locator('#inochi-model-jump')).toBeDisabled();
+  await page.goto('/?mode=convert');await expect(page.locator('#inochi-model-jump')).toBeDisabled();
   await page.locator('#file').setInputFiles({name:'character.png',mimeType:'image/png',buffer:Buffer.from(reviewFixture().files['common/observed/head_surface.png'])});
   await page.locator('#inochi-model-jump').tap();await expect(page.locator('#inochi-model-title')).toBeFocused();
   await expect(page.locator('#inochi-model-title')).toBeInViewport();expect(requests).toBe(0);
@@ -80,7 +80,7 @@ test('cancelling an archive read cannot replace the previous result after a late
     const read=Blob.prototype.arrayBuffer;
     Blob.prototype.arrayBuffer=async function(){if(this.name==='slow-model.zip')await new Promise(resolve=>{window.finishSlowReview=resolve;});return read.call(this);};
   });
-  await page.goto('/');await open(page);await displayed(page);
+  await page.goto('/?mode=convert');await open(page);await displayed(page);
   const previous=await page.locator('#inochi-review-image').getAttribute('src');
   await page.locator('#inochi-model-open-file').setInputFiles({name:'slow-model.zip',mimeType:'application/zip',buffer:reviewFixture().zip()});
   await expect(page.locator('#inochi-model-status')).toContainText('端末内で読み込んでいます');
@@ -90,7 +90,7 @@ test('cancelling an archive read cannot replace the previous result after a late
 });
 
 test('skin comparison switches before/after at the same opening and keeps unsupported head comparison hidden',async({page})=>{
-  await page.goto('/');await open(page,reviewFixture({withBoundary:true}).zip());await displayed(page);
+  await page.goto('/?mode=convert');await open(page,reviewFixture({withBoundary:true}).zip());await displayed(page);
   await expect(page.locator('#inochi-review-skin-summary')).toContainText('2.80 → 2.20');
   await expect(page.locator('#inochi-review-variant')).toBeHidden();
   await page.locator('#inochi-review-view').selectOption('blink');await page.locator('#inochi-review-next').tap();

@@ -5,7 +5,7 @@ test.use({hasTouch:true,isMobile:true});
 const red=[230,40,60,255],blue=[30,80,160,255];
 function png(color){const data=new Uint8Array(128*192*4);for(let i=0;i<data.length;i+=4)data.set(color,i);return Buffer.from(encode({width:128,height:192,data,channels:4,depth:8}));}
 async function setup(page){
-  await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png([200,150,50,255])});await expect(page.locator('#source-preview')).toBeVisible();
+  await page.goto('/?mode=convert');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png([200,150,50,255])});await expect(page.locator('#source-preview')).toBeVisible();
   for(const [role,color] of [['face_base',blue],['mouth_upper',red]]){await page.locator('#asset-role').selectOption(role);await page.locator('#asset-file').setInputFiles({name:`${role}.png`,mimeType:'image/png',buffer:png(color)});await expect(page.locator('#clip-apply')).toBeEnabled();}
   await page.locator('#scene-role').selectOption('mouth_upper');
 }

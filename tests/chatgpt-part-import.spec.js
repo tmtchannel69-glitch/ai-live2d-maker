@@ -10,7 +10,7 @@ async function getDownload(page,selector){
   return Buffer.concat(parts);
 }
 async function setup(page){
-  await page.goto('/');
+  await page.goto('/?mode=convert');
   await page.locator('#mode-generate').click();
   await page.locator('#cg-provider').selectOption('design-local');
   await page.locator('#cg-generate').click();

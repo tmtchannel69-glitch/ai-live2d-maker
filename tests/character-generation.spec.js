@@ -15,7 +15,7 @@ async function download(page,selector){
 const json=(files,name)=>JSON.parse(strFromU8(files[name]));
 
 test('assembles 33 genuine independent PNGs, exports data, and reconstructs the preview from the downloaded contract',async({page})=>{
-  await page.goto('/');let requests=0;await page.route('**/api/**',r=>{requests++;return r.abort();});
+  await page.goto('/?mode=convert');let requests=0;await page.route('**/api/**',r=>{requests++;return r.abort();});
   await generate(page);await expect(page.locator('#image-conversion-mode')).toBeHidden();await expect(page.locator('#cg-part option')).toHaveCount(33);
   const zip=await download(page,'#cg-download-zip');expect(zip.name).toBe('ai-live2d-generated-character.zip');const files=unzipSync(zip.bytes),m=validateCharacterManifest(json(files,'character_manifest.json'));
   expect(Object.keys(files)).toHaveLength(45);expect(m.generator).toMatchObject({id:'template',ai_generated:false});
@@ -50,7 +50,7 @@ test('assembles 33 genuine independent PNGs, exports data, and reconstructs the 
 });
 
 test('switching modes preserves the original source, parts and work ZIP without sending them to the new generator',async({page})=>{
-  await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#save-project')).toBeEnabled();
+  await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#save-project')).toBeEnabled();
   const source=await page.locator('#source-preview').getAttribute('src'),before=await download(page,'#save-project');
   let requests=0;await page.route('**/api/**',r=>{requests++;return r.abort();});await generate(page);
   await page.locator('#mode-convert').click();await expect(page.locator('#source-preview')).toBeVisible();expect(await page.locator('#source-preview').getAttribute('src')).toBe(source);
@@ -60,7 +60,7 @@ test('switching modes preserves the original source, parts and work ZIP without 
 });
 
 test('background affects the composite only and saved settings match the completed generation',async({page})=>{
-  await page.goto('/');await generate(page);const before=(await download(page,'#cg-download-zip')).bytes,original=unzipSync(before);
+  await page.goto('/?mode=convert');await generate(page);const before=(await download(page,'#cg-download-zip')).bytes,original=unzipSync(before);
   await page.locator('#cg-background').selectOption('white');await expect(page.locator('#cg-saved-settings')).toContainText('前回');
   expect((await download(page,'#cg-download-zip')).bytes).toEqual(before);
   await page.locator('#cg-generate').click();await expect(page.locator('#cg-status')).toContainText('33パーツを組み立てました');
@@ -70,7 +70,7 @@ test('background affects the composite only and saved settings match the complet
 });
 
 test('cancel and failed generation keep the previous character and unlock retry',async({page})=>{
-  await page.goto('/');await generate(page);const before=await download(page,'#cg-download-zip');
+  await page.goto('/?mode=convert');await generate(page);const before=await download(page,'#cg-download-zip');
   await page.evaluate(()=>{window.realCgBlob=HTMLCanvasElement.prototype.toBlob;HTMLCanvasElement.prototype.toBlob=function(...args){setTimeout(()=>window.realCgBlob.apply(this,args),200);};});
   await page.locator('#cg-generate').click();await page.locator('#cg-cancel').click();await expect(page.locator('#cg-status')).toContainText('生成を中止');await expect(page.locator('#cg-status')).toContainText('保持');
   await page.evaluate(()=>{HTMLCanvasElement.prototype.toBlob=function(callback){setTimeout(()=>callback(null),0);};});
@@ -80,7 +80,7 @@ test('cancel and failed generation keep the previous character and unlock retry'
 });
 
 test('missing, blank, wrong-size and unlabelled external providers fail instead of substituting dummy assets',async({page})=>{
-  await page.goto('/');const result=await page.evaluate(async()=>{
+  await page.goto('/?mode=convert');const result=await page.evaluate(async()=>{
     const {generateCharacter,localPartProvider}=await import('/src/character-generation/generator.js');
     const c=document.createElement('canvas');c.width=c.height=2;const tiny=await new Promise(r=>c.toBlob(r));const failures=[];
     for(const which of ['null','tiny','blank','external']){
@@ -91,13 +91,13 @@ test('missing, blank, wrong-size and unlabelled external providers fail instead 
 });
 
 test('dummy mode is labelled and exposes the same 33-part output contract',async({page})=>{
-  await page.goto('/');await generate(page,{provider:'dummy'});await expect(page.locator('#cg-summary')).toContainText('配置確認用');
+  await page.goto('/?mode=convert');await generate(page,{provider:'dummy'});await expect(page.locator('#cg-summary')).toContainText('配置確認用');
   const files=unzipSync((await download(page,'#cg-download-zip')).bytes);expect(validateCharacterManifest(json(files,'character_manifest.json')).generator.id).toBe('dummy');
   expect(Object.keys(files)).toHaveLength(39);expect(files['character.inp']).toBeUndefined();await expect(page.locator('#cg-model-output')).toBeHidden();
 });
 
 test('phone and landscape controls fit, are touch-sized, and retain the preview across mode changes',async({page})=>{
-  await page.goto('/');await generate(page);
+  await page.goto('/?mode=convert');await generate(page);
   for(const size of [{width:320,height:640},{width:390,height:844},{width:844,height:390},{width:1280,height:800}]){
     await page.setViewportSize(size);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     for(const id of ['mode-convert','mode-generate','cg-generate','cg-hair','cg-eyes','cg-background','cg-part','cg-download-zip','cg-download-inp','cg-download-inx']){

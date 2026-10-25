@@ -15,7 +15,7 @@ async function download(page,selector) {
   for await(const chunk of await d.createReadStream())chunks.push(chunk);return Buffer.concat(chunks);
 }
 async function setup(page) {
-  await page.goto('/');await page.locator('#file').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();
+  await page.goto('/?mode=convert');await page.locator('#file').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();
   await expect(page.locator('#motion-play')).toBeDisabled();await page.locator('#processing-mode').selectOption('ai');
   for(const id of ['face','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();
   await page.locator('#edit-prompts').click();await page.getByText('数値で指定（キーボード操作）').click();

@@ -30,7 +30,7 @@ async function saveModel(page){
 }
 
 test('explicit generation requires no prompts, uploads raw source only, and preserves existing work',async({page})=>{
-  await page.goto('/');let sends=0,checks=0;
+  await page.goto('/?mode=convert');let sends=0,checks=0;
   await page.route('**/api/inochi2d/status',route=>{checks++;return route.fulfill({json:{configured:true,busy:false}});});
   let source;
   await page.route('**/api/inochi2d/generate',route=>{
@@ -54,7 +54,7 @@ test('explicit generation requires no prompts, uploads raw source only, and pres
 });
 
 test('unconfigured or busy server never receives the image; phone controls fit and stay readable',async({page})=>{
-  await page.goto('/');await image(page);let sends=0;
+  await page.goto('/?mode=convert');await image(page);let sends=0;
   await page.route('**/api/inochi2d/generate',route=>{sends++;return route.fulfill({status:503,json:{error:'not configured'}});});
   await ready(page,{configured:false,busy:false});await page.locator('#inochi-model-start').click();
   await expect(page.locator('#inochi-model-status')).toContainText('未設定');
@@ -71,7 +71,7 @@ test('unconfigured or busy server never receives the image; phone controls fit a
 });
 
 test('failed retry retains the previous model and original project; malformed responses are rejected',async({page})=>{
-  await page.goto('/');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();
+  await page.goto('/?mode=convert');await page.locator('#try-sample').click();await expect(page.locator('#scene-inspect')).toBeEnabled();
   await ready(page);const before=await saveWork(page);
   await page.route('**/api/inochi2d/generate',route=>route.fulfill({contentType:'application/zip',body:output}));
   await page.locator('#inochi-model-start').click();await expect(page.locator('#inochi-model-download')).toBeVisible();
@@ -83,7 +83,7 @@ test('failed retry retains the previous model and original project; malformed re
 });
 
 test('cancel, reset, and replacing the source reject delayed responses and release all locks',async({page})=>{
-  await page.goto('/');await image(page);await ready(page);
+  await page.goto('/?mode=convert');await image(page);await ready(page);
   const releases=[];
   await page.route('**/api/inochi2d/generate',async route=>{
     await new Promise(resolve=>releases.push(resolve));
@@ -106,7 +106,7 @@ test('cancel, reset, and replacing the source reject delayed responses and relea
 });
 
 test('reset during readiness check cannot upload the old image',async({page})=>{
-  await page.goto('/');await image(page);let release,sends=0;
+  await page.goto('/?mode=convert');await image(page);let release,sends=0;
   const held=new Promise(resolve=>release=resolve);
   await page.route('**/api/inochi2d/status',async route=>{await held;await route.fulfill({json:{configured:true,busy:false}}).catch(()=>{});});
   await page.route('**/api/inochi2d/generate',route=>{sends++;return route.fulfill({contentType:'application/zip',body:output});});
