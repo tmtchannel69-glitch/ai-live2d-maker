@@ -1,6 +1,6 @@
 # 共通原画・髪3系統の検証
 
-2026-10-25、`feature/modular-character-maker` の `b448514` を維持して実装。[使い方・形式・再現手順](COMMON_DESIGN_WORKFLOW.md)。機械可読の記録は[JSON](COMMON_DESIGN_VALIDATION.json)。画像/モデル/ZIPはGit外だけに保持する。
+2026-10-25、`feature/modular-character-maker` の `b448514` を維持し、`abda529` に実装。[使い方・形式・再現手順](COMMON_DESIGN_WORKFLOW.md)。機械可読の記録は[JSON](COMMON_DESIGN_VALIDATION.json)。画像/モデル/ZIPはGit外だけに保持する。
 
 ## 今回の結果
 

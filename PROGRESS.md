@@ -2,6 +2,7 @@
 
 ## 2026-10-25 共通原画・髪3系統のデザイン統一工程
 
+- 実装の保存点はabda529。以下の実画像・旧出力不変・217/109/46＋7検査と再現手順を同じ開発branchへ保存。元画像や出力モデルをGitへ追加していない。
 - feature/modular-character-maker/b448514のclean/remote一致を確認し継続。新指示は共通原画/33仕様/線・色・陰影・座標・透過・下地の検査/スマホ確認保存。外部画像API/課金/main統合/公開/画像モデルのGit追加を行わない。sourceを同branchへcommit/pushする既存承認を維持。
 - 共通原画をPNG/JPEG/WebP8MiB/4096辺/8M画素で登録し、元バイト・SHA/条件SHAを保持。原画だけの登録では33PNG/native/poseは変更しない。髪は前髪1+横髪左右2+後ろ髪1の3系統4枚を優先、原画用のPNGは一括で検査/交換し失敗・中止で前作業を保持。
 - shared/design-reference.js、design-part-quality.jsとsrc/character-maker/design-*を独立追加。33仕様/隠れ面の要請/実mask/支点/順序を出すが、原画の人体配置や画風を意味で認識したとはしない。色差/run線幅/輝度のばらつき/alpha/支点/基準下地不足は注意候補だけで、完成品質/隠れた形/光源はfalse。
