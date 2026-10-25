@@ -121,3 +121,62 @@ test('compares template and user PNG for each imported role without altering can
   expect(first).not.toBe(second);
   expect(await download(page,'#cg-download-zip')).toEqual(original);
 });
+test('all 33 supplied PNGs replace templates and export a complete local-only model',async({page})=>{
+  test.setTimeout(180000);
+  await setup(page);
+  let apiCalls=0;
+  await page.route('**/api/**',route=>{apiCalls++;return route.abort();});
+  const originals=await download(page,'#cg-download-zip');
+  const encoded=await page.evaluate(async()=>{
+    const {createDesignPlan}=await import('/shared/character-design.js');
+    const plan=await createDesignPlan();
+    return plan.blueprint.parts.map(p=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=p.rect.width;canvas.height=p.rect.height;
+      const ctx=canvas.getContext('2d');ctx.fillStyle='#8065bd';
+      ctx.fillRect(Math.floor(canvas.width*.28),Math.floor(canvas.height*.25),
+        Math.max(2,Math.floor(canvas.width*.35)),Math.max(2,Math.floor(canvas.height*.4)));
+      return {name:p.role+'.png',b64:canvas.toDataURL('image/png').split(',')[1]};
+    });
+  });
+  expect(encoded).toHaveLength(33);
+  await page.locator('#cg-batch-files').setInputFiles(encoded.map(({name,b64})=>({
+    name,mimeType:'image/png',buffer:Buffer.from(b64,'base64')
+  })));
+  await expect(page.locator('#cg-batch-selection')).toContainText('33枚を検出');
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:120000});
+  const files=unzipSync(await download(page,'#cg-batch-download'));
+  const report=JSON.parse(strFromU8(files['experimental_batch_report.json']));
+  const manifest=JSON.parse(strFromU8(files['character_manifest.json']));
+  expect(report).toMatchObject({external_part_count:33,local_template_part_count:0,
+    model_build_invocations:1,all_33_texture_slots_present:true,ai_origin_verified:false,
+    fully_ai_generated:false,official_creator_tested:false,no_network_transmission:true});
+  expect(report.local_template_roles).toEqual([]);
+  expect(report.parts).toHaveLength(33);
+  expect(new Set(report.provided_roles).size).toBe(33);
+  expect(report.parts.every(p=>/^[a-f0-9]{64}$/.test(p.source_sha256)&&p.manual_review_required)).toBe(true);
+  expect(manifest.parts).toHaveLength(33);
+  expect(files['character.inp'].length).toBeGreaterThan(100);
+  expect(files['character.inx'].length).toBeGreaterThan(100);
+  for(const p of manifest.parts){
+    const png=decode(files[p.file]);
+    expect([png.width,png.height,png.channels,png.depth]).toEqual([p.rect.width,p.rect.height,4,8]);
+  }
+  expect(await download(page,'#cg-download-zip')).toEqual(originals);
+  expect(apiCalls).toBe(0);
+});
+
+test('one invalid PNG among valid selections aborts atomically without changing the original ZIP',async({page})=>{
+  await setup(page);
+  const original=await download(page,'#cg-download-zip');
+  const good=await imageForRole(page,'iris_r');
+  const invalid=await imageForRole(page,'iris_l',{outside:true});
+  await page.locator('#cg-batch-files').setInputFiles([good,invalid]);
+  await expect(page.locator('#cg-batch-selection')).toContainText('2枚を検出');
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('指定範囲外',{timeout:30000});
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
+  await expect(page.locator('#cg-batch-review-role').locator('option')).toHaveCount(0);
+  expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
