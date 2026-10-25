@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -29,7 +30,7 @@ def trial(a):
     running=subprocess.run(['pgrep','-f','^'+str(binary)+' '],capture_output=True,text=True)
     if running.returncode==0:raise ValueError('Close existing Creator processes first. This tool never takes over another session.')
     names=a.names.split(',')
-    if not names or any(n not in ['soft','bob','cool'] for n in names) or len(set(names))!=len(names):raise ValueError('Select unique matrix names soft,bob,cool.')
+    if not names or any(not re.fullmatch('[a-z][a-z0-9_-]{0,30}',n) for n in names) or len(set(names))!=len(names):raise ValueError('Select unique safe matrix directory names.')
     output.mkdir(mode=0o700);reports=[]
     env={**os.environ,'DISPLAY':a.display,'LIBGL_ALWAYS_SOFTWARE':'1','XDG_CONFIG_HOME':str(runtime/'config'),
          'XDG_CACHE_HOME':str(runtime/'cache'),'XDG_STATE_HOME':str(runtime/'state'),'XDG_RUNTIME_DIR':str(runtime/'runtime'),'MESA_SHADER_CACHE_DIR':str(runtime/'cache')}
@@ -57,6 +58,7 @@ def trial(a):
         folder=output/name;folder.mkdir(mode=0o700);original=source/name/'character.inp';working=folder/'creator-saved.inx'
         shutil.copyfile(source/name/'character.inx',working)
         base=['--input',source/name,'--model',working,'--xdotool',a.xdotool,'--display',a.display]
+        if a.include_breath:base.append('--include-breath')
         p,stream=launch(working,folder/'creator-before.log')
         try:
             command('scripts/character-generation/verify-creator.py',[*base,'--output',folder/'before'],folder/'before.log')
@@ -78,4 +80,4 @@ def trial(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for key in ['input','output','creator','runtime','xdotool']:p.add_argument('--'+key,required=True)
-    p.add_argument('--display',default=':94');p.add_argument('--names',default='soft,bob,cool');trial(p.parse_args())
+    p.add_argument('--display',default=':94');p.add_argument('--names',default='soft,bob,cool');p.add_argument('--include-breath',action='store_true');trial(p.parse_args())

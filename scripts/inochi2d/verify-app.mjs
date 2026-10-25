@@ -40,7 +40,7 @@ async function readyAgain(){
   }throw new Error('Backend stayed busy after browser cancellation.');
 }
 try{
-  await page.goto(url.href);await page.locator('#file').setInputFiles(resolve(values.source));
+  url.searchParams.set('mode','convert');await page.goto(url.href);await page.locator('#file').setInputFiles(resolve(values.source));
   await page.locator('#separate').click();await page.waitForSelector('.result-card');
   const before=await work();await page.locator('#inochi-model-mode').selectOption('detailed-head');
   assert.equal(requests.length,0);await page.locator('#inochi-model-check').click();await waitText('準備ができています');assert.equal(requests.length,0);

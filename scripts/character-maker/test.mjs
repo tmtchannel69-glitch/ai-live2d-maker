@@ -4,6 +4,12 @@ import {zipSync,strToU8} from 'fflate';
 import {matchMakerFiles,DEFAULT_POSE,validateMakerPose,validateMakerOrigin,validateMakerHistory} from '../../shared/modular-character.js';
 import {readBoundedZip} from '../../shared/bounded-zip.js';
 import {auditModularMeshes} from '../../shared/modular-mesh-audit.js';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import {mkdtemp,symlink,access} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 const file=(name,size=100)=>({name,size});
 const origin={kind:'user-png',label:'User PNG',sha256:'a'.repeat(64),ai_origin_verified:false};
 test('role matching uses personal left/right, known aliases and normalized filenames',()=>{
@@ -35,4 +41,11 @@ test('mesh audit detects folding inside an interval even when both endpoints and
   assert.equal(auditModularMeshes(model([zero,safe])).folds_detected,0);
   const hidden=[[0,0],[-10,0],[0,-10/3]];
   assert.throws(()=>auditModularMeshes(model([zero,hidden])),/折り返/);
+});
+test('private regeneration rejects both dot-prefixed and symlinked output inside Git before creating anything',async()=>{
+  const root=fileURLToPath(new URL('../..',import.meta.url)),folder=await mkdtemp(join(tmpdir(),'maker-output-guard-')),link=join(folder,'repo');await symlink(root,link);
+  for(const output of [join(root,'..private-maker-output-guard'),join(link,'private-maker-output-guard')]){
+    await assert.rejects(()=>promisify(execFile)(process.execPath,[join(root,'scripts/character-maker/trial.mjs'),'--output',output]),e=>e.stderr.includes('outside Git'));
+    await assert.rejects(()=>access(output),{code:'ENOENT'});
+  }
 });

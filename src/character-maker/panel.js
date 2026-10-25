@@ -25,6 +25,10 @@ export function createCharacterMaker(){
   </section></div>
   <div class="panel maker-feedback"><p id="maker-status" role="status" aria-live="polite">ベースを組み立てるか、保存済みの制作ZIPを開いてください。</p><button type="button" id="maker-cancel" class="secondary" hidden>処理を中止</button><p id="maker-quality" class="muted">構造検査、ファイル生成、公式Creator動作、完成品質は別々に判定します。</p></div>
   <section id="maker-output" class="panel" hidden><h2>4. 制作を保存</h2><p>交換済みの33枚と基準パーツ、配置・支点・親子関係、動作設定、完成PNG、INP/INXをまとめます。画面を閉じる前に保存してください。</p><div class="maker-actions"><button type="button" id="maker-save" class="primary">制作ZIPを保存</button><button type="button" id="maker-save-image" class="secondary">完成PNGを保存</button><button type="button" id="maker-save-inp" class="secondary">Inochi2D INPを保存</button><button type="button" id="maker-save-inx" class="secondary">Creator用 INXを保存</button></div><div class="maker-part"><label>個別PNG<select id="maker-part"></select></label><button type="button" id="maker-save-part" class="secondary">選んだパーツを保存</button><img id="maker-part-preview" alt="選択中の独立PNG"></div><p id="maker-part-origin" class="muted"></p><p class="muted">完成PNGは通常姿勢です。操作中の動作値は制作ZIPに保存します。Inochi Creator 0.8.6向けで、Cubism／MOC3／VTube Studio互換ではありません。外部PNGのAI出典・画風・隠れ領域は未確認です。</p></section>`;
+  // Keep the short job status/cancel near the phone viewport. Longer quality
+  // notes stay in normal flow instead of covering the character while scrolling.
+  const feedback=section.querySelector('.maker-feedback'),qualityPanel=document.createElement('div');qualityPanel.className='maker-quality';qualityPanel.append(section.querySelector('#maker-quality'));feedback.after(qualityPanel);section.querySelector('.maker-workspace').before(feedback);
+  const jump=document.createElement('button');jump.type='button';jump.id='maker-see-preview';jump.className='secondary';jump.dataset.needsProject='';jump.textContent='組み立てと動きを見る';section.querySelector('.maker-stack').after(jump);jump.addEventListener('click',()=>section.querySelector('.maker-stage-panel').scrollIntoView({block:'start'}));
   const $=s=>section.querySelector(s);let project=null,renderer=null,active=null,partUrl=null,playing=false,raf=0,t0=0,lastFrame=0,idlePose=null;
   function status(s){$('#maker-status').textContent=s;}
   function controls(){const busy=!!active;section.setAttribute('aria-busy',String(busy));for(const e of section.querySelectorAll('button,input,select'))e.disabled=busy;
@@ -37,11 +41,12 @@ export function createCharacterMaker(){
   function stop(){cancelAnimationFrame(raf);raf=0;playing=false;$('#maker-play').setAttribute('aria-pressed','false');$('#maker-play').textContent='瞬きと呼吸を再生';if(project&&idlePose){project={...project,pose:idlePose};idlePose=null;syncPose();draw();}}
   function selectedPart(){if(partUrl)URL.revokeObjectURL(partUrl);partUrl=null;if(!project)return;const role=$('#maker-part').value;if(!project.current.assets.has(role))return;partUrl=URL.createObjectURL(project.current.assets.get(role));$('#maker-part-preview').src=partUrl;const o=project.origins[role];$('#maker-part-origin').textContent=`${role} ／ ${o.label} ／ AI由来は未確認`;
   }
-  async function publish(candidate,job){const prepared=await createMakerPreview(candidate.current.native,{signal:job.signal});if(active!==job||job.signal.aborted){prepared.close();return;}stop();renderer?.close();renderer=prepared;project=candidate;
+  async function publish(candidate,job){const prepared=await createMakerPreview(candidate.current.native,{signal:job.signal});if(active!==job||job.signal.aborted){prepared.close();return;}const first=!project;stop();renderer?.close();renderer=prepared;project=candidate;
     $('#maker-empty').hidden=true;$('#maker-canvas').hidden=false;$('#maker-motion').hidden=false;$('#maker-output').hidden=false;section.dataset.revision=String(project.revision);
     const counts=Object.values(project.origins).reduce((a,o)=>(a[o.kind]=(a[o.kind]||0)+1,a),{});$('#maker-summary').textContent=`33パーツ ／ 交換 ${project.revision}回 ／ 基準 ${counts['local-template']||0}・別テンプレート ${counts['local-preset']||0}・取り込み ${counts['user-png']||0}`;
     const previous=$('#maker-part').value;$('#maker-part').replaceChildren(...project.current.manifest.parts.map(p=>{const o=document.createElement('option');o.value=p.role;o.textContent=p.label;return o;}));if(previous)$('#maker-part').value=previous;selectedPart();syncPose();draw();
     const warnings=project.current.quality.parts.filter(p=>p.warning_count).map(p=>`${p.role}（${p.warning_codes.map(c=>({'very-low-coverage':'描画範囲が小さい','almost-opaque-tile':'不透明部分が多い','high-edge-contact':'画像端への接触が多い'}[c])).join('・')}）`);$('#maker-quality').textContent=`構造検査：33枚と首の接続・目の配置を確認。${warnings.length?'画素の注意候補：'+warnings.join('、')+'。':''}モデル生成：完了。今回の素材の公式Creator動作・完成品質：画面上の自動合格判定は行いません。`;
+    if(first&&!section.hidden)section.querySelector('.maker-stage-panel').scrollIntoView({block:'start'});
   }
   async function run(task,success){if(active)return;stop();const job=new AbortController();active=job;controls();status('端末内で確認しています…');try{const candidate=await task(job.signal,msg=>{if(active===job)status(msg);});if(job.signal.aborted)throw new DOMException('中止しました。','AbortError');if(candidate)await publish(candidate,job);if(active===job&&!job.signal.aborted)status(success);}catch(e){if(active===job)status((e.name==='AbortError'?'処理を中止しました。':`処理できませんでした。${e.message}`)+(project?' 交換前の制作データと動作は保持しています。':' ベースの作成・選択からやり直せます。'));}finally{if(active===job){active=null;controls();}}}
   $('#maker-form').addEventListener('submit',e=>{e.preventDefault();run(async(signal,progress)=>createMakerProject(await generateDesignedCharacter({features:{hair:{style:$('#maker-hair-style').value,color:$('#maker-hair-color').value},eyes:{shape:$('#maker-eye-shape').value,color:$('#maker-eye-color').value}}},{signal,onProgress:p=>progress(`${p.completed}/${p.total}：${p.label}`)}),{signal}),'33パーツを組み立てました。前髪・目・衣装を交換して、動きを確認できます。');});
@@ -56,14 +61,15 @@ export function createCharacterMaker(){
   $('#maker-pose-reset').addEventListener('click',()=>{stop();project={...project,pose:{...DEFAULT_POSE}};syncPose();draw();});
   $('#maker-play').addEventListener('click',()=>{if(playing){stop();return;}if(!project||active||section.hidden)return;idlePose={...project.pose};playing=true;t0=performance.now();lastFrame=0;$('#maker-play').textContent='再生を停止';$('#maker-play').setAttribute('aria-pressed','true');const frame=t=>{if(!playing)return;if(t-lastFrame>=80){lastFrame=t;const seconds=(t-t0)/1000,phase=seconds%5.4,open=phase<.28?Math.abs(phase-.14)/.14:1;project={...project,pose:{...idlePose,EyeOpenL:open,EyeOpenR:open,Breath:(1-Math.cos(seconds/4.2*Math.PI*2))*.5}};syncPose();draw();}raf=requestAnimationFrame(frame);};raf=requestAnimationFrame(frame);});
   $('#maker-part').addEventListener('change',selectedPart);
+  const savePrepared=async(signal,prepare,name)=>{const blob=await prepare();if(signal.aborted)throw new DOMException('保存を中止しました。','AbortError');save(blob,name);};
   for(const [id,action] of Object.entries({
-    'maker-save':async()=>save(await createMakerArchive(project),'ai-live2d-character-project.zip'),
-    'maker-guide':async()=>save(await createMakerGuide(project),'character-part-guide.zip'),
+    'maker-save':signal=>savePrepared(signal,()=>createMakerArchive(project),'ai-live2d-character-project.zip'),
+    'maker-guide':signal=>savePrepared(signal,()=>createMakerGuide(project),'character-part-guide.zip'),
     'maker-save-image':async()=>save(project.current.preview,'character-preview.png'),
     'maker-save-inp':async()=>save(new Blob([project.current.native.inp]),'character.inp'),
     'maker-save-inx':async()=>save(new Blob([project.current.native.inx]),'character.inx'),
     'maker-save-part':async()=>save(project.current.assets.get($('#maker-part').value),$('#maker-part').value+'.png')
-  }))$('#'+id).addEventListener('click',()=>run(async()=>{await action();return null;},'端末への保存を開始しました。ダウンロード先を確認してください。'));
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',()=>{stop();active?.abort();renderer?.close();if(partUrl)URL.revokeObjectURL(partUrl);});
+  }))$('#'+id).addEventListener('click',()=>run(async signal=>{await action(signal);return null;},'端末への保存を開始しました。ダウンロード先を確認してください。'));
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',event=>{stop();active?.abort();if(!event.persisted){renderer?.close();if(partUrl)URL.revokeObjectURL(partUrl);}});
   controls();return {element:section,setVisible:visible=>{if(!visible)stop();}};
 }

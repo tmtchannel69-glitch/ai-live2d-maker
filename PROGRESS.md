@@ -1,5 +1,17 @@
 # 開発進捗
 
+## 2026-10-25 STEP4 共通リギング・公式検証と最終確認（最新）
+
+- 開発保存点はSTEP1=3e4c27c、STEP2=45c52ac、STEP3=f7183fd。すべてfeature/modular-character-makerへpush済み。今回の新指示がpushを承認しており、前段の禁止を上書きする。main/公開/画像・モデルのGit追加/外部画像API/課金は行わない。
+- 既存6制御生成器を再利用し、独立profileへBreathを追加。共通7制御/33役割/41ノード/28bindings。新素材の白目/まつ毛から曲線とmeshを再設定し、頭動作では胴体/襟固定、呼吸だけ胴体も変形。Canvasは実格納model/bindingを読む独立描画で、公式SDK/Inoxではない。
+- 基準6883b222…と累積交換後9d5a1559…を未改変公式Creator0.8.6でそれぞれ28状態→保存→新プロセス28状態、計112状態を検査。全viewport差0。33texture RGBA/親子/mesh/mask/7params28bindings保持、数値差最大6.67e-6。中間2モデルは公式未検査。
+- 最終4段階ZIPは77entry/約8.09〜8.12MB、CRC成功。最終コードからの再生成で直前4ZIPと全バイト一致。旧26MB ZIP18bf753f…も保持。元画像や外部AIの入力は不要な自作テンプレートで、実ChatGPT素材の成功ではない。
+- CPU4×24状態で首ROI穴/頭動作の胴体変化/折返し0、片目/口の独立性成功。中立は合成PNGとの白背景RGB差最大3。公式GUIと合成PNGは別のサンプル比較で差が残り、完成品質は未合格。
+- Node203項目/Python109/build成功。全192ブラウザ初回190成功2生成待ち5秒切れ→負荷低下後、失敗を含む旧7＋新10の17/17成功。重複を除いた最終195項目の通過を確認したが、全195の最終一括実行とはしない。Python既存警告1件。実iPhone/Safari/Windowsは未検査。
+- 呼吸の中間キー吸着、文字サイズ、遅い保存の中止、persisted画面復帰の描画保持を修正・検査。短い状況/中止を追従表示し、最初の生成後プレビュー移動と確認ボタンを追加。再生成出力先のsymlink/..privateによるGit内書込も拒否。
+- docs/MODULAR_CHARACTER_MAKER.mdとVALIDATION.md/jsonに再現/私用成果物/判定の区別を保存。最終は/tmp/modular-maker-trial-final、CPUは/tmp/modular-maker-cpu-v2-*、公式は/tmp/modular-maker-official-v2。環境消失時はNode依存/コードから復元できる。外部PNG使用時はオーナーのPNGか制作ZIPの保管も必要。
+- 次はSTEP5の途中まぶた/まつ毛・口/首影/公式表示差の品質検査。STEP6は本物のChatGPT独立PNG未提供で保留。APIの自動生成/利用契約/費用は別承認、送信/課金0。Cubism/VTube Studio対応とは表示しない。
+
 ## 2026-10-25 STEP3 交換・保存・スマホ向け制作画面
 
 - 主画面を交換式「キャラクター制作」にし、旧画像変換/従来パーツ生成を別タブで保持。旧試験は入口を?mode=convertへ指定し、既存の検査内容を維持する。

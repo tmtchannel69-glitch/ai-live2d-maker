@@ -10,7 +10,7 @@ ChatGPT等で用意した**独立した透過PNG**を、役割名から読み込
 
 このモードは **Node依存だけ**で利用できます。`npm ci` → `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`。SAM/Python/モデル重み/APIキーは不要で、第三者への画像送信はしません。画像1枚からの変換は上部「画像1枚から変換」（`?mode=convert`）、以前のパーツ生成・研究画面は「従来のパーツ生成」（`?mode=generate`）に維持しています。クラウド内のlocalhostはPC/iPhone自身のlocalhostとは異なります。
 
-[操作・保存形式・再生成・実装範囲](docs/MODULAR_CHARACTER_MAKER.md)。今回のソースは `feature/modular-character-maker` にcommit/pushします。main統合・アプリ公開・画像/モデルのGit追加は行いません。出力は **Inochi2D legacy 0.8.6** で、Cubism／MOC3／VTube Studio形式ではありません。
+[操作・保存形式・再生成・実装範囲](docs/MODULAR_CHARACTER_MAKER.md)、[STEP1〜4の検証結果](docs/MODULAR_CHARACTER_MAKER_VALIDATION.md)。今回のソースは `feature/modular-character-maker` にcommit/pushします。main統合・アプリ公開・画像/モデルのGit追加は行いません。出力は **Inochi2D legacy 0.8.6** で、Cubism／MOC3／VTube Studio形式ではありません。
 
 ## 画像1枚から頭・首・胴体を分ける
 

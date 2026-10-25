@@ -1,0 +1,228 @@
+{
+  "date": "2026-10-25",
+  "format": "modular-character-maker-validation",
+  "version": 1,
+  "branch": "feature/modular-character-maker",
+  "implementation_checkpoints": [
+    "3e4c27c",
+    "45c52ac",
+    "f7183fd"
+  ],
+  "scope": "Original local template only; no real ChatGPT independent PNGs supplied. No AI calls or paid services.",
+  "file_generation_passed": true,
+  "official_creator_tested_model_variants": [
+    "base",
+    "outfit"
+  ],
+  "appearance_quality_passed": false,
+  "tests": {
+    "node_unique_passed": 203,
+    "node_run_breakdown": [
+      {
+        "command": "node --test scripts/ai-image-pilot/*test.mjs scripts/character-generation/*test.mjs scripts/inochi2d/*test.mjs scripts/character-maker/test.mjs",
+        "passed": 172,
+        "includes_old_core_six": true
+      },
+      {
+        "command": "node --test scripts/model-build/*test.mjs",
+        "passed": 30
+      },
+      {
+        "command": "node --test scripts/character-maker/test.mjs",
+        "passed": 7,
+        "supersedes_the_old_six": true
+      }
+    ],
+    "python_passed": 109,
+    "python_existing_warnings": 1,
+    "browser_unique_verified": 195,
+    "browser_first_full_run": {
+      "scheduled": 192,
+      "passed": 190,
+      "failed": 2,
+      "failure_reason": "Original 5s generation expectation expired under concurrent official GUI/CPU load; no fallback or data loss."
+    },
+    "browser_final_related_run": {
+      "scheduled": 17,
+      "passed": 17,
+      "includes_the_two_prior_failures": true,
+      "includes_all_ten_new_maker_tests": true
+    },
+    "single_final_full_195_run_performed": false,
+    "build_passed": true
+  },
+  "variants": [
+    {
+      "name": "base",
+      "model_sha256": "6883b22222a3894231ec72fd54a4c9c6fa70503cb8d6a1a324de16c133c201f9",
+      "zip_sha256": "5d13192bc4f3ec226a74203938bfb52208d559c0a58c5496fc1a8f782897e019",
+      "zip_bytes": 8102069,
+      "zip_entries": 77,
+      "repeated_zip_bytes_identical": true,
+      "source_model_matches_cpu_test": true,
+      "cpu_geometry_passed": true,
+      "cpu_states": 24,
+      "cpu_neutral_comparison": {
+        "background": "white",
+        "changed_pixels": 11835,
+        "rgb_above_3_pixels": 0,
+        "maximum_channel_difference": 3,
+        "mean_channel_difference": 0.009106530083550347
+      },
+      "trial_exchange_and_archive_seconds": 0.177,
+      "ai_generated": false
+    },
+    {
+      "name": "bangs",
+      "model_sha256": "be3d7d212674704527f0c79a0d00bcd37d27d274783b6469e38e21c8fc53117d",
+      "zip_sha256": "1b5c4a39e29b72efd04f0773f455a7c7546eb2753b00c7e8981babf6fb79dcfb",
+      "zip_bytes": 8086368,
+      "zip_entries": 77,
+      "repeated_zip_bytes_identical": true,
+      "source_model_matches_cpu_test": true,
+      "cpu_geometry_passed": true,
+      "cpu_states": 24,
+      "cpu_neutral_comparison": {
+        "background": "white",
+        "changed_pixels": 11733,
+        "rgb_above_3_pixels": 0,
+        "maximum_channel_difference": 3,
+        "mean_channel_difference": 0.009104834662543403
+      },
+      "trial_exchange_and_archive_seconds": 1.61,
+      "ai_generated": false
+    },
+    {
+      "name": "eyes",
+      "model_sha256": "d4f3b34d161538388ba60e7adeb8c3514adec5d07c6e79a16bf16dbb571f9617",
+      "zip_sha256": "61adb8868f7a7c5431f18db6437880656785bfe3414474b88f4ec3ed9c9d262b",
+      "zip_bytes": 8099538,
+      "zip_entries": 77,
+      "repeated_zip_bytes_identical": true,
+      "source_model_matches_cpu_test": true,
+      "cpu_geometry_passed": true,
+      "cpu_states": 24,
+      "cpu_neutral_comparison": {
+        "background": "white",
+        "changed_pixels": 12459,
+        "rgb_above_3_pixels": 0,
+        "maximum_channel_difference": 3,
+        "mean_channel_difference": 0.009688059488932291
+      },
+      "trial_exchange_and_archive_seconds": 1.587,
+      "ai_generated": false
+    },
+    {
+      "name": "outfit",
+      "model_sha256": "9d5a1559af2578deacf461f2b76f91523edddb851ad644706447aa413dd05db0",
+      "zip_sha256": "96e1415b83a136e56964dc5075bf3a281cd55541251dd6fa8baaeb3ec35baafe",
+      "zip_bytes": 8118005,
+      "zip_entries": 77,
+      "repeated_zip_bytes_identical": true,
+      "source_model_matches_cpu_test": true,
+      "cpu_geometry_passed": true,
+      "cpu_states": 24,
+      "cpu_neutral_comparison": {
+        "background": "white",
+        "changed_pixels": 12541,
+        "rgb_above_3_pixels": 0,
+        "maximum_channel_difference": 3,
+        "mean_channel_difference": 0.009677886962890625
+      },
+      "trial_exchange_and_archive_seconds": 1.525,
+      "ai_generated": false
+    }
+  ],
+  "official": {
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "variants": [
+      {
+        "name": "base",
+        "generated_sha256": "6883b22222a3894231ec72fd54a4c9c6fa70503cb8d6a1a324de16c133c201f9",
+        "saved_sha256": "678793b74b243bc552ec6443955d4703cd3d0b5d5a239fddba0ce62ad0bc664a",
+        "before_states": 28,
+        "fresh_reload_states": 28,
+        "max_reload_changed_pixels": 0,
+        "official_creator_motion_save_reload_passed": true,
+        "appearance_quality_passed": false,
+        "ai_generated": false,
+        "structure": {
+          "hierarchy_mesh_masks_bindings_retained": true,
+          "drawables_and_drivers": 33,
+          "parameters": 7,
+          "bindings": 28,
+          "maximum_numeric_roundtrip_delta": 6.666666649834951e-06,
+          "float_tolerance": 0.0001,
+          "runtime_validation": false,
+          "appearance_quality_passed": false
+        },
+        "independent_eye_mouth_before": true,
+        "independent_eye_mouth_after": true,
+        "gui_vs_preview_opaque_sample": {
+          "method": "Existing integer native-size eye calibration; only visible opaque source pixels. Filtering/camera contribution not isolated.",
+          "tested_pixels": 425469,
+          "changed_pixels": 234756,
+          "rgb_above_3_pixels": 53471,
+          "max_channel_difference": 128,
+          "mean_channel_difference": 2.4564813574353637,
+          "exact_match": false
+        }
+      },
+      {
+        "name": "outfit",
+        "generated_sha256": "9d5a1559af2578deacf461f2b76f91523edddb851ad644706447aa413dd05db0",
+        "saved_sha256": "5e30ba20afa1dd4338dc8401eae8d0f4369681034de1d97efe2811868947c5fa",
+        "before_states": 28,
+        "fresh_reload_states": 28,
+        "max_reload_changed_pixels": 0,
+        "official_creator_motion_save_reload_passed": true,
+        "appearance_quality_passed": false,
+        "ai_generated": false,
+        "structure": {
+          "hierarchy_mesh_masks_bindings_retained": true,
+          "drawables_and_drivers": 33,
+          "parameters": 7,
+          "bindings": 28,
+          "maximum_numeric_roundtrip_delta": 6.666666649834951e-06,
+          "float_tolerance": 0.0001,
+          "runtime_validation": false,
+          "appearance_quality_passed": false
+        },
+        "independent_eye_mouth_before": true,
+        "independent_eye_mouth_after": true,
+        "gui_vs_preview_opaque_sample": {
+          "method": "Existing integer native-size eye calibration; only visible opaque source pixels. Filtering/camera contribution not isolated.",
+          "tested_pixels": 425469,
+          "changed_pixels": 233736,
+          "rgb_above_3_pixels": 55047,
+          "max_channel_difference": 128,
+          "mean_channel_difference": 2.459592434074711,
+          "exact_match": false
+        }
+      }
+    ],
+    "ai_generation_tested": false
+  },
+  "known_limitations": [
+    "Natural visual quality is not accepted.",
+    "Real ChatGPT parts and iPhone/Safari devices were not tested.",
+    "PNG import is limited to the canonical v1/v2 reference layout, not arbitrary new anatomy.",
+    "Independent Canvas rendering is not an official SDK/browser runtime.",
+    "No Cubism/MOC3/VTube Studio compatibility.",
+    "No hair physics or view-angle reconstruction."
+  ],
+  "regressions_fixed": [
+    "Creator Breath half-state snapped to endpoint: added 0.5 knot while preserving old six-control generator.",
+    "Three-tab phone fonts kept at 16px.",
+    "Late save after cancellation is discarded.",
+    "Persisted pagehide event preserves the preview renderer.",
+    "Regeneration resolves output-parent symlinks and rejects dot-prefixed paths inside Git."
+  ],
+  "private_artifacts": {
+    "current": "/tmp/modular-maker-trial-final",
+    "cpu_prefix": "/tmp/modular-maker-cpu-v2-",
+    "official": "/tmp/modular-maker-official-v2",
+    "older_26mb_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+    "cloud_persistence_guaranteed": false
+  }
+}

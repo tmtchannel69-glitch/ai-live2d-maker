@@ -8,6 +8,15 @@
 - 共通動作と交換履歴/パーツ固有情報を分離し、交換後も左右瞬き/口/HeadX/Y/Tiltを再利用。生成・公式runtime・自然な品質を別判定とする。ブラウザの独立描画を公式runtimeと呼ばない。Inochi2D legacy0.8.6とCubism/MOC3/VTSを区別する。
 - 設計/STEP進捗はdocs/MODULAR_CHARACTER_MAKER.md、ROADMAP/PROGRESSへ保存。画像/モデル/ZIP/画面写真は/tmp等Git外だけ。外部AI APIはサービス/料金/ライセンス/送信内容を具体化した後の承認が必要で、今回は実行しない。
 
+## 交換メーカーSTEP2〜4の保存・再開（2026-10-25）
+- 保存点は45c52ac(core)/f7183fd(UI)。主画面はmaker、旧2modeを?mode=convert/generateで保持。src/character-makerとshared/modular-*で独立管理し、旧v1/v2/five/detailedの生成器を変えない。
+- maker_project版1はcurrent/base33PNG、由来/SHA/pose/履歴。canonical cropの全バイト、配置canvasの元RGBAを保持。失敗/中止/破損ZIPで現在データを置換しない。48MiB/128entry、部品ZIP16MiB/PNG合計12MiB。外部PNGのAI出典/画風/hidden面は未確認。
+- 新profileだけ7制御（旧6+Breath）。Breathに0/.5/1キー、旧6制御の出力は不変。頭制御で胴体固定、Breathは胴体も変形。独立Canvasを公式SDKと呼ばない。メッシュ区間検査は全多軸内部の数学的保証ではない。
+- 基準6883b222…/累積交換後9d5a1559…は公式Creator0.8.6各28保存前+28新プロセスでviewport差0、RGBA/構造保持。中間2モデルと新しい外部素材の公式成功へ流用しない。合成PNGとのGUI表示差/低開度の線/開口/首影は残り完成品質false。
+- 再生成はscripts/character-maker/trial.mjsでGit外の新規dirへ。親symlinkと..privateも検査。docs/MODULAR_CHARACTER_MAKER.mdとVALIDATION.md/jsonが最新。実物は/tmp/modular-maker-trial-final、CPU/officialもGit外、旧26MB ZIPは不変。実ChatGPT素材未提供とiPhone実機未検査を成功にしない。
+- status/中止をスマホで追従表示し、初回プレビューへ移動。保存準備後も中止を照合し遅いdownloadを出さない。persisted pagehideは描画資源を閉じず再生停止、通常離脱は解放。新10ブラウザ試験を維持。
+- STEP4最終の検証はNode203/Python109/build、ブラウザ195項目を複数実行で確認。全192初回190成功2短待ち切れ→旧7+新10再確認17成功。全195の最終一括成功と表現しない。新しい承認なしにAPI/課金/画像送信/main統合/公開を行わない。開発branchへのsource commit/pushは今回承認済み。
+
 ## 閉眼肌の境界色の調整（2026-10-25、最新）
 - 721d9f1/未変更から同じ開発branchで継続。オーナーの「続けて」に従い、元の5役割/通常の詳細生成を保持して品質改善を進める。ローカルcommitのみ、push/公開/main統合/外部画像API/課金/重み自動取得/画像・モデルのGit追加は禁止のまま。
 - server/skin_boundary.pyは既存eye_skin_underpaintのRGBへのscreened harmonic補正だけ。観測PNG/所有/mask/alpha/座標/mesh/動作は変えない。screen=.04/各RGB±12/1眼131072画素/CG250回、支持12組未満/上限/改善なしは明示skipで元の実補完を保持。非収束は停止。skipを補正成功やダミー成功にしない。

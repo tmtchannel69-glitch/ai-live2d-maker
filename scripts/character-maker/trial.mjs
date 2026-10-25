@@ -1,14 +1,19 @@
 // Private, repeatable functional trial of original local templates. No AI calls.
 import {chromium} from '@playwright/test';
-import {mkdir,writeFile,access} from 'node:fs/promises';
-import {resolve,relative} from 'node:path';
+import {mkdir,writeFile,lstat,realpath} from 'node:fs/promises';
+import {resolve,relative,dirname,basename,sep,isAbsolute} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {unzipSync} from 'fflate';
 const args=Object.fromEntries(process.argv.slice(2).map((v,i,a)=>v.startsWith('--')?[v.slice(2),a[i+1]]:null).filter(Boolean));
-const root=process.cwd(),out=resolve(args.output||'');
-if(!args.output||!relative(root,out).startsWith('..'))throw new Error('Use --output NEW_PRIVATE_DIRECTORY outside Git.');
-try{await access(out);throw new Error('Output already exists. Nothing was overwritten.');}catch(e){if(e.code!=='ENOENT')throw e;}
+const root=await realpath(fileURLToPath(new URL('../..',import.meta.url))),out=resolve(args.output||'');
+if(!args.output)throw new Error('Use --output NEW_PRIVATE_DIRECTORY outside Git.');
+// Require an existing parent and resolve symlinks before deciding whether the
+// output is outside Git. A directory called "..private" is still inside Git.
+const actual=resolve(await realpath(dirname(out)),basename(out)),rel=relative(root,actual);
+if(!(rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel)))throw new Error('Use --output NEW_PRIVATE_DIRECTORY outside Git.');
+try{await lstat(out);throw new Error('Output already exists. Nothing was overwritten.');}catch(e){if(e.code!=='ENOENT')throw e;}
 const url=new URL(args.url||'http://127.0.0.1:5173');if(!['localhost','127.0.0.1','[::1]'].includes(url.hostname))throw new Error('Use a local development server.');
-await mkdir(out,{recursive:true,mode:0o700});
+await mkdir(out,{mode:0o700});
 const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH||undefined,headless:true});
 const summary=[];
 try{

@@ -100,7 +100,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npx playwright test tests/
 npm run build
 ```
 
-Windows PowerShellは環境変数を`$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='C:\\...\\chrome.exe'`のように別行で指定する。パスを未指定ならPlaywrightの既存ブラウザを使う。ブラウザ未導入なら`npx playwright install chromium`が必要で、これは画像処理モデル重みとは別の開発依存。自動取得はスクリプトへ入れていない。
+Windows PowerShellは環境変数を`$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='C:\...\chrome.exe'`のように別行で指定する。パスを未指定ならPlaywrightの既存ブラウザを使う。ブラウザ未導入なら`npx playwright install chromium`が必要で、これは画像処理モデル重みとは別の開発依存。自動取得はスクリプトへ入れていない。
 
 `trial.mjs`はGit外の**新規ディレクトリ**だけに保存し、既存データを上書きせず、local origin以外とAPIを遮断する。base/bangs/eyes/outfitにはproject.zip/PNG/manifest/INP/INX/動作画面と実測が入る。元画像は不要。外部PNGの再現にはその素材をオーナー自身で保管するか、制作ZIP（基準/現在PNGを含む）を保持する必要がある。クラウドの/tmpの存続は保証されない。
 
@@ -120,3 +120,5 @@ Windows PowerShellは環境変数を`$env:PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='C
 - 低開度のまぶた/まつ毛の線、開口の切り替え、首影、公式描画と合成PNGの表示差をSTEP5で優先。構造検査だけで完成品質へ昇格させない。
 - 髪/服の物理、視線/表情/会話反応、実iPhone/Safari、公式ブラウザランタイムは後段。Cubism/MOC3/VTube Studio互換とは表示しない。
 - 直接AI APIの接続は既存の未送信準備を再利用できるが、最新のサービス/モデル/料金/ライセンス/送信する参照/最大費用と承認が必要。今回の送信/課金は0。
+
+最終の検査結果・公式Creator・品質の別判定は[検証記録](MODULAR_CHARACTER_MAKER_VALIDATION.md)を参照。制作状態/中止欄をスマホで追従表示し、長い品質注記はプレビューを隠さない位置へ分けた。再生成先は実在する親のsymlinkも解決し、Git外の新規ディレクトリに限る。
