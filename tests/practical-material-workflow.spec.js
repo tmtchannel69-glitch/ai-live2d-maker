@@ -7,7 +7,17 @@ test.use({hasTouch:true,isMobile:true});
 function png(width=100,height=150,color=[190,40,60,255]){const data=new Uint8Array(width*height*4);for(let y=0;y<height;y++)for(let x=0;x<width;x++){if(width<100 || (x>=20 && x<40 && y>=30 && y<50))data.set(color,(y*width+x)*4);}return Buffer.from(encode({width,height,data,channels:4,depth:8}));}
 async function setup(page){await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();}
 async function ai(page,bytes=png()){await page.locator('#processing-mode').selectOption('ai');for(const id of ['face','body','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();await page.locator('#edit-prompts').click();await page.locator('#prompt-dialog svg').click({position:{x:50,y:50}});await page.locator('#close-prompts').click();await page.route('**/api/separate',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({parts:[{id:'hair',png:bytes.toString('base64')}]})}));await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(1);}
-async function download(page,id){const [d]=await Promise.all([page.waitForEvent('download'),page.locator(id).click()]);const chunks=[];for await(const c of await d.createReadStream())chunks.push(c);return {name:d.suggestedFilename(),bytes:Buffer.concat(chunks)};}
+async function download(page,id){
+  const waiting=page.waitForEvent('download',{timeout:10000}).catch(async error=>{
+    const status=await page.locator('#expression-psd-status').textContent().catch(()=>'<unavailable>');
+    const fileInfo=await page.locator('#file-info').textContent().catch(()=>'<unavailable>');
+    throw new Error('Download not received for '+id+'; page='+page.url()+'; file='+fileInfo+'; PSD status='+status+'; '+error.message);
+  });
+  await page.locator(id).click();
+  const d=await waiting,chunks=[];
+  for await(const c of await d.createReadStream())chunks.push(c);
+  return {name:d.suggestedFilename(),bytes:Buffer.concat(chunks)};
+}
 async function copy(page,role){await page.locator('#asset-role').selectOption(role);if(!await page.locator('#asset-result').isVisible())await page.locator('.asset-result-import summary').tap();await page.locator('#asset-use-result').tap();await expect(page.locator('#asset-status')).toContainText('コピーしました');await expect(page.locator('#asset-apply')).toBeEnabled();}
 const meta=bytes=>JSON.parse(strFromU8(unzipSync(bytes)['project.json']));
 test('AI result copies directly at its original position, preserves corrected bytes, and resumes independently',async({page})=>{
