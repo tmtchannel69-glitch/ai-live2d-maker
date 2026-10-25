@@ -2,6 +2,7 @@
 // contract. This does NOT split the image or synthesize hidden layer geometry.
 import {zip,strToU8} from 'fflate';
 import {createDesignPlan} from '../../shared/character-design.js';
+import {createForegroundMask} from '../../shared/portrait-foreground-mask.js';
 import {SOURCE_CANVAS,SOURCE_MAX_BYTES,planPortraitNormalization,auditPortraitPixels} from '../../shared/single-image-source.js';
 
 const supported=new Set(['image/png','image/jpeg','image/webp']);
@@ -21,13 +22,19 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
     '<div id="cg-single-result" hidden>'+
     '<label for="cg-single-role">確認する領域（テンプレートの仮位置）<select id="cg-single-role"></select></label>'+
     '<div class="cg-single-image"><canvas id="cg-single-canvas" width="768" height="1024" aria-label="入力画像を768×1024に収め、指定箇所を枠で示した画像"></canvas></div>'+
-    '<p id="cg-single-summary" class="muted"></p>'+
+    '<p id="cg-single-summary" class="muted"></p>'+ 
+    '<button id="cg-single-make-mask" class="secondary" type="button">前景の自動切り抜きを試す（背景が透明・単色の場合）</button>'+ 
+    '<section id="cg-single-mask-output" hidden><h3>自動切り抜きの試作結果</h3>'+ 
+    '<div class="cg-single-image"><canvas id="cg-single-mask-preview" width="768" height="1024" aria-label="背景から切り抜いた前景シルエット"></canvas></div>'+ 
+    '<p id="cg-single-mask-summary" class="muted"></p>'+ 
+    '<p class="muted">これは人物全体の前景マスクです。髪や目などの独立した33レイヤー、隠れた部分の補完、リギングではありません。</p></section>'+ 
     '<button id="cg-single-download" class="secondary" type="button">基準画像と検査結果をZIP保存</button>'+
     '<p class="muted">矩形内に画素があっても独立したパーツではありません。AIによる位置検出・背景除去・隠れ面生成・リギングの成功判定には使えません。</p></div>';
   section.querySelector('#cg-output').after(host);
   const $=s=>host.querySelector(s);
   let current=null,token=0,running=false;
   const preview=$('#cg-single-canvas'),ctx=preview.getContext('2d');
+  const maskPreview=$('#cg-single-mask-preview'),maskCtx=maskPreview.getContext('2d');
   function draw(){
     if(!current)return;
     ctx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
@@ -66,6 +73,9 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
   }
   function clear(){
     current=null;
+    $('#cg-single-mask-output').hidden=true;
+    $('#cg-single-mask-summary').textContent='';
+    maskCtx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
     $('#cg-single-result').hidden=true;
     $('#cg-single-role').replaceChildren();
     ctx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
@@ -94,19 +104,57 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
     }catch(error){if(job===token){clear();$('#cg-single-status').textContent='画像を確認できませんでした：'+error.message;}}
     finally{if(job===token){running=false;onBusy(false);}}
   });
+  $('#cg-single-make-mask').addEventListener('click',async()=>{
+    if(!current||running)return;
+    const info=current;running=true;onBusy(true);
+    $('#cg-single-mask-output').hidden=true;
+    $('#cg-single-status').textContent='背景とキャラクターの前景を判別しています…';
+    try{
+      const width=SOURCE_CANVAS.width,height=SOURCE_CANVAS.height;
+      const pixels=info.normalized.getContext('2d',{willReadFrequently:true}).getImageData(0,0,width,height);
+      const segmented=createForegroundMask(pixels.data,info.geometry.draw_rect);
+      const cutout=document.createElement('canvas'),maskCanvas=document.createElement('canvas');
+      cutout.width=maskCanvas.width=width;cutout.height=maskCanvas.height=height;
+      const cutPixels=new Uint8ClampedArray(pixels.data),maskPixels=new Uint8ClampedArray(pixels.data.length);
+      for(let i=0;i<segmented.mask.length;i++){
+        const offset=i*4,a=segmented.mask[i];
+        cutPixels[offset+3]=Math.round(cutPixels[offset+3]*a/255);
+        maskPixels[offset]=255;maskPixels[offset+1]=255;maskPixels[offset+2]=255;maskPixels[offset+3]=a;
+      }
+      const outCtx=cutout.getContext('2d'),layerCtx=maskCanvas.getContext('2d');
+      outCtx.putImageData(new ImageData(cutPixels,width,height),0,0);
+      layerCtx.putImageData(new ImageData(maskPixels,width,height),0,0);
+      if(info!==current)return;
+      info.foreground={cutout,maskCanvas,report:segmented.report};
+      maskCtx.clearRect(0,0,width,height);maskCtx.drawImage(cutout,0,0);
+      $('#cg-single-mask-output').hidden=false;
+      $('#cg-single-mask-summary').textContent='方式 '+(segmented.report.method==='existing-alpha'?'既存の透明度':'単色背景からの領域検出')+
+        ' / 前景 '+Math.round(segmented.report.foreground_fraction*100)+'% / 注意 '+segmented.report.warning_codes.length+
+        '件 / 分離済みの人体パーツ 0枚';
+      $('#cg-single-status').textContent='前景マスクを試作しました。品質と輪郭を目視確認してください。33パーツ化はまだです。';
+    }catch(error){
+      if(info===current){info.foreground=null;$('#cg-single-status').textContent='安全に前景を切り出せませんでした：'+error.message;}
+    }finally{running=false;onBusy(false);}
+  });
   $('#cg-single-download').addEventListener('click',async()=>{
     if(!current||running)return;
     running=true;onBusy(true);
     try{
       const info=current,files={};
       files['normalized_reference.png']=new Uint8Array(await (await pngBlob(info.normalized)).arrayBuffer());
+      if(info.foreground){
+        files['foreground_cutout.png']=new Uint8Array(await (await pngBlob(info.foreground.cutout)).arrayBuffer());
+        files['foreground_mask.png']=new Uint8Array(await (await pngBlob(info.foreground.maskCanvas)).arrayBuffer());
+      }
       files['source_audit.json']=strToU8(JSON.stringify({
         source:info.source,normalization:info.geometry,design_id:info.plan.blueprint.design_id,
-        blueprint_id:info.plan.blueprint_id,...info.report
+        blueprint_id:info.plan.blueprint_id,...info.report,
+        foreground_mask_result:info.foreground?.report??null
       },null,2)+'\n');
       files['README.txt']=strToU8('入力画像1枚の検査結果です。これは33パーツの切り出し/背景除去/隠れ面補完/リギングの結果ではありません。\n'+
         'normalized_reference.png は縦横比を保って768x1024キャンバスへ配置した入力画像。\n'+
-        'source_audit.json に33領域の暫定位置と未完了項目を記録します。\n');
+        'source_audit.json に33領域の暫定位置と未完了項目を記録します。\n'+
+        'foreground_* は試作の全身シルエット（存在する場合）のみ。髪・顔・衣装の33分割ではありません。\n');
       const data=await new Promise((resolve,reject)=>zip(files,{level:0},(err,bytes)=>err?reject(err):resolve(new Blob([bytes],{type:'application/zip'}))));
       save(data,'ai-live2d-single-image-audit.zip');
       $('#cg-single-status').textContent='画像と検査結果をZIPに保存しました。AI自動分離やモデル生成はまだ行っていません。';
