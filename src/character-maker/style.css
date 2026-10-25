@@ -3,3 +3,4 @@
 /* Short, persistent phone feedback; diagnostic details never cover the stage. */
 #character-maker-mode .maker-feedback{position:sticky;top:8px;z-index:4;display:flex;align-items:center;gap:12px;background:#211d31;max-height:30vh;overflow:auto;padding:12px 16px}
 .maker-feedback #maker-status{flex:1;min-width:0;margin:0;font-size:16px}.maker-feedback #maker-cancel{flex:0 0 auto}.maker-quality{margin:12px 0 20px}.maker-stage-panel{scroll-margin-top:165px}#maker-see-preview{margin-top:12px;width:100%}
+#maker-bangs-import{padding:12px;border:1px solid #645079;border-radius:12px}#maker-bangs-import button{width:100%;margin:8px 0}#maker-bangs-import p{overflow-wrap:anywhere}#maker-bangs-import input{min-width:0}

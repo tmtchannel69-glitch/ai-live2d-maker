@@ -7,8 +7,10 @@ import {buildModularRig} from '../../shared/modular-character-rig.js';
 import {assembleValidatedCharacter,validateAsset,checkAbort} from '../character-generation/generator.js';
 import {inspectExternalPartPng} from '../character-generation/external-part-batch.js';
 import {inspectExternalPartPixels} from '../../shared/external-part-quality.js';
+import {validateBangsPlacement,canonicalBangsManifest} from '../../shared/bangs-placement.js';
 
 export async function validateMakerManifest(m){
+  if(m?.assembly_extension)return validateBangsPlacement(m);
   if(m?.version===2)return validateDesignedCharacter(m);
   const value=validateCharacterManifest(m),expected=createTemplateManifest(value.generator.recipe);
   if(!sameJSONData(value.parts,expected.parts)||!sameJSONData(value.groups,expected.groups))throw new Error('旧版の基準配置と異なります。元の作業モードを使うか、正しい33パーツの基準を選んでください。');
@@ -54,14 +56,17 @@ async function assembled(manifest,assets,signal){
   return {manifest,assets,preview,native,quality};
 }
 export async function createMakerProject(character,{signal,imported=false}={}){
+  if(character.manifest?.assembly_extension)throw new Error('配置拡張のキャラクターは、基準パーツを含む制作ZIPから再開してください。');
   const manifest=await validateMakerManifest(character.manifest),assets=new Map(character.assets),origins={};
   for(const p of manifest.parts)origins[p.role]={kind:imported?'user-png':'local-template',label:imported?'既存ZIPから読み込み（由来未確認）':'端末内の自作テンプレート',ai_origin_verified:false,sha256:await makerDigest(await assets.get(p.role).arrayBuffer())};
   const current=await assembled(manifest,assets,signal);
   return {format:'ai-live2d-modular-session',base:{manifest,assets,origins:structuredClone(origins)},current,origins,pose:{...DEFAULT_POSE},revision:0,history:[],undo:[]};
 }
 
-export async function replaceMakerParts(project,files,{signal,originKind='user-png',label='ユーザーの独立PNG（AI出典未確認）',onProgress=()=>{}}={}){
-  const uploads=matchMakerFiles(files),manifest=await validateMakerManifest(project.current.manifest),assets=new Map(project.current.assets),origins=structuredClone(project.origins),changes=[];
+export async function replaceMakerParts(project,files,{signal,originKind='user-png',label='ユーザーの独立PNG（AI出典未確認）',onProgress=()=>{},assemblyManifest=project.current.manifest}={}){
+  const uploads=matchMakerFiles(files),manifest=await validateMakerManifest(assemblyManifest),assets=new Map(project.current.assets),origins=structuredClone(project.origins),changes=[];
+  if(!sameJSONData(canonicalBangsManifest(manifest),project.base.manifest))throw new Error('交換時に基準デザイン全体を変更できません。');
+  for(const p of manifest.parts)if(!uploads.some(u=>u.role===p.role)&&!sameJSONData(p,project.current.manifest.parts.find(q=>q.role===p.role)))throw new Error('交換していないパーツの配置は変更できません。');
   if(!['user-png','local-preset','local-template'].includes(originKind))throw new Error('交換元の種類が正しくありません。');
   for(const [i,item] of uploads.entries()){
     checkAbort(signal);const part=manifest.parts.find(p=>p.role===item.role),file=new File([item.file],item.role+'.png',{type:'image/png'});
@@ -82,8 +87,9 @@ export async function replaceMakerParts(project,files,{signal,originKind='user-p
   onProgress('配置を検査し、同じ共通動作でモデルを組み立てています…');
   const current=await assembled(manifest,assets,signal);checkAbort(signal);
   return {...project,current,origins,revision:project.revision+1,pose:validateMakerPose(project.pose),
+    bangsImport:uploads.some(p=>p.role==='bangs_front')?null:project.bangsImport,
     history:[...project.history.slice(-99),{revision:project.revision+1,kind:originKind,label,changes}],
-    undo:[...project.undo.slice(-9),{current:project.current,origins:project.origins,history:project.history,revision:project.revision}]};
+    undo:[...project.undo.slice(-9),{current:project.current,origins:project.origins,history:project.history,revision:project.revision,bangsImport:project.bangsImport}]};
 }
 export function undoMakerChange(project){
   const old=project.undo.at(-1);return old?{...project,...old,undo:project.undo.slice(0,-1)}:project;
@@ -91,7 +97,8 @@ export function undoMakerChange(project){
 export async function restoreMakerParts(project,set,options={}){
   if(!PART_SETS[set])throw new Error('戻す範囲が正しくありません。');
   const files=PART_SETS[set].map(role=>new File([project.base.assets.get(role)],role+'.png',{type:'image/png'}));
-  const next=await replaceMakerParts(project,files,{...options,originKind:'local-template',label:'保存した基準パーツに戻す'});
+  const assemblyManifest=set==='bangs'?project.base.manifest:project.current.manifest;
+  const next=await replaceMakerParts(project,files,{...options,assemblyManifest,originKind:'local-template',label:'保存した基準パーツに戻す'});
   for(const role of PART_SETS[set])next.origins[role]=structuredClone(project.base.origins[role]);
   next.history.at(-1).kind='restore';return next;
 }

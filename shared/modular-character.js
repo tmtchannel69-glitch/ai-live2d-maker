@@ -1,4 +1,5 @@
 import {GENERATED_ROLES} from './generated-character.js';
+import {validateBangsPreparation} from './bangs-preparation.js';
 export const MAKER_FORMAT='ai-live2d-modular-character-project';
 export const MAKER_RIG_PROFILE='modular-character-rig-v1';
 export const MAKER_PARAMETERS=Object.freeze({EyeOpenL:[0,1,1],EyeOpenR:[0,1,1],MouthOpen:[0,1,0],HeadX:[-1,1,0],HeadY:[-1,1,0],HeadTilt:[-1,1,0],Breath:[0,1,0]});
@@ -28,6 +29,7 @@ export function validateMakerPose(value=DEFAULT_POSE){
 export const makerDigest=async bytes=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
 export function validateMakerOrigin(origin){
   if(!origin||!['local-template','local-preset','user-png'].includes(origin.kind)||origin.ai_origin_verified!==false||typeof origin.label!=='string'||origin.label.length>120||typeof origin.sha256!=='string'||!/^[a-f0-9]{64}$/.test(origin.sha256))throw new Error('パーツの由来・指紋が正しくありません。');
+  if(Object.hasOwn(origin,'import_preparation')){if(origin.kind!=='user-png')throw new Error('前髪の取り込み元が一致しません。');validateBangsPreparation(origin.import_preparation,origin.sha256);}
   return structuredClone(origin);
 }
 export function validateMakerHistory(history,revision){

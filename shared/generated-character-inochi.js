@@ -5,6 +5,7 @@ import {decode, encode} from 'fast-png';
 import {validateCharacterManifest, createInochiIntermediate} from './generated-character.js';
 import {createInochiGeometry} from './generated-character.js';
 import {validateDesignedCharacter} from './designed-character.js';
+import {validateBangsPlacement} from './bangs-placement.js';
 
 export const GENERATED_RIG_PROFILE = 'generated-maid-rig-v1';
 export const GENERATED_INOCHI_PIN = Object.freeze({sdkTag:'v0.8.6', sdkCommit:'dda3a8f005f808104caa43183ab8753fb989e30f', creatorTag:'v0.8.6', creatorCommit:'371e5f4e21117102dbecc82371bfd9a6e2f5df02', container:'legacy-inp1'});
@@ -104,6 +105,12 @@ export async function buildGeneratedInochi(manifest,assets,{signal,onProgress=()
 
 export async function buildDesignedInochi(manifest,assets,options={}){
   return buildLayeredInochi(await validateDesignedCharacter(manifest),assets,options,true);
+}
+
+// Opt-in entry for the modular maker. Existing v1/v2 entry points retain their
+// strict canonical contracts and original output bytes.
+export async function buildPlacedInochi(manifest,assets,options={}){
+  return buildLayeredInochi(await validateBangsPlacement(manifest),assets,options,true);
 }
 
 async function buildLayeredInochi(m,assets,{signal,onProgress=()=>{}}={},designed=false){

@@ -4,6 +4,8 @@ import {createMakerPreset} from './presets.js';
 import {createMakerArchive,readMakerArchive,readMakerPartZip} from './archive.js';
 import {createMakerGuide} from './guide.js';
 import {createMakerPreview} from './preview.js';
+import {importBangsPart} from './bangs-import.js';
+import {createBangsReviewArchive} from './bangs-review.js';
 import {DEFAULT_POSE,MAKER_PARAMETERS,matchMakerFiles} from '../../shared/modular-character.js';
 import './style.css';
 
@@ -29,11 +31,14 @@ export function createCharacterMaker(){
   // notes stay in normal flow instead of covering the character while scrolling.
   const feedback=section.querySelector('.maker-feedback'),qualityPanel=document.createElement('div');qualityPanel.className='maker-quality';qualityPanel.append(section.querySelector('#maker-quality'));feedback.after(qualityPanel);section.querySelector('.maker-workspace').before(feedback);
   const jump=document.createElement('button');jump.type='button';jump.id='maker-see-preview';jump.className='secondary';jump.dataset.needsProject='';jump.textContent='組み立てと動きを見る';section.querySelector('.maker-stack').after(jump);jump.addEventListener('click',()=>section.querySelector('.maker-stage-panel').scrollIntoView({block:'start'}));
+  const bangsPanel=document.createElement('details');bangsPanel.id='maker-bangs-import';bangsPanel.innerHTML='<summary>生成した前髪PNGを自動で合わせる</summary><p>独立した前髪1枚が対象です。点・枠は指定せず、縦横比を保って目・眉との重なりを比較します。長い毛束に合わせて前髪の枠だけを拡張します。</p><label class="maker-file-label">前髪の透過PNG<input type="file" id="maker-bangs-file" accept=".png,image/png"></label><p id="maker-bangs-selection" class="muted">選択だけでは画像を読み込み・装着しません。端末内で処理します。</p><button type="button" id="maker-bangs-apply" class="primary" disabled>前髪を自動配置して装着</button><p id="maker-bangs-report" class="muted">64〜2048px・8 MiB以下のRGBA透過PNG。大きな引き伸ばしや画像の再生成はしません。</p><button type="button" id="maker-bangs-review" class="secondary" disabled>前後と動作の比較ZIPを保存</button><p class="muted">比較ZIPはPNGと検証記録です。この画面で読み込んだ元の前髪画像も含みます。画風・陰影の一致や自然な完成品質は別の未確認項目です。制作を再開するには制作ZIPも保存してください。</p>';
+  jump.after(bangsPanel);
   const $=s=>section.querySelector(s);let project=null,renderer=null,active=null,partUrl=null,playing=false,raf=0,t0=0,lastFrame=0,idlePose=null;
   function status(s){$('#maker-status').textContent=s;}
   function controls(){const busy=!!active;section.setAttribute('aria-busy',String(busy));for(const e of section.querySelectorAll('button,input,select'))e.disabled=busy;
     for(const e of section.querySelectorAll('[data-needs-project]'))e.disabled=busy||!project;
     $('#maker-open').disabled=busy||!$('#maker-open-file').files.length;$('#maker-apply').disabled=busy||!project||!$('#maker-part-files').files.length;$('#maker-undo').disabled=busy||!project?.undo.length;
+    $('#maker-bangs-apply').disabled=busy||!project||!$('#maker-bangs-file').files.length;$('#maker-bangs-review').disabled=busy||!project?.origins.bangs_front.import_preparation;
     $('#maker-cancel').disabled=!busy;$('#maker-cancel').hidden=!busy;
   }
   function syncPose(){if(!project)return;for(const name of Object.keys(MAKER_PARAMETERS)){$('#maker-'+name).value=project.pose[name];$('#maker-value-'+name).textContent=project.pose[name].toFixed(2);}}
@@ -45,6 +50,7 @@ export function createCharacterMaker(){
     $('#maker-empty').hidden=true;$('#maker-canvas').hidden=false;$('#maker-motion').hidden=false;$('#maker-output').hidden=false;section.dataset.revision=String(project.revision);
     const counts=Object.values(project.origins).reduce((a,o)=>(a[o.kind]=(a[o.kind]||0)+1,a),{});$('#maker-summary').textContent=`33パーツ ／ 交換 ${project.revision}回 ／ 基準 ${counts['local-template']||0}・別テンプレート ${counts['local-preset']||0}・取り込み ${counts['user-png']||0}`;
     const previous=$('#maker-part').value;$('#maker-part').replaceChildren(...project.current.manifest.parts.map(p=>{const o=document.createElement('option');o.value=p.role;o.textContent=p.label;return o;}));if(previous)$('#maker-part').value=previous;selectedPart();syncPose();draw();
+    const fit=project.origins.bangs_front.import_preparation;$('#maker-bangs-report').textContent=fit?`配置済み。縦横比を保って${(fit.placement.scale*100).toFixed(1)}%へ縮小。装着時の瞳への重なり 本人左${(fit.placement.occlusion.iris_l*100).toFixed(1)}%／右${(fit.placement.occlusion.iris_r*100).toFixed(1)}%。眉の一部は髪に隠れます。目のパーツを変えた場合は再検査してください。画風・陰影と後ろ髪の形は目視確認が必要です。`:'64〜2048px・8 MiB以下のRGBA透過PNG。大きな引き伸ばしや画像の再生成はしません。';
     const warnings=project.current.quality.parts.filter(p=>p.warning_count).map(p=>`${p.role}（${p.warning_codes.map(c=>({'very-low-coverage':'描画範囲が小さい','almost-opaque-tile':'不透明部分が多い','high-edge-contact':'画像端への接触が多い'}[c])).join('・')}）`);$('#maker-quality').textContent=`構造検査：33枚と首の接続・目の配置を確認。${warnings.length?'画素の注意候補：'+warnings.join('、')+'。':''}モデル生成：完了。今回の素材の公式Creator動作・完成品質：画面上の自動合格判定は行いません。`;
     if(first&&!section.hidden)section.querySelector('.maker-stage-panel').scrollIntoView({block:'start'});
   }
@@ -54,6 +60,8 @@ export function createCharacterMaker(){
   for(const set of Object.keys(sets))$('#maker-preset-'+set).addEventListener('click',()=>run(async(signal,onProgress)=>replaceMakerParts(project,await createMakerPreset(project,set,{signal}),{signal,onProgress,originKind:'local-preset',label:sets[set]+'の別テンプレート（端末内描画）'}),sets[set]+'を交換しました。他の交換と共通動作は保持しています。'));
   $('#maker-part-files').addEventListener('change',()=>{const files=[...$('#maker-part-files').files];try{if(files.length===1&&/\.zip$/i.test(files[0].name)){if(files[0].size>16*1024*1024)throw new Error('部品ZIPは16 MiBまでです。');$('#maker-files-note').textContent='部品ZIPを選びました。「確認して交換」で中身を検査します。';}else{$('#maker-files-note').textContent=matchMakerFiles(files).map(p=>p.role).join('、')+' を選択。まだ交換していません。';}}catch(e){$('#maker-files-note').textContent=e.message;}controls();});
   $('#maker-apply').addEventListener('click',()=>run(async(signal,onProgress)=>{let files=[...$('#maker-part-files').files];if(files.length===1&&/\.zip$/i.test(files[0].name))files=await readMakerPartZip(files[0],project.current.manifest.parts,{signal});return replaceMakerParts(project,files,{signal,onProgress});},'パーツを交換しました。目・口・頭の動きで接続を確認してください。'));
+  $('#maker-bangs-file').addEventListener('change',()=>{$('#maker-bangs-selection').textContent=$('#maker-bangs-file').files.length?'前髪PNGを選択しました。自動装着ボタンを押すまで処理しません。':'選択だけでは画像を読み込み・装着しません。';controls();});
+  $('#maker-bangs-apply').addEventListener('click',()=>run((signal,onProgress)=>importBangsPart(project,$('#maker-bangs-file').files[0],{signal,onProgress}),'添付の前髪PNGを装着しました。動作と見た目を比較してください。'));
   $('#maker-undo').addEventListener('click',()=>run(async()=>undoMakerChange(project),'ひとつ前の交換に戻しました。現在の動作値を保持しています。'));
   $('#maker-restore').addEventListener('click',()=>run((signal,onProgress)=>restoreMakerParts(project,$('#maker-reset-set').value,{signal,onProgress}),'選択した範囲を基準パーツに戻しました。'));
   $('#maker-cancel').addEventListener('click',()=>active?.abort());
@@ -65,6 +73,7 @@ export function createCharacterMaker(){
   for(const [id,action] of Object.entries({
     'maker-save':signal=>savePrepared(signal,()=>createMakerArchive(project),'ai-live2d-character-project.zip'),
     'maker-guide':signal=>savePrepared(signal,()=>createMakerGuide(project),'character-part-guide.zip'),
+    'maker-bangs-review':signal=>savePrepared(signal,()=>createBangsReviewArchive(project,{signal,onProgress:status}),'bangs-comparison.zip'),
     'maker-save-image':async()=>save(project.current.preview,'character-preview.png'),
     'maker-save-inp':async()=>save(new Blob([project.current.native.inp]),'character.inp'),
     'maker-save-inx':async()=>save(new Blob([project.current.native.inx]),'character.inx'),

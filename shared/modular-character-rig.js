@@ -1,4 +1,4 @@
-import {buildDesignedInochi,buildGeneratedInochi,packGeneratedContainer} from './generated-character-inochi.js';
+import {buildDesignedInochi,buildGeneratedInochi,buildPlacedInochi,packGeneratedContainer} from './generated-character-inochi.js';
 import {MAKER_RIG_PROFILE,MAKER_PARAMETERS} from './modular-character.js';
 import {auditModularMeshes} from './modular-mesh-audit.js';
 const signature=[84,82,78,83,82,84,83,0];
@@ -17,7 +17,7 @@ export function readModularContainer(bytes){
 }
 export async function buildModularRig(manifest,assets,{signal}={}){
   const bytes=new Map();for(const [role,blob] of assets)bytes.set(role,new Uint8Array(await blob.arrayBuffer()));
-  const original=await (manifest.version===2?buildDesignedInochi(manifest,bytes,{signal}):buildGeneratedInochi(manifest,bytes,{signal}));
+  const original=await (manifest.assembly_extension?buildPlacedInochi(manifest,bytes,{signal}):manifest.version===2?buildDesignedInochi(manifest,bytes,{signal}):buildGeneratedInochi(manifest,bytes,{signal}));
   const model=structuredClone(original.model),find=n=>n.name==='group_body'?n:n.children.map(find).find(Boolean),body=find(model.nodes);
   if(!body)throw new Error('共通動作に必要な胴体グループがありません。');
   const binding=(param_name,values)=>({node:body.uuid,param_name,values:values.map(v=>[v]),isSet:values.map(()=>[true]),interpolate_mode:'Linear'});
@@ -29,6 +29,7 @@ export async function buildModularRig(manifest,assets,{signal}={}){
     parameters:model.param.map(p=>({name:p.name,min:p.min[0],max:p.max[0],default:p.defaults[0]})),
     breathing:{parameter:'Breath',kind:'small-body-transform',automatic_native_playback:false,naturalness_verified:false},mesh_audit:meshAudit,
     limitations:[...original.report.limitations,'Breath is a reusable control; automatic idle playback is an app preview, not native SDK automation.']};
+  if(manifest.assembly_extension){report.assembly_extension=structuredClone(manifest.assembly_extension);report.part_generation_metadata_is_baseline_reference=true;report.external_front_hair_hidden_anatomy_verified=false;report.limitations.push('Front hair PNG is an external replacement. Generator/blueprint descriptions are baseline design references, not proof of the supplied artwork or hidden regions.');}
   for(const [name,[min,max,value]] of Object.entries(MAKER_PARAMETERS)){
     const p=model.param.find(p=>p.name===name);if(!p||p.min[0]!==min||p.max[0]!==max||p.defaults[0]!==value)throw new Error('共通動作が失われました: '+name);
   }

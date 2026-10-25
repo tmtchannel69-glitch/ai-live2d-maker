@@ -1,5 +1,15 @@
 # AI Live2D Maker 開発ルール
 
+## STEP5 実画像の前髪自動配置（2026-10-25、最新）
+- オーナーが0318465のfeature/modular-character-makerから、添付の実前髪PNGの検査/装着/動作/比較/修正とsource commit/pushを承認。main統合/公開/外部画像API/課金/画像モデルのGit追加は禁止のまま。同branchで継続する。
+- 元PNGは1254角/RGBA、SHA3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd。実際に開いて使用し、代替素材にはしない。実AI由来はオーナー申告、実パーツは前髪1枚、残り32枚は既存テンプレート。ai_origin_verifiedはfalseで、全33AI生成/完成品質とは呼ばない。
+- shared/bangs-*とsrc/character-maker/bangs-*で独立追加。alpha>=8の514977画素のRGB/alphaを保持、2px近傍から遠いalpha1..7背景だけ59582画素除去。元画像/cleaned/配置後は別ファイル。縦横比共通0.41527の縮小で、前髪rectだけ[159,42,450,445]へ拡張。手動点/枠、色の再描画/欠損の架空補完/無理な拡大はしない。
+- 保存は旧maker1を維持し、拡張だけmaker2でcanonical基準とassembly_extensionを保存。前髪以外のgeometry/親/支点/順序を迂回変更させない。fresh manifestのpartsとblueprint.partsの共有参照を分けて基準の破壊を防ぐ。旧生成器はopt-in buildPlacedInochiで再利用し、旧6制御/5parts/detailedは変えない。
+- 原点/前後順/親/共有7制御を維持し、実画像model cbc72e79…を生成。Creator0.8.6の28状態/保存/新プロセス28状態でviewport差0、33texture RGBA/7params28bindingsを保持。CPU24状態と81頭呼吸組合せは検査範囲で穴/折返し/剥離0。ただし見た目は未合格（光沢/線と既存顔・後ろ髪の絵柄/形が合わない）。再生成依頼文をZIPへ入れ、実行はしない。
+- 比較ZIPは実モデル設定の独立Canvas12前後。公式SDK/Creator画像とは別。元PNGはセッションに実在してSHAが一致する場合だけ同梱。モデル再開は別の制作ZIP。元画像/モデル/ZIP/画面は/tmp/real-bangs-*でGit外。資料はdocs/REAL_BANGS_IMPORT.mdとVALIDATION。
+- スクリプトreal-bangs-trial.mjsは実画像必須で、新規Git外dirのみ。元SHA・他32PNG/7bindings不変・取り消し・基準復帰・再開・外部通信0を確認。PNGの生成元/hidden面は未検証、baseline generator/part.generationを実素材の出典や補完済みの証拠にしない。
+- 現ツールにはZIP回答添付/認証共有URL発行がなく、/tmpやlocalhostをiPhoneダウンロードURLと偽らない。アプリの端末内ZIP保存を実装/Chromiumタッチで検証。実iPhone/Safari未確認、クラウド保持/直接引渡しを保証しない。外部Drive転送は別承認。
+
 ## 交換式33パーツメーカーへの移行（2026-10-25、最新）
 - オーナーの新指示で主方式を独立パーツ生成/組み立てへ移行。STEP1からSTEP4まで連続して実装/検証し、作業単位で新しい開発branchへcommit/pushする。これは前段の「ローカルcommitのみ/push禁止」を上書きする明示指示。main統合/アプリ公開/外部画像API/課金/無断画像送信/生成物のGit追加は禁止を維持する。
 - GitHub最新headsはmain=f38395c、part-first=08c0edd、automatic=50390a8、external=44b74d9、portrait=71976bb。未変更のローカル最新2986c7cからfeature/modular-character-makerを作り、portraitをmergeして既存ZIP/portrait研究も保持。Vite競合は詳細API timeout/portとPSD事前最適化の両方を残して解決。旧branches/mainを書き換えない。
