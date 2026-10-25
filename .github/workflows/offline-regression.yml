@@ -39,7 +39,7 @@ jobs:
         run: |
           node --test scripts/ai-image-pilot/*test.mjs
           node --test scripts/character-generation/design-test.mjs scripts/character-generation/test.mjs scripts/character-generation/inochi-test.mjs
-          node --test scripts/character-maker/test.mjs scripts/inochi2d/app-review-test.mjs
+          node --test scripts/character-maker/*test.mjs scripts/inochi2d/app-review-test.mjs
 
       - name: Build Vite app
         run: npm run build

@@ -1,0 +1,636 @@
+{
+  "format": "real-owner-bangs-validation",
+  "version": 1,
+  "date": "2026-10-25",
+  "branch": "feature/modular-character-maker",
+  "start_commit": "031846530ee046a54c6a8518720150ecc86414c6",
+  "implementation_commit": "fd3987694b186a2086a18fc99466e57596769108",
+  "input": {
+    "owner_declared_origin": "ChatGPT generated front-hair PNG; not independently authenticated",
+    "source_sha256": "3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd",
+    "bytes": 1185201,
+    "format": "PNG RGBA8",
+    "size": [
+      1254,
+      1254
+    ],
+    "source_observed": true,
+    "replacement_fixture_used": false,
+    "other_32_parts": "existing local templates"
+  },
+  "file_generation_passed": true,
+  "official_creator_specific_model_passed": true,
+  "appearance_quality_passed": false,
+  "iphone_native_zip_handoff_completed": false,
+  "preparation": {
+    "format": "ai-live2d-bangs-import",
+    "version": 1,
+    "role": "bangs_front",
+    "source_sha256": "3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd",
+    "prepared_sha256": "7d4441879ed0a1fb0be20ee5a0b0bebe2e70148dd2542f183de4c278c148ee99",
+    "source_claim": "User-supplied independent PNG; generator/AI origin is not authenticated.",
+    "ai_origin_verified": false,
+    "cleanup": {
+      "algorithm": "low-alpha-background-v1",
+      "alpha_threshold": 8,
+      "edge_halo_radius": 2,
+      "source_size": [
+        1254,
+        1254
+      ],
+      "source_visible_pixels": 602743,
+      "source_semitransparent_pixels": 601494,
+      "source_strong_pixels": 514977,
+      "source_visible_bounds": [
+        0,
+        23,
+        1234,
+        1254
+      ],
+      "source_edge_visible_pixels": 46,
+      "source_edge_strong_pixels": 0,
+      "removed_low_alpha_pixels": 59582,
+      "removed_alpha_sum": 72510,
+      "strong_pixels_removed": 0,
+      "source_colour_repainted": false,
+      "original_alpha_boosted": false,
+      "semantically_verified": false
+    },
+    "cleaned_bounds": {
+      "x": 102,
+      "y": 113,
+      "width": 1074,
+      "height": 1060
+    },
+    "placement": {
+      "rect": {
+        "x": 159,
+        "y": 42,
+        "width": 450,
+        "height": 445
+      },
+      "scale": 0.41527001862197394,
+      "draw_size": [
+        446,
+        440.18621973929237
+      ],
+      "occlusion": {
+        "iris_l": 0.01213310916137882,
+        "iris_r": 0.01639580978416538,
+        "eye_white_l": 0.13990064057069915,
+        "eye_white_r": 0.1307374502429349,
+        "brow_l": 0.3384091723336572,
+        "brow_r": 0.4352947211458441
+      },
+      "old_bangs_coverage": 0.9011058329317801,
+      "accepted": true,
+      "score": 0.8252555301407795
+    },
+    "uniform_scaling": true,
+    "upscaled": false,
+    "original_preserved": true,
+    "original_rgb_repainted": false,
+    "source_crop_clipped": false,
+    "thresholds": {
+      "iris_occlusion": 0.04,
+      "brow_occlusion": 0.5,
+      "eye_white_occlusion": 0.22
+    },
+    "appearance_quality_passed": false,
+    "style_consistency_verified": false,
+    "official_creator_tested": false
+  },
+  "candidate_count": 41,
+  "candidates_accepted": 2,
+  "old_front_rect": {
+    "x": 185,
+    "y": 102,
+    "width": 398,
+    "height": 237
+  },
+  "new_front_rect": {
+    "x": 159,
+    "y": 42,
+    "width": 450,
+    "height": 445
+  },
+  "front_anchor": [
+    384,
+    137.7
+  ],
+  "app": {
+    "format": "real-owner-bangs-trial",
+    "version": 1,
+    "source_sha256": "3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd",
+    "source_bytes": 1185201,
+    "used_real_owner_image": true,
+    "no_fallback_asset": true,
+    "application_import_seconds": 2.72,
+    "other_32_pngs_unchanged": true,
+    "all_seven_motion_bindings_unchanged": true,
+    "undo_restores_original_native": true,
+    "reset_restores_original_native": true,
+    "repeated_model_identical": true,
+    "reopened_project_zip_identical": true,
+    "no_image_post": true,
+    "no_external_request": true,
+    "review_bytes": 9062640,
+    "review_pose_pairs": 12,
+    "model_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+    "official_creator_tested": false,
+    "appearance_quality_passed": false
+  },
+  "source_and_attachment_audit": {
+    "format": "real-bangs-source-and-rig-audit",
+    "version": 1,
+    "source_sha256": "3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd",
+    "model_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+    "source_and_review_original_identical": true,
+    "strong_source_pixels_tested": 514977,
+    "strong_rgba_pixels_changed_in_cleanup": 0,
+    "low_alpha_pixels_removed": 59582,
+    "fitted_size": [
+      450,
+      445
+    ],
+    "fitted_nonzero_border_pixels": 0,
+    "transform_states": 81,
+    "maximum_front_hair_face_anchor_divergence_pixels": 5.687116766346677e-14,
+    "head_follow_checks_passed": true,
+    "independent_native_breath_rendered": true,
+    "scope": "An affine attachment point and transparent-border check, not a semantic/natural-seam test.",
+    "appearance_quality_passed": false,
+    "official_runtime_tested_by_this_script": false
+  },
+  "cpu": {
+    "states": 24,
+    "model_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+    "geometry_checks_passed": true,
+    "neutral_comparison": {
+      "background": "white",
+      "changed_pixels": 78601,
+      "rgb_above_3_pixels": 0,
+      "maximum_channel_difference": 3,
+      "mean_channel_difference": 0.05900785658094618
+    },
+    "motion_states": [
+      {
+        "name": "neutral",
+        "requested": {},
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "left_closed",
+        "requested": {
+          "EyeOpenL": 0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 0,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "opposite_eye_changed_pixels": 0
+      },
+      {
+        "name": "right_closed",
+        "requested": {
+          "EyeOpenR": 0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 0
+        },
+        "folded_mesh_triangles": 0,
+        "opposite_eye_changed_pixels": 0
+      },
+      {
+        "name": "both_closed",
+        "requested": {
+          "EyeOpenL": 0,
+          "EyeOpenR": 0
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 0,
+          "r": 0
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.025",
+        "requested": {
+          "EyeOpenL": 0.025,
+          "EyeOpenR": 0.025
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 68,
+          "r": 69
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.075",
+        "requested": {
+          "EyeOpenL": 0.075,
+          "EyeOpenR": 0.075
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 203,
+          "r": 201
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.15",
+        "requested": {
+          "EyeOpenL": 0.15,
+          "EyeOpenR": 0.15
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 413,
+          "r": 415
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.25",
+        "requested": {
+          "EyeOpenL": 0.25,
+          "EyeOpenR": 0.25
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 668,
+          "r": 666
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.5",
+        "requested": {
+          "EyeOpenL": 0.5,
+          "EyeOpenR": 0.5
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 1335,
+          "r": 1336
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "blink_0.75",
+        "requested": {
+          "EyeOpenL": 0.75,
+          "EyeOpenR": 0.75
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 1951,
+          "r": 1951
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "mouth_0.075",
+        "requested": {
+          "MouthOpen": 0.075
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "eyes_changed_pixels": 0
+      },
+      {
+        "name": "mouth_0.15",
+        "requested": {
+          "MouthOpen": 0.15
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "eyes_changed_pixels": 0
+      },
+      {
+        "name": "mouth_0.25",
+        "requested": {
+          "MouthOpen": 0.25
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "eyes_changed_pixels": 0
+      },
+      {
+        "name": "mouth_0.5",
+        "requested": {
+          "MouthOpen": 0.5
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "eyes_changed_pixels": 0
+      },
+      {
+        "name": "mouth_1",
+        "requested": {
+          "MouthOpen": 1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0,
+        "eyes_changed_pixels": 0
+      },
+      {
+        "name": "HeadX_-1",
+        "requested": {
+          "HeadX": -1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2480,
+          "r": 2479
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "HeadX_1",
+        "requested": {
+          "HeadX": 1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2480,
+          "r": 2481
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "HeadY_-1",
+        "requested": {
+          "HeadY": -1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2488,
+          "r": 2489
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "HeadY_1",
+        "requested": {
+          "HeadY": 1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2488,
+          "r": 2487
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "HeadTilt_-1",
+        "requested": {
+          "HeadTilt": -1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2528,
+          "r": 2530
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "HeadTilt_1",
+        "requested": {
+          "HeadTilt": 1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2529,
+          "r": 2530
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "combined_left",
+        "requested": {
+          "EyeOpenL": 0,
+          "MouthOpen": 1,
+          "HeadX": -1,
+          "HeadY": 1,
+          "HeadTilt": -1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 0,
+          "r": 2527
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "combined_right",
+        "requested": {
+          "EyeOpenR": 0,
+          "MouthOpen": 0.5,
+          "HeadX": 1,
+          "HeadY": -1,
+          "HeadTilt": 1
+        },
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2532,
+          "r": 0
+        },
+        "folded_mesh_triangles": 0
+      },
+      {
+        "name": "neutral_return",
+        "requested": {},
+        "fixed_torso_changed_pixels": 0,
+        "neck_tested_pixels": 1968,
+        "neck_alpha_below_250": 0,
+        "iris_contributing_pixels": {
+          "l": 2432,
+          "r": 2432
+        },
+        "folded_mesh_triangles": 0
+      }
+    ]
+  },
+  "official": {
+    "summary": {
+      "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+      "variants": [
+        {
+          "name": "attached",
+          "generated_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+          "saved_sha256": "c2ad17c931e618b849fdd42296ae35150f83013a7ddc86f1d29825bd82c53f61",
+          "before_states": 28,
+          "fresh_reload_states": 28,
+          "max_reload_changed_pixels": 0,
+          "official_creator_motion_save_reload_passed": true,
+          "appearance_quality_passed": false,
+          "ai_generated": false
+        }
+      ],
+      "ai_generation_tested": false
+    },
+    "structure": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 33,
+      "parameters": 7,
+      "bindings": 28,
+      "maximum_numeric_roundtrip_delta": 6.666666649834951e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    },
+    "all_texture_rgba_equal": true,
+    "textures_checked": 33,
+    "initial_fit": {
+      "official_creator_version": "0.8.6",
+      "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+      "opened_model_sha256": "c2ad17c931e618b849fdd42296ae35150f83013a7ddc86f1d29825bd82c53f61",
+      "source_model_unchanged": true,
+      "initial_view_only": true,
+      "appearance_quality_passed": false
+    },
+    "independent_eye_mouth_before": true,
+    "independent_eye_mouth_after": true
+  },
+  "tests": {
+    "node_passed": 212,
+    "python_passed": 109,
+    "python_existing_warnings": 1,
+    "related_browser_first_passed": 39,
+    "related_browser_first_total": 40,
+    "initial_test_error": "Playwright range.fill(.5) rejected malformed numeric literal; fixed test to 0.5.",
+    "new_bangs_recheck_passed": 3,
+    "final_related_maker_and_bangs_passed": 13,
+    "related_unique_cases_verified": 40,
+    "build_passed": true,
+    "full_app_198_browser_suite_rerun": false
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/real-bangs-release/base/project.zip",
+      "sha256": "5d13192bc4f3ec226a74203938bfb52208d559c0a58c5496fc1a8f782897e019",
+      "bytes": 8102069,
+      "entries": 77,
+      "expanded_bytes": 8092975,
+      "crc_passed": true,
+      "reproduced_all_bytes_identical": true
+    },
+    {
+      "path": "/tmp/real-bangs-release/attached/project.zip",
+      "sha256": "0a9093a323b214687d663b8503ee9d45df9a994ffe57f6d250f99b7183cfc7a2",
+      "bytes": 8871357,
+      "entries": 77,
+      "expanded_bytes": 8862263,
+      "crc_passed": true,
+      "reproduced_all_bytes_identical": true
+    },
+    {
+      "path": "/tmp/real-bangs-release/bangs-comparison.zip",
+      "sha256": "479ce86cf263a89a7ffb125043f56780b8a98e4affb62b5db96ba340feb2f092",
+      "bytes": 9062640,
+      "entries": 22,
+      "expanded_bytes": 9060132,
+      "crc_passed": true,
+      "reproduced_all_bytes_identical": true
+    },
+    {
+      "path": "/tmp/real-bangs-verified-preview.zip",
+      "sha256": "bf38c66a34575d8f09a8d28b9052390830d58f8fd5080e6cf65b087feceb06ca",
+      "bytes": 10382234,
+      "entries": 30,
+      "crc_passed": true,
+      "contains_official_evidence": true
+    }
+  ],
+  "limits": [
+    "Not all 33 parts are AI generated.",
+    "Style/lighting and back/side-hair silhouette differ; appearance is not accepted.",
+    "Some white edge/speckle and resampling of fine strokes remain.",
+    "Anchor/ROI checks are not a semantic all-hair seam proof.",
+    "No real iPhone/Safari/Windows device test.",
+    "No answer ZIP-attachment or authenticated sharing-URL tool available; internal paths are not iPhone download links.",
+    "No Cubism/MOC3/VTube Studio compatibility claim.",
+    "No external image API, payment, public upload or main merge."
+  ],
+  "baseline_regression_byte_match": true,
+  "prior_26mb_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf"
+}

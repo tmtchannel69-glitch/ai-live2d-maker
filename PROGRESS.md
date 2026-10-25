@@ -1,6 +1,14 @@
 # 開発進捗
 
-## 2026-10-25 STEP5 実前髪の装着と動作（最新）
+## 2026-10-25 STEP5 最終記録・比較ZIP
+
+- 実装fd39876を開発branchへpush済み。最終コードの2回の実画像試験でbase/attached制作ZIPと比較ZIPが全バイト一致。前段STEP4のbase制作ZIPとも一致し、旧生成の不変を確認。
+- 特定実物cbc72e79…のCreator56状態に加え、保存INXc2ad17c9…を初期全体表示43%で撮影。モデルを編集していない。公式画像/検証JSONを加えた新しい確認ZIPを/tmp/real-bangs-verified-preview.zipへ10,382,234bytes/30項目/CRC成功で保存。アプリ比較ZIP9,062,640bytes/22項目、制作ZIP8,871,357bytes/77項目も別に保持。
+- 元PNGと処理後の強い514977画素のRGBA差0、低alpha候補59582除去、配置PNG外周画素0。CPU24と共有点81組合せ/公式は成功したが、見た目は未合格。全領域の自然な隙間なし/全33AI生成/iPhoneへの直接引渡しとはしない。
+- 最終Node212/Python109/build、関連40項目（テスト側の.5記法修正後確認）と新13項目の再確認を記録。全198ブラウザ再実行ではない。実iPhone/Safari/Windows未確認。元約26MB ZIPのSHA18bf753f…も不変。
+- docs/REAL_BANGS_VALIDATION.md/jsonに品質/保存先/制限を保存。bundle-real-bangs.pyは特定モデルのSHAを照合し、公式証拠を元の比較ZIPに上書きせず新規ZIPへまとめる。Gitにはコード/記録だけを保存する。
+
+## 2026-10-25 STEP5 実前髪の装着と動作
 
 - 開始はfeature/modular-character-maker/0318465、未変更・remote一致を確認/fetch。mainはf38395cで触れない。今回もsourceを作業branchへcommit/pushする承認があり、外部API/課金/公開/画像モデルのGit追加は禁止。
 - 添付1254角RGBAを実際に開いた。元SHA3f8ffe58…、低alpha残留が周囲にあるが有効毛先は元画像端に接触しない。元画像を保持し、強い514977画素のRGBAを変えず、遠いalpha1..7の59582画素だけ除去。色の描き直し/欠損補完/alpha増強はしない。
