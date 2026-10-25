@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/verify-browser-pipeline
+  pull_request:
+    branches:
+      - feature/external-part-side-by-side-review
   workflow_dispatch:
 
 permissions:
