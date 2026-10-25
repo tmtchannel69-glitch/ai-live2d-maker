@@ -42,3 +42,7 @@
 #cg-single-mask-output{margin:18px 0;padding:14px;border:1px solid #5b506e;border-radius:12px}
 #cg-single-mask-output h3{margin-top:0}
 #cg-single-mask-summary{overflow-wrap:anywhere;line-height:1.7}
+/* Geometric region proposal, not semantic segmentation */
+#cg-single-suggest-regions{width:100%;min-height:48px;margin:12px 0}
+#cg-single-region-output{margin-top:15px;padding:12px;border:1px solid #777087;border-radius:12px}
+#cg-single-region-summary{overflow-wrap:anywhere;line-height:1.65}
