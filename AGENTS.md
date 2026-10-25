@@ -1,5 +1,13 @@
 # AI Live2D Maker 開発ルール
 
+## 交換式33パーツメーカーへの移行（2026-10-25、最新）
+- オーナーの新指示で主方式を独立パーツ生成/組み立てへ移行。STEP1からSTEP4まで連続して実装/検証し、作業単位で新しい開発branchへcommit/pushする。これは前段の「ローカルcommitのみ/push禁止」を上書きする明示指示。main統合/アプリ公開/外部画像API/課金/無断画像送信/生成物のGit追加は禁止を維持する。
+- GitHub最新headsはmain=f38395c、part-first=08c0edd、automatic=50390a8、external=44b74d9、portrait=71976bb。未変更のローカル最新2986c7cからfeature/modular-character-makerを作り、portraitをmergeして既存ZIP/portrait研究も保持。Vite競合は詳細API timeout/portとPSD事前最適化の両方を残して解決。旧branches/mainを書き換えない。
+- AImyの品質/着せ替えという方向性だけを参考にし、独自素材/キャラクターを複製しない。基準素材は既存の自作テンプレート、外部PNGはユーザーが端末内で読み込む。本物のChatGPT素材が未提供なら実AI検証成功にしない。
+- 既存33manifest版1/2、画像分離/5parts/head機能、旧実験の保存/取り込みは維持する。新しい交換プロジェクトは独立した形式/画面にし、基準設計と実際のPNGの由来を区別。外部PNGをローカルテンプレートや確認済みAI生成と偽らない。
+- 共通動作と交換履歴/パーツ固有情報を分離し、交換後も左右瞬き/口/HeadX/Y/Tiltを再利用。生成・公式runtime・自然な品質を別判定とする。ブラウザの独立描画を公式runtimeと呼ばない。Inochi2D legacy0.8.6とCubism/MOC3/VTSを区別する。
+- 設計/STEP進捗はdocs/MODULAR_CHARACTER_MAKER.md、ROADMAP/PROGRESSへ保存。画像/モデル/ZIP/画面写真は/tmp等Git外だけ。外部AI APIはサービス/料金/ライセンス/送信内容を具体化した後の承認が必要で、今回は実行しない。
+
 ## 閉眼肌の境界色の調整（2026-10-25、最新）
 - 721d9f1/未変更から同じ開発branchで継続。オーナーの「続けて」に従い、元の5役割/通常の詳細生成を保持して品質改善を進める。ローカルcommitのみ、push/公開/main統合/外部画像API/課金/重み自動取得/画像・モデルのGit追加は禁止のまま。
 - server/skin_boundary.pyは既存eye_skin_underpaintのRGBへのscreened harmonic補正だけ。観測PNG/所有/mask/alpha/座標/mesh/動作は変えない。screen=.04/各RGB±12/1眼131072画素/CG250回、支持12組未満/上限/改善なしは明示skipで元の実補完を保持。非収束は停止。skipを補正成功やダミー成功にしない。
