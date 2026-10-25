@@ -3,6 +3,7 @@
 import {zip,strToU8} from 'fflate';
 import {createDesignPlan} from '../../shared/character-design.js';
 import {createForegroundMask} from '../../shared/portrait-foreground-mask.js';
+import {proposePortraitRegions} from '../../shared/portrait-region-proposals.js';
 import {SOURCE_CANVAS,SOURCE_MAX_BYTES,planPortraitNormalization,auditPortraitPixels} from '../../shared/single-image-source.js';
 
 const supported=new Set(['image/png','image/jpeg','image/webp']);
@@ -27,7 +28,12 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
     '<section id="cg-single-mask-output" hidden><h3>自動切り抜きの試作結果</h3>'+ 
     '<div class="cg-single-image"><canvas id="cg-single-mask-preview" width="768" height="1024" aria-label="背景から切り抜いた前景シルエット"></canvas></div>'+ 
     '<p id="cg-single-mask-summary" class="muted"></p>'+ 
-    '<p class="muted">これは人物全体の前景マスクです。髪や目などの独立した33レイヤー、隠れた部分の補完、リギングではありません。</p></section>'+ 
+    '<p class="muted">これは人物全体の前景マスクです。髪や目などの独立した33レイヤー、隠れた部分の補完、リギングではありません。</p>'+
+    '<button type="button" id="cg-single-suggest-regions" class="secondary">頭部・胴体の候補範囲を推定する</button>'+
+    '<div id="cg-single-region-output" hidden><h3>形状から推定した候補</h3>'+
+    '<div class="cg-single-image"><canvas id="cg-single-region-preview" width="768" height="1024" aria-label="前景シルエットに重ねた頭部と胴体の候補範囲"></canvas></div>'+
+    '<p id="cg-single-region-summary" class="muted"></p>'+
+    '<p class="muted">くびれによる形状推定です。頭や胴体のAI認識・髪の分割・33パーツ化ではありません。</p></div></section>'+ 
     '<button id="cg-single-download" class="secondary" type="button">基準画像と検査結果をZIP保存</button>'+
     '<p class="muted">矩形内に画素があっても独立したパーツではありません。AIによる位置検出・背景除去・隠れ面生成・リギングの成功判定には使えません。</p></div>';
   section.querySelector('#cg-output').after(host);
@@ -35,6 +41,7 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
   let current=null,token=0,running=false;
   const preview=$('#cg-single-canvas'),ctx=preview.getContext('2d');
   const maskPreview=$('#cg-single-mask-preview'),maskCtx=maskPreview.getContext('2d');
+  const regionPreview=$('#cg-single-region-preview'),regionCtx=regionPreview.getContext('2d');
   function draw(){
     if(!current)return;
     ctx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
@@ -75,6 +82,9 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
     current=null;
     $('#cg-single-mask-output').hidden=true;
     $('#cg-single-mask-summary').textContent='';
+    $('#cg-single-region-output').hidden=true;
+    $('#cg-single-region-summary').textContent='';
+    regionCtx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
     maskCtx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
     $('#cg-single-result').hidden=true;
     $('#cg-single-role').replaceChildren();
@@ -108,6 +118,10 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
     if(!current||running)return;
     const info=current;running=true;onBusy(true);
     $('#cg-single-mask-output').hidden=true;
+    $('#cg-single-region-output').hidden=true;
+    $('#cg-single-region-summary').textContent='';
+    regionCtx.clearRect(0,0,SOURCE_CANVAS.width,SOURCE_CANVAS.height);
+    info.foreground=null;
     $('#cg-single-status').textContent='背景とキャラクターの前景を判別しています…';
     try{
       const width=SOURCE_CANVAS.width,height=SOURCE_CANVAS.height;
@@ -127,7 +141,7 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
       outCtx.putImageData(new ImageData(cutPixels,width,height),0,0);
       layerCtx.putImageData(new ImageData(maskPixels,width,height),0,0);
       if(info!==current)return;
-      info.foreground={cutout,maskCanvas,report:segmented.report};
+      info.foreground={cutout,maskCanvas,maskData:segmented.mask,report:segmented.report,regionProposal:null};
       maskCtx.clearRect(0,0,width,height);maskCtx.drawImage(cutout,0,0);
       $('#cg-single-mask-output').hidden=false;
       $('#cg-single-mask-summary').textContent='方式 '+(segmented.report.method==='existing-alpha'?'既存の透明度':'単色背景からの領域検出')+
@@ -138,6 +152,39 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
       if(info===current){info.foreground=null;$('#cg-single-status').textContent='安全に前景を切り出せませんでした：'+error.message;}
     }finally{running=false;onBusy(false);}
   });
+  $('#cg-single-suggest-regions').addEventListener('click',()=>{
+    const info=current;
+    if(!info?.foreground||running)return;
+    try{
+      const report=proposePortraitRegions(info.foreground.maskData);
+      info.foreground.regionProposal=report;
+      const width=SOURCE_CANVAS.width,height=SOURCE_CANVAS.height;
+      regionCtx.clearRect(0,0,width,height);
+      regionCtx.drawImage(info.foreground.cutout,0,0);
+      if(report.status==='candidate'){
+        for(const [candidate,color,label] of [
+          [report.upper_candidate,'#ffc14a','上部候補'],
+          [report.lower_candidate,'#58c8ff','下部候補']
+        ]){
+          const {x,y,width:w,height:h}=candidate.rect;
+          regionCtx.strokeStyle=color;regionCtx.lineWidth=4;
+          regionCtx.strokeRect(x+2,y+2,Math.max(1,w-4),Math.max(1,h-4));
+          regionCtx.fillStyle='rgba(0,0,0,.8)';
+          regionCtx.fillRect(x,Math.min(height-28,Math.max(0,y)),115,28);
+          regionCtx.fillStyle=color;regionCtx.font='bold 18px sans-serif';
+          regionCtx.fillText(label,x+6,Math.min(height-8,Math.max(20,y+20)));
+        }
+        $('#cg-single-region-summary').textContent='形状のくびれから境界候補を表示しました。位置の正しさ、髪・服の重なりは未確認です。独立パーツ0枚。';
+      }else{
+        $('#cg-single-region-summary').textContent='頭部・胴体の境界を推定できませんでした（'+report.reason+'）。誤った部位分割は行いません。';
+      }
+      $('#cg-single-region-output').hidden=false;
+    }catch(error){
+      info.foreground.regionProposal=null;
+      $('#cg-single-region-output').hidden=true;
+      $('#cg-single-status').textContent='候補領域を解析できませんでした：'+error.message;
+    }
+  });
   $('#cg-single-download').addEventListener('click',async()=>{
     if(!current||running)return;
     running=true;onBusy(true);
@@ -145,13 +192,15 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
       const info=current,files={};
       files['normalized_reference.png']=new Uint8Array(await (await pngBlob(info.normalized)).arrayBuffer());
       if(info.foreground){
+        if(info.foreground.regionProposal)files['region_proposals.json']=strToU8(JSON.stringify(info.foreground.regionProposal,null,2)+'\n');
         files['foreground_cutout.png']=new Uint8Array(await (await pngBlob(info.foreground.cutout)).arrayBuffer());
         files['foreground_mask.png']=new Uint8Array(await (await pngBlob(info.foreground.maskCanvas)).arrayBuffer());
       }
       files['source_audit.json']=strToU8(JSON.stringify({
         source:info.source,normalization:info.geometry,design_id:info.plan.blueprint.design_id,
         blueprint_id:info.plan.blueprint_id,...info.report,
-        foreground_mask_result:info.foreground?.report??null
+        foreground_mask_result:info.foreground?.report??null,
+        region_proposals:info.foreground?.regionProposal??null
       },null,2)+'\n');
       files['README.txt']=strToU8('入力画像1枚の検査結果です。これは33パーツの切り出し/背景除去/隠れ面補完/リギングの結果ではありません。\n'+
         'normalized_reference.png は縦横比を保って768x1024キャンバスへ配置した入力画像。\n'+

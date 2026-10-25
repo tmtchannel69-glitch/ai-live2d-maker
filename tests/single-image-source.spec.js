@@ -136,3 +136,54 @@ test('transparent source uses alpha and rejects ambiguous uniform background wit
   const clean=unzipSync(await download(page,'#cg-single-download'));
   expect(Object.keys(clean).sort()).toEqual(['README.txt','normalized_reference.png','source_audit.json']);
 });
+function shapedPortrait(){
+  const w=240,h=320,data=new Uint8Array(w*h*4);
+  const color=(x,y)=>{
+    const head=((x-120)/60)**2+((y-83)/65)**2<1;
+    const neck=x>=109&&x<132&&y>=139&&y<167;
+    const body=x>=40&&x<200&&y>=160&&y<305;
+    return head||neck||body?[55,88,170,255]:[255,255,255,255];
+  };
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)data.set(color(x,y),(y*w+x)*4);
+  return Buffer.from(encode({width:w,height:h,data,channels:4,depth:8}));
+}
+test('one cutout yields geometrical upper/lower proposals with zero independent layers',async({page})=>{
+  await setup(page);
+  await page.locator('#cg-single-file').setInputFiles({
+    name:'shape.png',mimeType:'image/png',buffer:shapedPortrait()
+  });
+  await expect(page.locator('#cg-single-status')).toContainText('入力画像の検査が完了');
+  await page.locator('#cg-single-make-mask').click();
+  await expect(page.locator('#cg-single-mask-output')).toBeVisible({timeout:25000});
+  await page.locator('#cg-single-suggest-regions').click();
+  await expect(page.locator('#cg-single-region-output')).toBeVisible();
+  await expect(page.locator('#cg-single-region-summary')).toContainText('境界候補');
+  const entries=unzipSync(await download(page,'#cg-single-download'));
+  expect(entries['region_proposals.json']).toBeTruthy();
+  const report=JSON.parse(strFromU8(entries['region_proposals.json']));
+  expect(report).toMatchObject({
+    status:'candidate',geometry_only:true,landmarks_detected:false,
+    anatomical_segmentation_performed:false,independent_parts_generated:0,
+    hidden_surfaces_recovered:0,rigging_performed:false
+  });
+  expect(report.upper_candidate.rect.y).toBeLessThan(report.split_y);
+  expect(report.lower_candidate.rect.y).toBeGreaterThanOrEqual(report.split_y);
+  const audit=JSON.parse(strFromU8(entries['source_audit.json']));
+  expect(audit.region_proposals.status).toBe('candidate');
+});
+test('rectangular silhouette must not produce fabricated head or torso regions',async({page})=>{
+  await setup(page);
+  await page.locator('#cg-single-file').setInputFiles({
+    name:'block.png',mimeType:'image/png',buffer:coloredPortrait()
+  });
+  await expect(page.locator('#cg-single-status')).toContainText('入力画像の検査が完了');
+  await page.locator('#cg-single-make-mask').click();
+  await expect(page.locator('#cg-single-mask-output')).toBeVisible({timeout:25000});
+  await page.locator('#cg-single-suggest-regions').click();
+  await expect(page.locator('#cg-single-region-summary')).toContainText('境界を推定できませんでした');
+  const archive=unzipSync(await download(page,'#cg-single-download'));
+  const report=JSON.parse(strFromU8(archive['region_proposals.json']));
+  expect(report.status).toBe('ambiguous');
+  expect(report.upper_candidate).toBe(null);
+  expect(report.independent_parts_generated).toBe(0);
+});
