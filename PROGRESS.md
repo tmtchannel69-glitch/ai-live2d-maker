@@ -1,5 +1,18 @@
 # 開発進捗
 
+## 2026-10-25 共通原画・髪3系統のデザイン統一工程
+
+- feature/modular-character-maker/b448514のclean/remote一致を確認し継続。新指示は共通原画/33仕様/線・色・陰影・座標・透過・下地の検査/スマホ確認保存。外部画像API/課金/main統合/公開/画像モデルのGit追加を行わない。sourceを同branchへcommit/pushする既存承認を維持。
+- 共通原画をPNG/JPEG/WebP8MiB/4096辺/8M画素で登録し、元バイト・SHA/条件SHAを保持。原画だけの登録では33PNG/native/poseは変更しない。髪は前髪1+横髪左右2+後ろ髪1の3系統4枚を優先、原画用のPNGは一括で検査/交換し失敗・中止で前作業を保持。
+- shared/design-reference.js、design-part-quality.jsとsrc/character-maker/design-*を独立追加。33仕様/隠れ面の要請/実mask/支点/順序を出すが、原画の人体配置や画風を意味で認識したとはしない。色差/run線幅/輝度のばらつき/alpha/支点/基準下地不足は注意候補だけで、完成品質/隠れた形/光源はfalse。
+- 原画を含むときだけmaker_project3に元原画・contract・qualityを追加。原画なしの旧maker1/2と33v1/v2/5parts/detailed/native writerを維持。原画/条件変更で旧関連付け、通常交換で未関連、undoで由来を復帰。保存済みの有利な品質JSONも実PNGから再計算。
+- 既提供メイドJPEG04a40e3e…を仮原画、実前髪3f8ffe58…を使用。原画保持/全33PNG/native cbc72e79…不変・7操作・再開ZIP全バイト一致、POST/第三者通信0。前髪が同原画から生成されたと未確認なので自己申告を付けず髪0/4。残32はテンプレート、見た目は未合格。比較PNGと髪4枚画像を実際に開いて確認した。
+- 原画入り制作ZIP9,248,116bytes/80項目、ガイド896,067bytes/5項目、比較3,400,101bytes/13項目。独立ZIP CRC成功、基準制作ZIPは前回の5d13192b…と一致。前回公式成功のnative cbc72e79…そのもので、今回はCreator再実行ではない。旧26MB ZIP18bf753f…も不変。
+- iPhone用に原画/組み立て/左右/髪比較の拡大・2倍表示・tapからのWeb Share・未対応download/open-imageを追加。共有取消は保存完了にしない。実素材でダイアログ保存PNGとZIP内PNG一致。Chromiumタッチ/共有mockだけで、実Safari/ファイルアプリ/クラウドZIP直接引渡しは未確認。
+- Node217/Python109/build成功。新6+既存の関連46ブラウザ項目を一括46/46成功。初回の1件は開発中HMRによる状態初期化、次回の1件は素材選択時に自己申告を解除するUIへテストが未追従で修正。閾値やデータ保持を緩めていない。最終のZIP索引/ヘッダーを含む容量/中止判定を補強し、保存の7件も追加で一括7/7成功。
+- 最終コードの実画像再生成は/tmp/common-design-real-v2。1回目とbase/project/guide/reviewの4ZIP全バイト一致、原画登録約1.372秒。原画像・旧native・ガイドを描き替えていない。
+- 実物は/tmp/common-design-real-v1、再現はscripts/character-maker/reference-design-trial.mjs（実2画像必須、Git外新規dir、無断通信/代替素材なし）。docs/COMMON_DESIGN_WORKFLOW.mdとVALIDATION.md/jsonへ手順/実測/保存先/未合格を記録。次は確定原画による実髪4枚の統一、顔/目/衣装はその後に広げる。
+
 ## 2026-10-25 STEP5 最終記録・比較ZIP
 
 - 実装fd39876を開発branchへpush済み。最終コードの2回の実画像試験でbase/attached制作ZIPと比較ZIPが全バイト一致。前段STEP4のbase制作ZIPとも一致し、旧生成の不変を確認。

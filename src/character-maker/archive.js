@@ -7,6 +7,8 @@ import {assembleValidatedCharacter,checkAbort} from '../character-generation/gen
 import {buildModularRig} from '../../shared/modular-character-rig.js';
 import {canonicalBangsManifest,withBangsPlacement} from '../../shared/bangs-placement.js';
 import {sameJSONData} from '../../shared/designed-character.js';
+import {validateDesignReference,createReferenceContract,auditReferenceDesign} from './design-workflow.js';
+import {validateReferenceMeta} from '../../shared/design-reference.js';
 
 const MIB=1024*1024;
 const need=(v,m)=>{if(!v)throw new Error(m);};
@@ -29,7 +31,7 @@ export async function readMakerPartZip(file,parts,{signal}={}){
   return matched.map(p=>p.file);
 }
 
-export async function createMakerArchive(project){
+export async function createMakerArchive(project,{signal}={}){
   const m=await validateMakerManifest(project.current.manifest);
   need(sameJSONData(canonicalBangsManifest(m),project.base.manifest),'基準と現在の配置が一致しません。');
   need(project.current.quality?.structural_checks_passed===true,'構造検査が完了していない状態はモデルとして保存できません。');
@@ -39,6 +41,7 @@ export async function createMakerArchive(project){
   const put=(name,b)=>{total+=b.length;need(total<=48*MIB,'制作ZIPが48 MiBを超えています。');files[name]=[b,{mtime:new Date('2000-01-01T00:00:00Z')}];};
   const putJSON=(name,v)=>put(name,strToU8(JSON.stringify(v,null,2)+'\n'));
   for(const p of m.parts){
+    checkAbort(signal);
     const b=new Uint8Array(await project.current.assets.get(p.role).arrayBuffer()),origin=validateMakerOrigin(project.origins[p.role]);
     need(await makerDigest(b)===origin.sha256,'パーツと由来の指紋が一致しません: '+p.role);
     put(p.file,b);index.push({role:p.role,file:p.file,sha256:origin.sha256,origin});
@@ -51,11 +54,19 @@ export async function createMakerArchive(project){
   put('preview.png',new Uint8Array(await project.current.preview.arrayBuffer()));put('character.inp',native.inp);put('character.inx',native.inx);
   putJSON('character_manifest.json',m);putJSON('assembly_manifest.json',makerAssemblyManifest(project));
   putJSON('rig_metadata.json',native.rig);putJSON('inochi_model.json',native.model);putJSON('inochi_report.json',native.report);putJSON('assembly_quality.json',project.current.quality);
-  putJSON('maker_project.json',{format:MAKER_FORMAT,version:m.assembly_extension?2:1,baseline_manifest:project.base.manifest,...(m.assembly_extension?{assembly_extension:m.assembly_extension}:{}),parts:index,base_parts:baseIndex,pose:project.pose,
+  const reference=project.designReference?await validateDesignReference(project.designReference,{signal}):null;
+  if(reference){put(reference.meta.source.file,new Uint8Array(await reference.blob.arrayBuffer()));putJSON('design/contract.json',await createReferenceContract(project,{signal}));putJSON('design/quality.json',await auditReferenceDesign(project,{signal}));}
+  putJSON('maker_project.json',{format:MAKER_FORMAT,version:reference?3:m.assembly_extension?2:1,baseline_manifest:project.base.manifest,...(m.assembly_extension?{assembly_extension:m.assembly_extension}:{}),...(reference?{design_reference:reference.meta}:{}),parts:index,base_parts:baseIndex,pose:project.pose,
     rig_profile:MAKER_RIG_PROFILE,revision:project.revision,history:project.history,
     native_sha256:await makerDigest(native.inp),ai_origin_verified:false,appearance_quality_passed:false});
   put('README.txt',strToU8('AI Live2D Maker 交換式33パーツ制作プロジェクト\n\nアプリの「制作を再開」でこのZIPを開けます。33枚の現在PNGと、元に戻す基準PNGを保存しています。\ncharacter_manifest.jsonは基準設計です。実際の現在素材と由来はassembly_manifest.json/maker_project.jsonを参照してください。\n外部PNGのAI出典、画風一致、自然さは未確認です。構造検査・モデル生成・公式動作・完成品質は別判定です。\ncharacter.inp/inxはInochi2D legacy0.8.6用。Cubism/MOC3/VTube Studio互換ではありません。\nBreathは小さな胴体変形の共通パラメータです。アプリの待機再生は独立描画で、公式SDKの自動再生ではありません。\n基準のdesign/recipeと入力PNGを保持して再生成できます。画像/モデルをGitHubへ無断で追加しないでください。\n'));
-  return new Promise((resolve,reject)=>zip(files,{level:0},(error,bytes)=>error?reject(error):resolve(new Blob([bytes],{type:'application/zip'}))));
+  return new Promise((resolve,reject)=>zip(files,{level:0},(error,bytes)=>{
+    if(error)return reject(error);
+    // Include ZIP directory/header bytes so a saved archive also fits the
+    // reader's compressed-size limit at the exact boundary.
+    if(bytes.length>48*MIB)return reject(new Error('制作ZIPが48 MiBを超えています。'));
+    try{checkAbort(signal);resolve(new Blob([bytes],{type:'application/zip'}));}catch(e){reject(e);}
+  }));
 }
 
 export async function readMakerArchive(file,{signal}={}){
@@ -69,12 +80,21 @@ export async function readMakerArchive(file,{signal}={}){
     return createMakerProject({manifest,assets},{signal,imported:true});
   }
   const meta=json(entries,'maker_project.json');
-  need(meta.format===MAKER_FORMAT&&[1,2].includes(meta.version)&&Boolean(meta.assembly_extension)===(meta.version===2)&&meta.rig_profile===MAKER_RIG_PROFILE&&meta.ai_origin_verified===false&&meta.appearance_quality_passed===false,'この制作プロジェクトの版/由来には対応していません。');
+  need(meta.format===MAKER_FORMAT&&[1,2,3].includes(meta.version)&&(meta.version===3||Boolean(meta.assembly_extension)===(meta.version===2))&&Boolean(meta.design_reference)===(meta.version===3)&&meta.rig_profile===MAKER_RIG_PROFILE&&meta.ai_origin_verified===false&&meta.appearance_quality_passed===false,'この制作プロジェクトの版/由来には対応していません。');
   need(!meta.baseline_manifest?.assembly_extension,'基準には元の33パーツ配置が必要です。');
-  const baseline=await validateMakerManifest(meta.baseline_manifest),manifest=meta.version===2?await withBangsPlacement(baseline,meta.assembly_extension.rect):baseline,assets=new Map(),baseAssets=new Map(),origins={},baseOrigins={};
-  if(meta.version===2)need(sameJSONData(manifest.assembly_extension,meta.assembly_extension),'保存した前髪配置の版が一致しません。');
+  const baseline=await validateMakerManifest(meta.baseline_manifest),manifest=meta.assembly_extension?await withBangsPlacement(baseline,meta.assembly_extension.rect):baseline,assets=new Map(),baseAssets=new Map(),origins={},baseOrigins={};
+  if(meta.assembly_extension)need(sameJSONData(manifest.assembly_extension,meta.assembly_extension),'保存した前髪配置の版が一致しません。');
   need(Array.isArray(meta.parts)&&meta.parts.length===33&&Array.isArray(meta.base_parts)&&meta.base_parts.length===33,'33パーツの現在/基準情報が不足しています。');
   const allowed=new Set(['maker_project.json','preview.png','character.inp','character.inx','character_manifest.json','assembly_manifest.json','rig_metadata.json','inochi_model.json','inochi_report.json','assembly_quality.json','README.txt']);
+  let designReference;
+  if(meta.version===3){
+    // The saved audit is advisory. Validate bounded metadata, then recompute
+    // every quality observation from actual bytes after opening the project.
+    const rm=validateReferenceMeta(meta.design_reference);
+    need(entries.has(rm.source.file),'制作ZIPに共通原画の実データがありません。');
+    designReference=await validateDesignReference({meta:rm,blob:new Blob([entries.get(rm.source.file)],{type:rm.source.media_type})},{signal});
+    for(const name of ['design/contract.json','design/quality.json']){json(entries,name);allowed.add(name);}allowed.add(rm.source.file);
+  }
   for(const [list,dest,sources,prefix] of [[meta.parts,assets,origins,''],[meta.base_parts,baseAssets,baseOrigins,'base/']]){
     const roles=new Set();
     for(const item of list){
@@ -84,7 +104,7 @@ export async function readMakerArchive(file,{signal}={}){
       dest.set(item.role,new Blob([bytes],{type:'image/png'}));sources[item.role]=origin;
     }
   }
-  for(const name of entries.keys())need(allowed.has(name)||['parts/','base/','base/parts/'].includes(name)&&entries.get(name).length===0,'制作ZIPに未対応の項目があります: '+name);
+  for(const name of entries.keys())need(allowed.has(name)||['parts/','base/','base/parts/',...(designReference?['design/']:[])].includes(name)&&entries.get(name).length===0,'制作ZIPに未対応の項目があります: '+name);
   const history=validateMakerHistory(meta.history,meta.revision);
   const pose=validateMakerPose(meta.pose);
   await auditMakerAssets(baseline,baseAssets,{signal});const quality=await auditMakerAssets(manifest,assets,{signal});
@@ -92,5 +112,7 @@ export async function readMakerArchive(file,{signal}={}){
   if(entries.has('character.inp'))need(await makerDigest(entries.get('character.inp'))===meta.native_sha256,'保存モデルの指紋が一致しません。');
   if(entries.has('character.inx'))need(await makerDigest(entries.get('character.inx'))===meta.native_sha256,'保存INXの指紋が一致しません。');
   const preview=await assembleValidatedCharacter(manifest,assets,{signal}),native=await buildModularRig(manifest,assets,{signal});checkAbort(signal);
-  return {format:'ai-live2d-modular-session',base:{manifest:baseline,assets:baseAssets,origins:baseOrigins},current:{manifest,assets,preview,native,quality},origins,pose,revision:meta.revision,history,undo:[]};
+  const project={format:'ai-live2d-modular-session',base:{manifest:baseline,assets:baseAssets,origins:baseOrigins},current:{manifest,assets,preview,native,quality},origins,pose,revision:meta.revision,history,undo:[],...(designReference?{designReference}:{})};
+  if(designReference)project.designAudit=await auditReferenceDesign(project,{signal});
+  return project;
 }

@@ -1,5 +1,16 @@
 # AI Live2D Maker 開発ルール
 
+## 共通原画・髪のデザイン統一（2026-10-25、最新）
+- オーナーはfeature/modular-character-makerの成果を保持し、共通原画の管理/33パーツ仕様/品質検査/iPhoneの確認保存を承認。b448514のclean/remote一致から同branchで継続。髪は前髪1・横髪左右2・後ろ髪1の3系統4PNGから優先する。外部画像API/課金/画像モデルのGit追加/main統合/公開は禁止、source commit/pushは既存承認を維持。
+- shared/design-reference.jsとdesign-part-quality.js、src/character-maker/design-*で独立追加。原画はPNG/JPEG/WebP・8MiB/4096辺/8M画素、元バイト/SHAと共通条件SHAを保持。画像選択だけでは処理しない。原画登録は33PNG/native/poseを変えない。
+- 原画を含む場合だけmaker_project3、元のdesign/reference画像とcontract/qualityを追加。原画なしmaker1/2の出力、旧v1/v2の33生成器、5parts/detailed/native writerは不変。PNGと検査JSONを再開時に再計算し、保存済みの品質合格を信用しない。
+- 同じ原画用の髪の関連付けはuser-png originのdesign_binding。利用者の自己申告でAI出典の認証ではない。原画/条件変更で旧扱い、通常交換で未関連、undoで由来も復帰。4/4でも見た目・隠れ面・光源・完成品質はfalse。
+- 色差/暗色run線幅/輝度ばらつき/alpha/支点/基準の下地不足は注意候補。原画のcontain配置を人体位置や髪の意味的な検出と呼ばない。実画像を描き直した/根元を補完したとも呼ばない。33役割へ仕様/診断を出すが、新しい原画用取り込みの優先は髪4役割で、他は旧入口を維持する。
+- 既提供の960×1280メイドJPEG（SHA04a40e3e…）を仮原画、実前髪3f8ffe58…を使い、実画像で原画保持/33PNG/7制御/native cbc72e79…不変・ZIP再開一致を確認。前髪が同原画を参照したと未確認なので自己申告は付けず0/4。残32はテンプレート、同一原画の4枚完成/自然さ成功にしない。
+- モデルは前回の公式成功CBCと全バイト同一。今回のCreator再実行ではなく、同SHAの前回28+28証拠を別記。新規の髪/顔のPNGでモデルが変われば、そのモデルを公式で再検証する。Inochi2DとCubism/MOC3/VTSは区別する。
+- iPhone向けには原画/組み立て/左右比較/髪4枚の拡大・2倍表示と、準備済みBlobをtap直後にWeb Shareへ渡す導線。未対応はdownload/open-image、共有の取消は成功としない。Chromiumタッチと共有mockだけ、実Safari/ファイルアプリ/クラウドZIP直接引渡しの成功にしない。外部転送/公開URLは作らない。
+- 手順と実測はdocs/COMMON_DESIGN_WORKFLOW.md、COMMON_DESIGN_VALIDATION.md/json。reference-design-trial.mjsは実2画像必須/新しいGit外dir/外部通信0/代替素材なし。画像・ZIP・モデルは/tmp/common-design-real-v1、旧成果物は不変。依頼文/配置/固定依存だけGitへ保存する。
+
 ## STEP5 実画像の前髪自動配置（2026-10-25、最新）
 - オーナーが0318465のfeature/modular-character-makerから、添付の実前髪PNGの検査/装着/動作/比較/修正とsource commit/pushを承認。main統合/公開/外部画像API/課金/画像モデルのGit追加は禁止のまま。同branchで継続する。
 - 元PNGは1254角/RGBA、SHA3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd。実際に開いて使用し、代替素材にはしない。実AI由来はオーナー申告、実パーツは前髪1枚、残り32枚は既存テンプレート。ai_origin_verifiedはfalseで、全33AI生成/完成品質とは呼ばない。

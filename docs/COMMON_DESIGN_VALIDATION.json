@@ -1,0 +1,201 @@
+{
+  "format": "ai-live2d-common-design-validation",
+  "version": 1,
+  "date": "2026-10-25",
+  "branch": "feature/modular-character-maker",
+  "start_commit": "b44851438650a968f5aa26f31fd733b438c7575c",
+  "reference": {
+    "format": "ai-live2d-design-reference",
+    "version": 1,
+    "label": "既提供メイド画像（仮原画・前髪との同一性未確認）",
+    "source": {
+      "file": "design/reference.jpg",
+      "media_type": "image/jpeg",
+      "bytes": 191295,
+      "width": 960,
+      "height": 1280,
+      "sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e"
+    },
+    "policy": {
+      "line_width_px": null,
+      "hair_palette": [],
+      "shading": "reference",
+      "lighting": "reference"
+    },
+    "policy_sha256": "a77bca9b1a47b9bf660dacb3b75a8c6a2e16ad422313891feee893baa6f49971",
+    "claim": "user-supplied-unverified",
+    "ai_origin_verified": false,
+    "appearance_quality_passed": false
+  },
+  "actual_trial": {
+    "format": "ai-live2d-real-reference-design-trial",
+    "version": 1,
+    "reference_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "bangs_source_sha256": "3f8ffe587827435e663432c4b8fd562969985c89239726cbbc6892f6477960cd",
+    "reference_use": "provisional previous owner portrait; not authenticated as source design of supplied bangs",
+    "actual_owner_reference_used": true,
+    "actual_owner_bangs_used": true,
+    "no_substitute_assets": true,
+    "actual_external_parts": 1,
+    "remaining_parts": "32 local template PNGs; no invented matching side/back hair",
+    "reference_registration_seconds": 1.857,
+    "reference_original_bytes_preserved": true,
+    "registration_preserves_all_33_pngs": true,
+    "registration_preserves_native_bytes": true,
+    "model_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+    "base_model_sha256": "6883b22222a3894231ec72fd54a4c9c6fa70503cb8d6a1a324de16c133c201f9",
+    "independently_rendered_motion_changes": {
+      "EyeOpenL": true,
+      "EyeOpenR": true,
+      "MouthOpen": true,
+      "HeadX": true,
+      "HeadY": true,
+      "HeadTilt": true,
+      "Breath": true
+    },
+    "reference_hair_linked_pngs": 0,
+    "warning_count": 19,
+    "source_hair_checks": [
+      {
+        "role": "back_hair",
+        "source_kind": "local-template",
+        "reference_binding": "not-linked-to-reference",
+        "palette_delta_e76": 12.30234,
+        "ink_run_proxy_px": null,
+        "shading_contrast_ratio": 0.57264,
+        "warning_codes": []
+      },
+      {
+        "role": "side_hair_r",
+        "source_kind": "local-template",
+        "reference_binding": "not-linked-to-reference",
+        "palette_delta_e76": 10.88981,
+        "ink_run_proxy_px": null,
+        "shading_contrast_ratio": 0.77837,
+        "warning_codes": []
+      },
+      {
+        "role": "side_hair_l",
+        "source_kind": "local-template",
+        "reference_binding": "not-linked-to-reference",
+        "palette_delta_e76": 10.67356,
+        "ink_run_proxy_px": null,
+        "shading_contrast_ratio": 0.77722,
+        "warning_codes": [
+          "attachment-patch-thin-candidate"
+        ]
+      },
+      {
+        "role": "bangs_front",
+        "source_kind": "user-png",
+        "reference_binding": "not-linked-to-reference",
+        "palette_delta_e76": 7.59305,
+        "ink_run_proxy_px": 1,
+        "shading_contrast_ratio": 0.95289,
+        "warning_codes": [
+          "line-width-difference-candidate",
+          "faint-alpha-residue-candidate"
+        ]
+      }
+    ],
+    "reopened_project_identical": true,
+    "guide_bytes": 896067,
+    "review_bytes": 3400101,
+    "project_bytes": 9248116,
+    "local_dialog_png_saving_verified": true,
+    "no_image_post": true,
+    "no_external_request": true,
+    "official_creator_retested_this_trial": false,
+    "iphone_safari_device_tested": false,
+    "matched_ai_hair_set_verified": false,
+    "appearance_quality_passed": false
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/common-design-real-v1/base.zip",
+      "bytes": 8102069,
+      "files": 77,
+      "expanded_bytes": 8092975,
+      "sha256": "5d13192bc4f3ec226a74203938bfb52208d559c0a58c5496fc1a8f782897e019",
+      "crc_passed": true
+    },
+    {
+      "path": "/tmp/common-design-real-v1/project.zip",
+      "bytes": 9248116,
+      "files": 80,
+      "expanded_bytes": 9238676,
+      "sha256": "5e0734a1d3cbdeabdc0d3b8ad424957473e8536bc9f4a6347dedded7935aba65",
+      "crc_passed": true
+    },
+    {
+      "path": "/tmp/common-design-real-v1/guide.zip",
+      "bytes": 896067,
+      "files": 5,
+      "expanded_bytes": 895473,
+      "sha256": "8eb1956e520c909fddeefd22d2d1319d08e49932c2985ba74e8ce72d2a234689",
+      "crc_passed": true
+    },
+    {
+      "path": "/tmp/common-design-real-v1/review.zip",
+      "bytes": 3400101,
+      "files": 13,
+      "expanded_bytes": 3398563,
+      "sha256": "13e53feb084f6b16f924dffe0acf44de11e21a60e64a49eddb3fb9e17134f3c0",
+      "crc_passed": true
+    }
+  ],
+  "file_generation_passed": true,
+  "original_reference_preserved": true,
+  "existing_native_unchanged": true,
+  "prior_official_evidence_for_identical_bytes": {
+    "record": "REAL_BANGS_VALIDATION.json",
+    "creator_version": "0.8.6",
+    "model_sha256": "cbc72e796b2b1306da1fd2153b6c7e4c5c05454240e0e1446dec9d483b114a51",
+    "before_states": 28,
+    "fresh_reload_states": 28,
+    "maximum_reload_pixel_change": 0,
+    "retested_this_trial": false,
+    "valid_for_other_models": false
+  },
+  "tests": {
+    "build_passed": true,
+    "node_passed": 217,
+    "python_passed": 109,
+    "related_browser_expected": 46,
+    "related_browser_status": "passed",
+    "all_application_browser_tests_rerun": false,
+    "real_device_iphone_safari": false,
+    "related_browser_passed": 46,
+    "final_save_guard_recheck_status": "passed",
+    "final_save_guard_recheck_passed": 7
+  },
+  "appearance_quality_passed": false,
+  "style_consistency_verified": false,
+  "real_common_reference_ai_hair_set_verified": false,
+  "fully_ai_generated": false,
+  "iphone_cloud_zip_handoff_completed": false,
+  "limitations": [
+    "Only one actual supplied external front-hair image; remaining 32 textures are local templates.",
+    "Earlier owner portrait is provisional at time of trial; no authenticated claim that supplied bangs were generated with that portrait.",
+    "Current reference hair binding progress remains 0/4. No missing side/back art was fabricated.",
+    "Pixel color/line/contrast/anchor probes are warnings, not art-style, lighting, or hidden-anatomy approval.",
+    "Reference-to-template mapping is uniform contain, not semantic/anatomical alignment.",
+    "Web Share tested with stubs in emulated Chromium, not actual iPhone Files or native Safari.",
+    "No available response ZIP attachment or authenticated URL tool; /tmp is not an iPhone download URL."
+  ],
+  "no_paid_api_or_external_image_send": true,
+  "source_only_in_git": true,
+  "main_merged_or_app_published": false,
+  "prior_26mb_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+  "reproduction": {
+    "second_trial_directory": "/tmp/common-design-real-v2",
+    "zip_byte_identical": [
+      "base.zip",
+      "project.zip",
+      "guide.zip",
+      "review.zip"
+    ],
+    "second_reference_registration_seconds": 1.372,
+    "final_zip_header_size_guard_applied": true
+  }
+}

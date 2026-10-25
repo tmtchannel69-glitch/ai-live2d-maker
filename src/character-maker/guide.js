@@ -1,9 +1,11 @@
 import {zip,strToU8} from 'fflate';
 import {assembleValidatedCharacter} from '../character-generation/generator.js';
 import {PART_SETS} from '../../shared/modular-character.js';
+import {createReferenceArchive} from './design-review.js';
 
 // Download only. This module never calls a remote generation provider.
 export async function createMakerGuide(project){
+  if(project.designReference)return createReferenceArchive(project,{guideOnly:true});
   const m=project.base.manifest,reference=await assembleValidatedCharacter(m,project.base.assets);
   const spec={format:'ai-live2d-independent-part-request',version:1,canvas:m.canvas,
     character_design:m.design||m.generator.recipe,sides:'character-personal-left-right',
