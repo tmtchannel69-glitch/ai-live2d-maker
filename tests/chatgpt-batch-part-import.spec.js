@@ -127,22 +127,18 @@ test('all 33 supplied PNGs replace templates and export a complete local-only mo
   let apiCalls=0;
   await page.route('**/api/**',route=>{apiCalls++;return route.abort();});
   const originals=await download(page,'#cg-download-zip');
-  const encoded=await page.evaluate(async()=>{
-    const {createDesignPlan}=await import('/shared/character-design.js');
-    const plan=await createDesignPlan();
-    return plan.blueprint.parts.map(p=>{
-      const canvas=document.createElement('canvas');
-      canvas.width=p.rect.width;canvas.height=p.rect.height;
-      const ctx=canvas.getContext('2d');ctx.fillStyle='#8065bd';
-      ctx.fillRect(Math.floor(canvas.width*.28),Math.floor(canvas.height*.25),
-        Math.max(2,Math.floor(canvas.width*.35)),Math.max(2,Math.floor(canvas.height*.4)));
-      return {name:p.role+'.png',b64:canvas.toDataURL('image/png').split(',')[1]};
-    });
+  // Use known-valid per-role layer shapes from the canonical archive;
+  // arbitrary rectangles are intentionally rejected by anatomical rig checks.
+  const canonical=unzipSync(originals);
+  const originalManifest=JSON.parse(strFromU8(canonical['character_manifest.json']));
+  expect(originalManifest.parts).toHaveLength(33);
+  const changedIris=await imageForRole(page,'iris_l');
+  const uploads=originalManifest.parts.map(part=>{
+    if(part.role==='iris_l')return changedIris;
+    expect(canonical[part.file]).toBeTruthy();
+    return {name:part.role+'.png',mimeType:'image/png',buffer:Buffer.from(canonical[part.file])};
   });
-  expect(encoded).toHaveLength(33);
-  await page.locator('#cg-batch-files').setInputFiles(encoded.map(({name,b64})=>({
-    name,mimeType:'image/png',buffer:Buffer.from(b64,'base64')
-  })));
+  await page.locator('#cg-batch-files').setInputFiles(uploads);
   await expect(page.locator('#cg-batch-selection')).toContainText('33枚を検出');
   await page.locator('#cg-batch-apply').click();
   await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:120000});
@@ -159,6 +155,9 @@ test('all 33 supplied PNGs replace templates and export a complete local-only mo
   expect(manifest.parts).toHaveLength(33);
   expect(files['character.inp'].length).toBeGreaterThan(100);
   expect(files['character.inx'].length).toBeGreaterThan(100);
+  const irisRole=manifest.parts.find(p=>p.role==='iris_l');
+  expect(Buffer.from(files[irisRole.file]).equals(Buffer.from(canonical[irisRole.file]))).toBe(false);
+
   for(const p of manifest.parts){
     const png=decode(files[p.file]);
     expect([png.width,png.height,png.channels,png.depth]).toEqual([p.rect.width,p.rect.height,4,8]);
