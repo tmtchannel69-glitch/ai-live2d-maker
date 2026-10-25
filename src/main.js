@@ -322,7 +322,8 @@ $('#download-all').addEventListener('click', async () => {
   } catch { if(snapshotAll===results) $('#status').textContent='ZIP の作成に失敗しました。もう一度お試しください。個別 PNG 保存も利用できます。'; }
   finally { archiveBusy=false; $('#download-all').textContent='まとめて ZIP 保存'; updateButton(); }
 });
-$('#download-expression-psd').addEventListener('click',async()=>{
+$('#download-expression-psd').addEventListener('click',async event=>{
+  event.preventDefault();
   if($('#download-expression-psd').disabled)return;
   brushEditor.close();editor.clearView();reviewPanel.close();
   const version=uploadVersion,snapshot={file,assets:expressionAssets.map(a=>({...a,placement:{...a.placement}})),layers:structuredClone(expressionLayers)},current=new AbortController();psdController=current;

@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {unzipSync,strFromU8} from 'fflate';
+import {unzipSync,zipSync,strFromU8} from 'fflate';
 import {decode} from 'fast-png';
 test.use({hasTouch:true,isMobile:true});
 async function download(page,selector){
@@ -120,4 +120,96 @@ test('compares template and user PNG for each imported role without altering can
   const second=await page.locator('#cg-batch-replacement').getAttribute('src');
   expect(first).not.toBe(second);
   expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
+test('all 33 supplied PNGs replace templates and export a complete local-only model',async({page})=>{
+  test.setTimeout(180000);
+  await setup(page);
+  let apiCalls=0;
+  await page.route('**/api/**',route=>{apiCalls++;return route.abort();});
+  const originals=await download(page,'#cg-download-zip');
+  // Use known-valid per-role layer shapes from the canonical archive;
+  // arbitrary rectangles are intentionally rejected by anatomical rig checks.
+  const canonical=unzipSync(originals);
+  const originalManifest=JSON.parse(strFromU8(canonical['character_manifest.json']));
+  expect(originalManifest.parts).toHaveLength(33);
+  const changedIris=await imageForRole(page,'iris_l');
+  const uploads=originalManifest.parts.map(part=>{
+    if(part.role==='iris_l')return changedIris;
+    expect(canonical[part.file]).toBeTruthy();
+    return {name:part.role+'.png',mimeType:'image/png',buffer:Buffer.from(canonical[part.file])};
+  });
+  await page.locator('#cg-batch-files').setInputFiles(uploads);
+  await expect(page.locator('#cg-batch-selection')).toContainText('33枚を検出');
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:120000});
+  const files=unzipSync(await download(page,'#cg-batch-download'));
+  const report=JSON.parse(strFromU8(files['experimental_batch_report.json']));
+  const manifest=JSON.parse(strFromU8(files['character_manifest.json']));
+  expect(report).toMatchObject({external_part_count:33,local_template_part_count:0,
+    model_build_invocations:1,all_33_texture_slots_present:true,ai_origin_verified:false,
+    fully_ai_generated:false,official_creator_tested:false,no_network_transmission:true});
+  expect(report.local_template_roles).toEqual([]);
+  expect(report.parts).toHaveLength(33);
+  expect(new Set(report.provided_roles).size).toBe(33);
+  expect(report.parts.every(p=>/^[a-f0-9]{64}$/.test(p.source_sha256)&&p.manual_review_required)).toBe(true);
+  expect(manifest.parts).toHaveLength(33);
+  expect(files['character.inp'].length).toBeGreaterThan(100);
+  expect(files['character.inx'].length).toBeGreaterThan(100);
+  const irisRole=manifest.parts.find(p=>p.role==='iris_l');
+  expect(Buffer.from(files[irisRole.file]).equals(Buffer.from(canonical[irisRole.file]))).toBe(false);
+
+  for(const p of manifest.parts){
+    const png=decode(files[p.file]);
+    expect([png.width,png.height,png.channels,png.depth]).toEqual([p.rect.width,p.rect.height,4,8]);
+  }
+  expect(await download(page,'#cg-download-zip')).toEqual(originals);
+  expect(apiCalls).toBe(0);
+});
+
+test('one invalid PNG among valid selections aborts atomically without changing the original ZIP',async({page})=>{
+  await setup(page);
+  const original=await download(page,'#cg-download-zip');
+  const good=await imageForRole(page,'iris_r');
+  const invalid=await imageForRole(page,'iris_l',{outside:true});
+  await page.locator('#cg-batch-files').setInputFiles([good,invalid]);
+  await expect(page.locator('#cg-batch-selection')).toContainText('2枚を検出');
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('指定範囲外',{timeout:30000});
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
+  await expect(page.locator('#cg-batch-review-role').locator('option')).toHaveCount(0);
+  expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
+test('complete character ZIP restores 33 roles locally without touching canonical output',async({page})=>{
+  test.setTimeout(180000);
+  await setup(page);
+  const original=await download(page,'#cg-download-zip');
+  await page.locator('#cg-batch-zip').setInputFiles({name:'all-33-parts.zip',mimeType:'application/zip',buffer:original});
+  await expect(page.locator('#cg-batch-selection')).toContainText('PNG 33枚を検出',{timeout:30000});
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:120000});
+  const out=unzipSync(await download(page,'#cg-batch-download'));
+  const report=JSON.parse(strFromU8(out['experimental_batch_report.json']));
+  expect(report).toMatchObject({external_part_count:33,local_template_part_count:0,
+    input_bundle_kind:'local-zip',model_build_invocations:1,fully_ai_generated:false,
+    ai_origin_verified:false,no_network_transmission:true});
+  expect(report.parts).toHaveLength(33);
+  expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
+
+test('reject ZIP path traversal and duplicate aliases before loading layers',async({page})=>{
+  await setup(page);
+  const image=await imageForRole(page,'iris_l');
+  const unsafe=zipSync({'../iris_l.png':image.buffer},{level:0});
+  await page.locator('#cg-batch-zip').setInputFiles({
+    name:'unsafe.zip',mimeType:'application/zip',buffer:Buffer.from(unsafe)
+  });
+  await expect(page.locator('#cg-batch-selection')).toContainText('ZIPを取り込めません');
+  await expect(page.locator('#cg-batch-selection')).toContainText('不正なパス');
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
+  const duplicate=zipSync({'iris_l.png':image.buffer,'parts/iris_l.png':image.buffer},{level:0});
+  await page.locator('#cg-batch-zip').setInputFiles({
+    name:'duplicate.zip',mimeType:'application/zip',buffer:Buffer.from(duplicate)
+  });
+  await expect(page.locator('#cg-batch-selection')).toContainText('同じパーツが重複');
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
 });

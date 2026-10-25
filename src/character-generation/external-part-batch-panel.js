@@ -2,6 +2,7 @@
 import {zip,strToU8} from 'fflate';
 import {matchExternalPartFiles} from '../../shared/external-part-file-list.js';
 import {importExternalPartBatch} from './external-part-batch.js';
+import {readExternalPartZip} from './external-part-zip.js';
 import {buildExternalPartComparison} from '../../shared/external-part-comparison.js';
 
 export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
@@ -12,7 +13,9 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
   region.innerHTML='<h3>透過PNGをまとめて取り込む（試験版）</h3>'+
     '<p class="muted">ChatGPTなどで作った独立した画像を複数選びます。ファイル名は <code>iris_l.png</code> のように役割名と完全一致させてください。端末内だけで検査・組み立てし、画像は外部送信されません。</p>'+
     '<label for="cg-batch-files">パーツPNGを複数選択（最大33枚・合計12MB）'+
-    '<input id="cg-batch-files" type="file" accept="image/png,.png" multiple></label>'+
+    '<input id="cg-batch-files" type="file" accept="image/png,.png" multiple></label>'+ 
+    '<label for="cg-batch-zip">またはZIPファイルを1つ選択（最大16MB）'+ 
+    '<input id="cg-batch-zip" type="file" accept=".zip,application/zip"></label>'+ 
     '<p id="cg-batch-selection" class="muted">まず基準キャラを生成し、透過PNGを選んでください。</p>'+
     '<button id="cg-batch-apply" type="button" class="primary">選択したパーツをまとめて取り込む</button>'+
     '<button id="cg-batch-cancel" type="button" class="secondary" hidden>取り込みを中止</button>'+
@@ -32,6 +35,7 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
   section.querySelector('#cg-external-import').after(region);
   const $=s=>region.querySelector(s);
   let result=null,previewUrl=null,aborter=null,packing=false,reviewUrls=[];
+  let zipFiles=null,zipReading=false,zipTicket=0;
   function releaseReviewImages(){
     for(const url of reviewUrls)URL.revokeObjectURL(url);
     reviewUrls=[];
@@ -57,12 +61,14 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
     $('#cg-batch-warnings').replaceChildren();
   }
   function update(){
-    clearResult();$('#cg-batch-files').value='';
+    zipTicket++;zipFiles=null;zipReading=false;aborter?.abort();
+    clearResult();$('#cg-batch-files').value='';$('#cg-batch-zip').value='';
     region.hidden=getCharacter()?.manifest?.version!==2;
     $('#cg-batch-selection').textContent='ファイル名とパーツ名を合わせて複数選択してください。';
     $('#cg-batch-status').textContent='';
   }
   function preflight(){
+    zipTicket++;zipFiles=null;zipReading=false;$('#cg-batch-zip').value='';
     clearResult();
     const base=getCharacter();
     if(!base||base.manifest.version!==2)return;
@@ -77,19 +83,42 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
     }
   }
   $('#cg-batch-files').addEventListener('change',preflight);
+  $('#cg-batch-zip').addEventListener('change',async()=>{
+    const ticket=++zipTicket;zipFiles=null;zipReading=true;clearResult();
+    $('#cg-batch-files').value='';
+    const archive=$('#cg-batch-zip').files?.[0],base=getCharacter();
+    if(!archive||!base?.manifest?.parts){zipReading=false;return;}
+    $('#cg-batch-selection').textContent='ZIP内のPNGを検査しています…';
+    $('#cg-batch-status').textContent='ZIPの役割・容量・ファイル名を確認しています。';
+    try{
+      const {files,summary}=await readExternalPartZip(archive,base.manifest.parts);
+      if(ticket!==zipTicket)return;
+      zipFiles=files;
+      $('#cg-batch-selection').textContent='ZIP内のPNG '+summary.provided_count+'枚を検出：'+
+        summary.provided_roles.join(', ')+'。未収録の'+summary.missing_count+'枚はローカル描画を保持します。';
+      $('#cg-batch-status').textContent='ZIPの一覧を確認しました。透過・配置は取り込み実行時に検査します。';
+    }catch(error){
+      if(ticket!==zipTicket)return;
+      zipFiles=null;
+      $('#cg-batch-selection').textContent='ZIPを取り込めません：'+error.message;
+      $('#cg-batch-status').textContent='ZIPの中身を確認してください。';
+    }finally{if(ticket===zipTicket)zipReading=false;}
+  });
   $('#cg-batch-apply').addEventListener('click',async()=>{
     if(aborter||packing)return;
     const base=getCharacter();
     if(!base||base.manifest?.version!==2){
       $('#cg-batch-status').textContent='「デザイン指定の端末内描画」で基準キャラを生成してください。';return;
     }
-    try{matchExternalPartFiles($('#cg-batch-files').files,base.manifest.parts);}
+    if(zipReading){$('#cg-batch-status').textContent='ZIPの検査が終わってから実行してください。';return;}
+    const selectedFiles=zipFiles??$('#cg-batch-files').files;
+    try{matchExternalPartFiles(selectedFiles,base.manifest.parts);}
     catch(error){$('#cg-batch-status').textContent=error.message;return;}
     clearResult();aborter=new AbortController();onBusy(true);
     $('#cg-batch-cancel').hidden=false;$('#cg-batch-cancel').disabled=false;
     $('#cg-batch-status').textContent='画像を検査しています…';
     try{
-      const created=await importExternalPartBatch(base,$('#cg-batch-files').files,{
+      const created=await importExternalPartBatch(base,selectedFiles,{
         signal:aborter.signal,
         onProgress:({stage,completed,total,role})=>{
           $('#cg-batch-status').textContent=stage==='checking'
@@ -97,6 +126,7 @@ export function createExternalBatchPanel({section,getCharacter,save,onBusy}){
             :stage==='preview'?'合成プレビューを準備しています…':'Inochi2Dモデルを1回だけ生成しています…';
         }
       });
+      created.report.input_bundle_kind=zipFiles?'local-zip':'individual-png';
       result=created;previewUrl=URL.createObjectURL(created.preview);
       $('#cg-batch-preview').src=previewUrl;$('#cg-batch-output').hidden=false;
       $('#cg-batch-summary').textContent='外部PNG '+created.report.external_part_count+

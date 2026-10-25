@@ -1,0 +1,61 @@
+name: Offline app regression
+
+on:
+  push:
+    branches:
+      - feature/verify-browser-pipeline
+  pull_request:
+    branches:
+      - feature/external-part-side-by-side-review
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      CI: 'true'
+      RUN_REAL_SAM: '0'
+    steps:
+      - name: Check out this development branch
+        uses: actions/checkout@v4
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run offline image-pilot and character-generation unit tests
+        run: |
+          node --test scripts/ai-image-pilot/*test.mjs
+          node --test scripts/character-generation/design-test.mjs scripts/character-generation/test.mjs scripts/character-generation/inochi-test.mjs
+
+      - name: Build Vite app
+        run: npm run build
+
+      - name: Install isolated Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Recheck previously timed-out legacy UI flows with one worker
+        run: npx playwright test tests/practical-material-workflow.spec.js tests/production.spec.js --workers=1
+
+      - name: Run app browser regression suite serially (no live AI test)
+        run: npm test -- --workers=1
+
+      - name: Upload regression evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-regression-failures
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
