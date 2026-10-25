@@ -72,12 +72,12 @@ test('no template character needs to be generated before one portrait audit',asy
   await expect(page.locator('#cg-output')).toBeHidden();
   await expect(page.locator('#cg-single-summary')).toContainText('モデル生成なし');
 });
-function coloredPortrait({transparent=false,uniform=false}={}){
+function coloredPortrait({transparent=false,uniform=false,halfTransparent=false}={}){
   const w=200,h=300,data=new Uint8Array(w*h*4);
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const pos=(y*w+x)*4;
     const inside=!uniform&&x>=50&&x<150&&y>=60&&y<240;
-    const color=inside?[70,65,175,255]:[255,255,255,transparent?0:255];
+    const color=inside?[70,65,175,halfTransparent?128:255]:[255,255,255,transparent?0:255];
     data.set(color,pos);
   }
   return Buffer.from(encode({width:w,height:h,data,channels:4,depth:8}));
@@ -113,7 +113,7 @@ test('single flat-background portrait yields a mask and real RGBA cutout, not 33
 test('transparent source uses alpha and rejects ambiguous uniform background without fake output',async({page})=>{
   await setup(page);
   await page.locator('#cg-single-file').setInputFiles({
-    name:'transparent.png',mimeType:'image/png',buffer:coloredPortrait({transparent:true})
+    name:'transparent.png',mimeType:'image/png',buffer:coloredPortrait({transparent:true,halfTransparent:true})
   });
   await expect(page.locator('#cg-single-status')).toContainText('検査が完了');
   await page.locator('#cg-single-make-mask').click();
@@ -121,6 +121,11 @@ test('transparent source uses alpha and rejects ambiguous uniform background wit
   const archive=unzipSync(await download(page,'#cg-single-download'));
   const report=JSON.parse(strFromU8(archive['source_audit.json']));
   expect(report.foreground_mask_result.method).toBe('existing-alpha');
+  const reference=decode(archive['normalized_reference.png']);
+  const cutout=decode(archive['foreground_cutout.png']);
+  const center=(500*768+380)*4+3;
+  expect(reference.data[center]).toBe(128);
+  expect(cutout.data[center]).toBe(reference.data[center]);
   await page.locator('#cg-single-file').setInputFiles({
     name:'uniform.png',mimeType:'image/png',buffer:coloredPortrait({uniform:true})
   });
