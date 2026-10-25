@@ -1,5 +1,15 @@
 # 開発進捗
 
+## 2026-10-25 交換式33パーツメーカー STEP1〜2
+
+- 新指示でパーツ方式を主経路にし、開発branchへのcommit/pushを承認。前段のpush禁止を今回だけ更新。main統合・公開・画像/モデルのGit追加・外部画像API/課金/無断画像送信は禁止を維持。
+- ローカル2986c7cからfeature/modular-character-makerを作り、GitHub headsを照合してportrait71976bbをmerge5780b30。33生成/設計/native/外部PNG・ZIP、従来画像変換、詳細head/肌補正、旧研究を保持。調査doc3e4c27cをpush済み。
+- STEP1は関連Node113/ブラウザ27/build成功。新coreは原子交換、現在と基準33PNG、役割別SHA/由来/100件履歴/10undo、既存PNG検査/合成/モデル生成器を再利用。入力失敗や中止で旧制作を保持。cropは元PNGバイト、full canvasは元RGBAを直接cropする。
+- 構造検査（白目/虹彩/左右/首stem）と単一制御区間mesh折返し検査を独立追加。透明な穴や極小の重要素材を完成保存しない。任意の画風/隠れ面/人体形状は自動保証しない。
+- 制作ZIP新版はcurrent/base33PNG・manifest/assembly・由来/指紋・pose/履歴・preview・nativeを48MiB以内へ保存し、PNGから再計算して再開。旧v1/v2 ZIPも維持。readBoundedZipを共有化し、旧モデルreviewの10試験も成功。新Node6件成功。
+- STEP3〜4の画面/試着/再生コードも続けて作業中。自作テンプレート4段階の生成/保存/画面再開、PNG/alias ZIPのバイト保持と不正素材時の作業保持を確認。生成品はGit外。実ChatGPT素材は未提供、AI自由生成/自然な完成品質の成功ではない。
+- 現在、全192ブラウザ試験と公式Creator新モデルの保存/再読込を実行中。実行中の項目は成功扱いせず、完了後の結果を追記する。呼吸の中間キー不足を公式操作で見つけて修正し、新モデルで再検証している。
+
 ## 2026-10-25 閉眼肌の境界色の限定補正（最新）
 
 - 721d9f1/未変更から同じfeature/external-part-side-by-side-reviewで継続。ローカル実装/検証/commitだけで保存し、push/公開/main統合/外部画像API/課金/重み取得/画像モデルのGit追加は行わない。
