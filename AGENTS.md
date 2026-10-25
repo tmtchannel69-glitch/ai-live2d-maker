@@ -1,5 +1,14 @@
 # AI Live2D Maker 開発ルール
 
+## 詳細な頭・首・胴体のアプリ接続（2026-10-25、最新）
+- オーナーが途中の確認で止めずローカルの調査/実装/検証/修正を進めることを承認。今回の保存は作業ブランチへのローカルcommitだけ。push/main統合/公開、画像・モデルのGit追加、外部画像API/有料API/新有料契約、モデル重みの自動取得は行わない。前段のpush指示より今回の禁止を優先する。
+- 指定0966e2e/DETAILED_INOCHI_APP_MODE.mdはこの環境に未存在。対象branchを読み取り取得しても44b74d9までで、0966の差分確認ができたと報告しない。未変更を確認して44b74d9からfeature/external-part-side-by-side-reviewをローカル復元し、不足した詳細接続を再構成。別環境の未公開コミットを置き換えたものではない。
+- API/画面のmodeは既定fiveとopt-inのdetailed-head。準備はGETだけで画像なし、生成ボタン後のPOSTだけがローカルAPIへ送る。mode不一致の旧サーバーには送信しない。SAM/重みの不足を表示し自動取得しない。旧fiveのgenerate関数と最小writerは不変。
+- server/inochi_detailed.pyは既存scripts/parts/rig.py --stage headをプロセスから呼び、最終graphの参照PNG/マスクとモデル/JSONだけをZIPへ入れる。原JPEG/source-image/一枚再構成/未参照ファイルは除外。CLIの--error-reportは任意の構造化失敗だけを追加し、通常生成アルゴリズムを変えない。-m起動時のPreparationFailureのclass同一性と504伝播も維持する。
+- timeoutは詳細CLI540/API600/proxy660秒、従来API150秒。入力10MiB/4096辺/16M画素、ZIPと展開後80MiB/256項目、作業領域監視256MiB/512ファイル/log2MiB。ブラウザはContent-Lengthなし/過少でも80MiBで停止。Linuxでは親の終了後の子も私用プロセスグループを止める。Windowsの子終了は未検証。
+- headは固定胴体と小さな頭の移動/傾きだけ。全身/立体顔角度/口/髪物理/前後関係/自然な完成品質の成功と呼ばない。ファイル生成・公式Creator・見た目は別判定。モデル内reportのofficialCreatorTested/appearanceQualityVerifiedは生成時false、特定SHAの後検証を別記録にする。
+- 再現/起動/不足の案内はdocs/DETAILED_INOCHI_APP_MODE.md。verify-app.mjsはローカルURL限定で実画像の準備/中止/再試行/ZIP/既存編集保持を検証する。入力/モデル/ZIP/画面写真はGit外。Creator検証は生成したZIPの実物を使い、新プロセスの保存後確認も行う。過去の約26MB ZIPは変更しない。
+
 ## GPT Image 2.5を含む2回試験（2026-10-24、最新）
 - オーナーが1988679を維持した調査/設計/準備の更新を承認。同じfeature/openai-image-pilot-preparationで継続し、実API送信/課金/新契約/main統合/公開は未承認。旧33部品/Native/画像変換は変更しない。
 - 既定はcreateTwoCallPilotPlan/版2、参照1回＋iris_l1回、再試行込み合計最大2回。自動/手動retryやモデルfallbackを追加しない。1.5/Flare/Sunburstは同じモデルで2段を実行する計画。Flare固定版2026-09-08が暫定候補で、安さ/速さ/品質順位を未実測で主張しない。2.5へinput_fidelityは適用の明記がないため送らない。

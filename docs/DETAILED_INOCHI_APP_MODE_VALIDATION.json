@@ -1,0 +1,430 @@
+{
+  "format": "ai-live2d-detailed-inochi-app-validation",
+  "version": 1,
+  "date": "2026-10-25",
+  "requested_branch": "feature/external-part-side-by-side-review",
+  "requested_local_commit": "0966e2e",
+  "requested_commit_available": false,
+  "actual_resume_base": "44b74d9ff3b4b2f8d718cd7d8d6619dd07b2b55b",
+  "resume_note": "The requested unpublished commit/document were unavailable. The remote branch was read-only fetched and the missing app integration was reconstructed from its last saved code; no claim of inspecting 0966e2e.",
+  "save_policy": "Local commit only; no push/main merge/publication.",
+  "build_passed": true,
+  "tests": {
+    "node_passed": 168,
+    "python_passed": 97,
+    "browser_passed": 167,
+    "python_warning": "Existing Starlette/httpx deprecation warning; no dependency changes."
+  },
+  "live_browser_api": {
+    "format": "ai-live2d-detailed-head-live-app-check",
+    "version": 1,
+    "source_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+    "local_url": "http://127.0.0.1:5180",
+    "actual_image_posts": 2,
+    "cancelled_posts": 1,
+    "completed_posts": 1,
+    "readiness_sent_images": false,
+    "backend_busy_observed_before_cancel": true,
+    "cancel_released_backend_lock": true,
+    "existing_work_entries_unchanged": true,
+    "archive_entries": 119,
+    "archive_bytes": 6270701,
+    "archive_sha256": "910b983aae35651bd5ce98464ce49f0b91540c916ef7f1c99b99ee4113d9ca75",
+    "model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "source_file_in_archive": false,
+    "external_hosts_requested": 0,
+    "completed_generation_seconds": 131.195532768,
+    "file_generation_passed": true,
+    "official_creator_tested": false,
+    "appearance_quality_passed": false
+  },
+  "five_part_control": {
+    "five_part_real_generation_passed": true,
+    "stable_preexisting_five_part_sha256_matched": true,
+    "old_five_generate_function_unchanged": true,
+    "model_sha256": "dfc65b5dbb9c7e99852d6e7b710bb9b72f600d72cf871a0fe020660d04d327e9",
+    "zip_entries": 13,
+    "source_not_in_model_zip": true,
+    "head_broken_image_status": 400,
+    "head_bad_input_lock_released": true,
+    "initial_comparator_issue": "The detailed CLI five-part directory uses quality-derived input, so it is a different pipeline. The stable five-part API correctly matches its prior dfc65b5 digest."
+  },
+  "archive": {
+    "entries": 119,
+    "compressed_bytes": 6270701,
+    "expanded_bytes": 17105751,
+    "crc_passed": true,
+    "source_jpeg_included": false,
+    "one_piece_reconstruction_included": false,
+    "common_graph_parts": 38,
+    "official_creator_flags_left_false_in_generated_archive": true
+  },
+  "official_creator": {
+    "version": "0.8.6",
+    "platform": "Linux/Xvfb/Mesa",
+    "binary_sha256": "2ae3b449a8bd32c826d851a5663e58f3df451b0cfbbed0aa64121ce1f1eb9bcc",
+    "generated_model_sha256": "a759efab3bb02d8e8f1b9eb74398d2741e0863319dc88cf0c4915fd854f0ffde",
+    "saved_model_sha256": "ce213991f2923bfd4a7095ae9cbd3afecc7617d73ba4292ac3a948dd30b1f618",
+    "actual_save_observed": true,
+    "before_states": 26,
+    "fresh_process_states": 26,
+    "fresh_process_control_checks_passed": true,
+    "max_viewport_changed_pixels_after_save_reload": 0,
+    "max_fixed_torso_region_changed_pixels": 0,
+    "neck_skin_pixels_per_state": 5690,
+    "max_neck_background_candidate_pixels": 0,
+    "stored_rgba_texture_count": 28,
+    "stored_rgba_identical": true,
+    "structure": {
+      "hierarchy_mesh_masks_bindings_retained": true,
+      "drawables_and_drivers": 28,
+      "parameters": 4,
+      "bindings": 22,
+      "maximum_numeric_roundtrip_delta": 9.707469416753156e-06,
+      "float_tolerance": 0.0001,
+      "runtime_validation": false,
+      "appearance_quality_passed": false
+    },
+    "appearance_quality_passed": false
+  },
+  "independent_cpu": {
+    "head": {
+      "format": "ai-live2d-maker-independent-head-cpu-diagnostic",
+      "source_size": [
+        960,
+        1280
+      ],
+      "neutral_before_after_changed_pixels": 0,
+      "neutral_max_channel_delta": 0,
+      "neck_bridge_roi": [
+        435,
+        647,
+        514,
+        723
+      ],
+      "fixed_torso_roi": [
+        483,
+        888,
+        524,
+        929
+      ],
+      "poses": [
+        {
+          "pose": "neutral",
+          "head_x": 0,
+          "head_tilt": 0,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 0
+        },
+        {
+          "pose": "shift_left",
+          "head_x": -1,
+          "head_tilt": 0,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 414877
+        },
+        {
+          "pose": "shift_right",
+          "head_x": 1,
+          "head_tilt": 0,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 414884
+        },
+        {
+          "pose": "tilt_left",
+          "head_x": 0,
+          "head_tilt": -1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 408395
+        },
+        {
+          "pose": "tilt_right",
+          "head_x": 0,
+          "head_tilt": 1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 408187
+        },
+        {
+          "pose": "combined_left",
+          "head_x": -1,
+          "head_tilt": -1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 424758
+        },
+        {
+          "pose": "combined_right",
+          "head_x": 1,
+          "head_tilt": 1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 424714
+        },
+        {
+          "pose": "opposed_left",
+          "head_x": -1,
+          "head_tilt": 1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 414574
+        },
+        {
+          "pose": "opposed_right",
+          "head_x": 1,
+          "head_tilt": -1,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 414643
+        },
+        {
+          "pose": "neutral_return",
+          "head_x": 0,
+          "head_tilt": 0,
+          "neck_bridge_tested_pixels": 6004,
+          "neck_bridge_transparent_pixels": 0,
+          "fixed_torso_changed_pixels": 0,
+          "changed_pixels": 0
+        }
+      ],
+      "official_runtime_evidence": false,
+      "appearance_quality_passed": false
+    },
+    "blink": {
+      "source": "independent ROI renderer of actual serialized model",
+      "official_runtime": false,
+      "source_roi": [
+        288,
+        383,
+        664,
+        513
+      ],
+      "frames": [
+        {
+          "opening": 0.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 0.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 4.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.025,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 4.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 3,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.05,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 5.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.075,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 5.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 0.9960784316062927
+          }
+        },
+        {
+          "opening": 0.1,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 5.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.15,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 6.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.25,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": 0,
+          "median_lash_stroke_pixels": 7.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": 0,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.5,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 13.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 0.75,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 16.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        },
+        {
+          "opening": 1.0,
+          "transparent_hole_pixels": 0,
+          "closed_iris_residual_pixels": 0,
+          "maximum_iris_contribution": 1.0,
+          "possible_closed_iris_color_pixels": 0,
+          "double_lash_columns": null,
+          "median_lash_stroke_pixels": 15.0,
+          "lash_core_coverage": null,
+          "warnings": [],
+          "appearance_quality_passed": false,
+          "central_iris_double_lash_columns": null,
+          "central_lash_core_coverage": {
+            "weak_columns": 0,
+            "median_column_maximum_alpha": 1.0
+          }
+        }
+      ],
+      "appearance_quality_passed": false,
+      "notes": [
+        "Candidate metrics do not certify appearance. The eye-white mask bounds iris contribution; it does not identify individual RGB pixels as iris."
+      ]
+    }
+  },
+  "limits": {
+    "input_bytes": 10485760,
+    "max_input_edge": 4096,
+    "max_input_pixels": 16000000,
+    "zip_compressed_and_expanded_bytes": 83886080,
+    "zip_entries": 256,
+    "workdir_monitored_bytes": 268435456,
+    "workdir_files": 512,
+    "worker_log_bytes": 2097152,
+    "five_api_seconds": 150,
+    "detailed_cli_seconds": 540,
+    "detailed_api_seconds": 600,
+    "proxy_seconds": 660
+  },
+  "image_inference_environment": "Existing local CPU dependencies and pinned weights reused; no automatic weights download.",
+  "input_sha256": "04a40e3ebcea23b4f6253eeaca12699df61fa70998a161ca6ce2733477304a4e",
+  "external_image_api_calls": 0,
+  "paid_api_calls": 0,
+  "new_paid_contracts": 0,
+  "model_or_image_git_additions": false,
+  "remote_push_performed": false,
+  "old_private_zip_sha256": "18bf753fd4d94afa443f28bed6648641436b546ed05638a27331d721bf92a1cf",
+  "private_evidence": [
+    "/tmp/detailed-app-cli-baseline",
+    "/tmp/detailed-app-live-first",
+    "/tmp/detailed-app-live-verified",
+    "/tmp/detailed-app-five-control",
+    "/tmp/detailed-app-creator-check"
+  ],
+  "unverified": [
+    "Requested local commit 0966e2e and its exact diff",
+    "General success rate across other characters, full-body rigging",
+    "True hidden anatomy and correct hair depth/order",
+    "Natural finished appearance: skin blur, seams, hair/occlusion estimates",
+    "Windows/iPhone/Safari real devices and Windows process-tree cancellation",
+    "Cubism/MOC3/VTube Studio compatibility"
+  ]
+}

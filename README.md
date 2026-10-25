@@ -1,5 +1,15 @@
 # AI Live2D Maker
 
+## 画像1枚から頭・首・胴体を分ける
+
+「画像から変換」の「画像1枚から動くモデルを作る」で「頭・首・胴体を分ける（実験）」を選べます。準備確認は画像を送らず、生成ボタンを押した時だけローカルサーバーで自動分離・補完・リギング・Inochi2D出力を行います。点や枠の指定は不要です。従来の5パーツ方式も保持しています。
+
+頭の小さい移動・傾きとまばたきを扱い、胴体は固定です。全身リギング/見えない形の正確な復元/自然な完成品品質は未完成です。出力はInochi2D用で、Cubism/MOC3/VTube Studio用ではありません。[使い方・ローカル起動](docs/DETAILED_INOCHI_APP_MODE.md)、[実画像・公式Creator・テストの検証結果](docs/DETAILED_INOCHI_APP_MODE_VALIDATION.md)。今回はローカルコミットだけで、GitHubへのpush/公開は行いません。
+
+### 詳細モードの準備
+
+Pythonの依存、顔検出/BiRefNetモデル、SAM2とSAM2.1 Tiny重み、Node依存が必要です。不足項目は画面の「ローカル処理の準備状況を確認」に表示します。画像の選択・準備確認・生成でモデルを自動取得しません。既存環境があれば`.venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8000`と、別ターミナルの`npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`で起動できます。WindowsはPythonパスを`.\.venv\Scripts\python.exe`へ置き換えます。重み/依存の一覧とポート競合時の設定は上記手順へ記録しています。クラウドのlocalhostはPC/iPhoneのlocalhostとは異なります。
+
 OpenAI画像生成の実証は[1.5/2.5 Flare/Sunburstの比較・2回試験と予算](docs/OPENAI_IMAGE_TWO_CALL_PILOT.md)と[送信予定の全文](docs/OPENAI_IMAGE_TWO_CALL_PAYLOADS.md)を参照してください。`node scripts/ai-image-pilot/prepare.mjs --output /tmp/NEW-openai-pilot`は既定で共通参照1枚＋虹彩1枚の計画を作ります。API送信/キー読取なし、呼出しは再試行込み最大2回、予算案1 USD。現行公式価格は接続403で未確認のため推定費用/最大課金は算定待ち、許可済み実行は0回/0USDです。これはAI生成成功例ではありません。1988679の旧6回準備も`--legacy-six-call`で再現できます。
 
 スマートフォン・PC で利用できるキャラクターパーツ準備用 Web アプリです。

@@ -139,4 +139,17 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',required=True);parser.add_argument('--output',required=True)
     parser.add_argument('--stage',choices=['head','hair'],default='head',help='hair adds independent bounded strands and a separate native-physics candidate; verified head output is retained.')
-    generate(parser.parse_args())
+    parser.add_argument('--error-report',help='Optional bounded app error JSON beside the new private output directory. No algorithm changes.')
+    args=parser.parse_args()
+    if args.error_report:
+        error_path=Path(args.error_report).resolve();destination=Path(args.output).resolve()
+        if error_path.is_relative_to(ROOT) or error_path.parent!=destination.parent or error_path.exists():
+            raise ValueError('Use a new private error report beside the output directory.')
+        try:generate(args)
+        except Exception as error:
+            from server.inochi_worker import PreparationFailure
+            status=error.status if isinstance(error,PreparationFailure) else 503 if type(error).__name__=='ModelUnavailable' else 422 if isinstance(error,ValueError) else 504 if isinstance(error,subprocess.TimeoutExpired) else 500
+            message=str(error)[:2000] if status!=500 else '頭・首・胴体の自動処理に失敗しました。ローカルサーバーのログを確認してください。'
+            error_path.write_text(json.dumps({'status':status,'error':message},ensure_ascii=False),encoding='utf-8')
+            raise
+    else:generate(args)

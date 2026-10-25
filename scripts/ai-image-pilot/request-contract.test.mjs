@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {prepareReferenceRequest,prepareIrisRequest,parseImageResponseOffline} from './request-contract.mjs';
+import {prepareReferenceRequest,prepareIrisRequest,parseImageResponseOffline} from '../../server/ai-image-pilot/request-contract.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 // Header-only fixtures check the envelope contract, NOT full PNG decoding.
 // Production-quality inspection requires the separate fast-png checker.

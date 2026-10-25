@@ -108,11 +108,20 @@ def generate(source_path, directory):
 def main():
     source, output = Path(sys.argv[1]), Path(sys.argv[2])
     try:
-        generate(source, output)
+        mode = sys.argv[3] if len(sys.argv) > 3 else 'five'
+        if mode == 'detailed-head':
+            from server.inochi_detailed import generate as generate_detailed
+            generate_detailed(source, output)
+        elif mode == 'five':
+            generate(source, output)
+        else:
+            raise PreparationFailure(422, '対応していない生成モードです。')
     except PreparationFailure as error:
         message, status = str(error), error.status
     except ValueError as error:
         message, status = str(error), 422
+    except subprocess.TimeoutExpired:
+        message, status = 'モデル生成が制限時間を超えました。小さい正面画像で再実行してください。', 504
     except Exception as error:
         # ModelUnavailable may be provided by either the preparation module or SAM.
         if type(error).__name__ == 'ModelUnavailable':
@@ -126,4 +135,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # The detailed adapter imports this module's exception/decoder. Reuse the
+    # running module so PreparationFailure is not a different class under -m.
+    sys.modules.setdefault('server.inochi_worker', sys.modules[__name__])
     raise SystemExit(main())
