@@ -8,12 +8,20 @@ function png(width=100,height=150,color=[190,40,60,255]){const data=new Uint8Arr
 async function setup(page){await page.goto('/');await page.locator('#file').setInputFiles({name:'source.png',mimeType:'image/png',buffer:png()});await expect(page.locator('#source-preview')).toBeVisible();}
 async function ai(page,bytes=png()){await page.locator('#processing-mode').selectOption('ai');for(const id of ['face','body','eyes'])await page.locator(`.part-options input[value=${id}]`).uncheck();await page.locator('#edit-prompts').click();await page.locator('#prompt-dialog svg').click({position:{x:50,y:50}});await page.locator('#close-prompts').click();await page.route('**/api/separate',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({parts:[{id:'hair',png:bytes.toString('base64')}]})}));await page.locator('#separate').click();await expect(page.locator('.result-card')).toHaveCount(1);}
 async function download(page,id){
+  if(id==='#download-expression-psd'){
+    const state=()=>page.evaluate(()=>({ready:document.readyState,file:document.querySelector('#file-info')?.textContent,source:document.querySelector('#source-preview')?.getAttribute('src'),buttonDisabled:document.querySelector('#download-expression-psd')?.disabled,status:document.querySelector('#expression-psd-status')?.textContent,form:document.querySelector('#download-expression-psd')?.closest('form')?.id||null}));
+    console.log('PSD_BEFORE '+JSON.stringify(await state()));
+    page.on('framenavigated',f=>{if(f===page.mainFrame())console.log('PSD_NAVIGATED '+f.url());});
+    page.on('pageerror',e=>console.log('PSD_PAGEERROR '+e.message));
+    page.on('console',m=>{if(m.type()==='error')console.log('PSD_CONSOLE '+m.text());});
+  }
   const waiting=page.waitForEvent('download',{timeout:10000}).catch(async error=>{
     const status=await page.locator('#expression-psd-status').textContent().catch(()=>'<unavailable>');
     const fileInfo=await page.locator('#file-info').textContent().catch(()=>'<unavailable>');
     throw new Error('Download not received for '+id+'; page='+page.url()+'; file='+fileInfo+'; PSD status='+status+'; '+error.message);
   });
   await page.locator(id).click();
+  if(id==='#download-expression-psd')console.log('PSD_AFTER '+JSON.stringify(await page.evaluate(()=>({file:document.querySelector('#file-info')?.textContent,status:document.querySelector('#expression-psd-status')?.textContent,ready:document.readyState}))));
   const d=await waiting,chunks=[];
   for await(const c of await d.createReadStream())chunks.push(c);
   return {name:d.suggestedFilename(),bytes:Buffer.concat(chunks)};
