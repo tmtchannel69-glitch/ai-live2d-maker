@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {unzipSync,strFromU8} from 'fflate';
+import {unzipSync,zipSync,strFromU8} from 'fflate';
 import {decode} from 'fast-png';
 test.use({hasTouch:true,isMobile:true});
 async function download(page,selector){
@@ -178,4 +178,38 @@ test('one invalid PNG among valid selections aborts atomically without changing 
   await expect(page.locator('#cg-batch-output')).toBeHidden();
   await expect(page.locator('#cg-batch-review-role').locator('option')).toHaveCount(0);
   expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
+test('complete character ZIP restores 33 roles locally without touching canonical output',async({page})=>{
+  test.setTimeout(180000);
+  await setup(page);
+  const original=await download(page,'#cg-download-zip');
+  await page.locator('#cg-batch-zip').setInputFiles({name:'all-33-parts.zip',mimeType:'application/zip',buffer:original});
+  await expect(page.locator('#cg-batch-selection')).toContainText('PNG 33枚を検出',{timeout:30000});
+  await page.locator('#cg-batch-apply').click();
+  await expect(page.locator('#cg-batch-status')).toContainText('一括取り込みを完了',{timeout:120000});
+  const out=unzipSync(await download(page,'#cg-batch-download'));
+  const report=JSON.parse(strFromU8(out['experimental_batch_report.json']));
+  expect(report).toMatchObject({external_part_count:33,local_template_part_count:0,
+    input_bundle_kind:'local-zip',model_build_invocations:1,fully_ai_generated:false,
+    ai_origin_verified:false,no_network_transmission:true});
+  expect(report.parts).toHaveLength(33);
+  expect(await download(page,'#cg-download-zip')).toEqual(original);
+});
+
+test('reject ZIP path traversal and duplicate aliases before loading layers',async({page})=>{
+  await setup(page);
+  const image=await imageForRole(page,'iris_l');
+  const unsafe=zipSync({'../iris_l.png':image.buffer},{level:0});
+  await page.locator('#cg-batch-zip').setInputFiles({
+    name:'unsafe.zip',mimeType:'application/zip',buffer:Buffer.from(unsafe)
+  });
+  await expect(page.locator('#cg-batch-selection')).toContainText('ZIPを取り込めません');
+  await expect(page.locator('#cg-batch-selection')).toContainText('不正なパス');
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
+  const duplicate=zipSync({'iris_l.png':image.buffer,'parts/iris_l.png':image.buffer},{level:0});
+  await page.locator('#cg-batch-zip').setInputFiles({
+    name:'duplicate.zip',mimeType:'application/zip',buffer:Buffer.from(duplicate)
+  });
+  await expect(page.locator('#cg-batch-selection')).toContainText('同じパーツが重複');
+  await expect(page.locator('#cg-batch-output')).toBeHidden();
 });
