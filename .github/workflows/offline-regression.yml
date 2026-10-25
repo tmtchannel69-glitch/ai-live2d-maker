@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/verify-browser-pipeline
+      - feature/single-image-source-audit
   pull_request:
     branches:
       - feature/external-part-side-by-side-review
