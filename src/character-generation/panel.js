@@ -3,6 +3,7 @@ import {generateDesignedCharacter} from './design-generator.js';
 import {createCharacterArchive} from './archive.js';
 import {createExternalPartPanel} from './external-part-panel.js';
 import {createExternalBatchPanel} from './external-part-batch-panel.js';
+import {createSingleImageAuditPanel} from './single-image-audit-panel.js';
 import './style.css';
 
 function save(blob,name){
@@ -100,5 +101,6 @@ export function createCharacterGenerationMode(){
   });
   externalPartPanel=createExternalPartPanel({section,getCharacter:()=>result,save,onBusy:v=>{externalBusy=v;controls();}});
   batchPartPanel=createExternalBatchPanel({section,getCharacter:()=>result,save,onBusy:v=>{externalBusy=v;controls();}});
+  createSingleImageAuditPanel({section,save,onBusy:v=>{externalBusy=v;controls();}});
   controls();return {element:section};
 }
