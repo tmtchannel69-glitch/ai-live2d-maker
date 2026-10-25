@@ -118,7 +118,9 @@ export function createSingleImageAuditPanel({section,save,onBusy}){
       const cutPixels=new Uint8ClampedArray(pixels.data),maskPixels=new Uint8ClampedArray(pixels.data.length);
       for(let i=0;i<segmented.mask.length;i++){
         const offset=i*4,a=segmented.mask[i];
-        // Existing PNG transparency must not be multiplied by itself.\n        cutPixels[offset+3]=segmented.report.method==='existing-alpha'\n          ?cutPixels[offset+3]:Math.round(cutPixels[offset+3]*a/255);
+        // Existing PNG transparency must not be multiplied by itself.
+        cutPixels[offset+3]=segmented.report.method==='existing-alpha'
+          ?cutPixels[offset+3]:Math.round(cutPixels[offset+3]*a/255);
         maskPixels[offset]=255;maskPixels[offset+1]=255;maskPixels[offset+2]=255;maskPixels[offset+3]=a;
       }
       const outCtx=cutout.getContext('2d'),layerCtx=maskCanvas.getContext('2d');
